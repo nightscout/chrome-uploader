@@ -1,0 +1,31 @@
+{
+  "manifest_version": 2,
+
+  "name": "Dexcom upchuck",
+  "description": "Report #cgmnow",
+  "version": "1.0",
+  "app": {
+    "background": {
+      "scripts": ["driver.js"]
+    }
+  },
+  "permissions": [
+    "usb",
+    "serial"
+  ],
+  "optional_permissions": [
+  {
+    "usbDevices": [
+      {
+        "vendorId": 8867,
+        "productId": 71
+      }
+    ]
+  }
+  ],
+
+  "icons": {
+    "16": "icon.png",
+    "128": "icon.png"
+  }
+}

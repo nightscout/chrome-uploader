@@ -13,13 +13,12 @@ var dexcom = {
 				dexcom.connection = conn;
 				dexcom.connected = true;
 			};
-			for (var i=0; i<ports.length; i++) {
-				console.log(ports[i].path);
-				if (ports[i].path == "/dev/cu.usbmodem14241") {
-					dexcom.port = ports[i];
-					chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
-				}
-			}
+			var dex = "/dev/" + (Math.random(1) > 0.5? "tty": "cu") + ".usbmodem";
+			ports.forEach(function(port) {
+				if (port.path.substr(0,dex.length) != dex) return;
+				dexcom.port = port;
+				chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
+			});
 		});
 
 		chrome.serial.onReceive.addListener(function(info) {

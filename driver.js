@@ -115,7 +115,6 @@ var dexcom = {
 		});
 	},
 	parseDatabasePages: function(databasePages) {
-		debugger;
 		var fourPages = [];
 		var recordCounts = [];
 		var totalRecordCount = 0;
@@ -241,18 +240,12 @@ function int16_calculateCRC16 (buff, start, end) {
 	var buffer = new Uint8Array(buff);
 	crc[0] = 0;
 	for (var i = start; i < end; i++) {
-		console.log(crc);
 		crc[0] = (crc[0] >>> 8) | (crc[0] << 8) & 0xffff;
-		console.log(crc);
 		crc[0] ^= (buffer[i] & 0xff);
-		console.log(crc);
 		crc[0] ^= ((crc[0] & 0xff) >> 4);
-		console.log(crc);
 		crc[0] ^= (crc[0] << 12) & 0xffff;
-		console.log(crc);
 		crc[0] ^= ((crc[0] & 0xff) << 5) & 0xffff;
 	}
-		console.log(crc);
 	crc[0] &= 0xffff;
 	return crc[0];
 }
@@ -292,6 +285,5 @@ function bytesOfInt(int32) {
 	var a = new Int32Array(1);
 	a[0] = int32;
 	var bytes = new Uint8Array(a.buffer);
-	console.log(bytes);
 	return bytes;
 }

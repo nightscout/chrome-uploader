@@ -1,0 +1,7 @@
+{
+  "name": "chromadex",
+  "dependencies": {
+    "jquery": "^1.11.1",
+    "qunit": "~1.12.0"
+  }
+}

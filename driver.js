@@ -10,8 +10,14 @@ var dexcom = {
 	connect: function() {
 		chrome.serial.getDevices(function(ports) {
 			var connected = function(conn) {
-				dexcom.connection = conn;
-				dexcom.connected = true;
+				if (conn && "connectionId" in conn) {
+					dexcom.connection = conn;
+					dexcom.connected = true;	
+				} else {
+					throw new Error(
+						"Couldn't open USB connection. Unplug your Dexcom, plug it back in, and try again."
+					);
+				}
 			};
 			var dex = "/dev/" + (Math.random(1) > 0.5? "tty": "cu") + ".usbmodem";
 			ports.forEach(function(port) {
@@ -54,6 +60,7 @@ var dexcom = {
 		//locate the EGV data pages
 		dexcom.getEGVDataPageRange(function(dexcomPageRange) {
 			dexcom.getLastFourPages(dexcomPageRange, pageOffset, function(databasePages) {
+				databasePages = databasePages.slice(4); // why? i dunno
 				callback(dexcom.parseDatabasePages(databasePages));
 			});
 		});
@@ -74,13 +81,17 @@ var dexcom = {
 			dexcom.readSerial(256, 200, callback);
 		});
 	},
-	getLastFourPages: function(dexcomPageRange, pageOffset,callback) {
-		var endPage = dexcomPageRange.slice(8,12);
-		endInt = toInt(endPage,1);
-		lastFour = endInt - 4 * pageOffset + 1;
-		b = getInt64Bytes(lastFour).slice(4,8);
+	getLastFourPages: function(dexcomPageRangeJS, pageOffset,callback) {
+		if (dexcomPageRangeJS.length == 0) {
+			throw new Error(
+				"Didn't receive response from Dexcom. Unplug, plug it back in, and try again."
+			);
+		}
+		var endPage = int32at(dexcomPageRangeJS, 8, 4);
+		var getLastFour = endPage - 4 * pageOffset + 1;
+		var b = bytesOfInt(getLastFour);
 
-		var buf = new ArrayBuffer(636);
+		var buf = new ArrayBuffer(12);
 		getLastEGVPage =new Uint8Array(buf);
 
 		getLastEGVPage[0] = 0x01;
@@ -88,18 +99,16 @@ var dexcom = {
 		getLastEGVPage[2] = 0x00;
 		getLastEGVPage[3] = 0x11;
 		getLastEGVPage[4] = 0x04;
-		getLastEGVPage[5] = b[3]; // reverse these 4?
-		getLastEGVPage[6] = b[2];
-		getLastEGVPage[7] = b[1];
-		getLastEGVPage[8] = b[0];
+		getLastEGVPage[5] = b[0]; // reverse these 4?
+		getLastEGVPage[6] = b[1];
+		getLastEGVPage[7] = b[2];
+		getLastEGVPage[8] = b[3];
 		getLastEGVPage[9] = 0x04;
 
-		getLastEGVCRC = calculateCRC16(getLastEGVPage, 0, 10);
-		crcByte1 = getInt64Bytes(getLastEGVCRC & 0xff)[7];
-		crcByte2 = getInt64Bytes((getLastEGVCRC >> 8) & 0xff)[7];
+		var checksum = bytesOfInt(calculateCRC16(getLastEGVPage, 0, 10));
 
-		getLastEGVPage[10] = crcByte1;
-		getLastEGVPage[11] = crcByte2;
+		getLastEGVPage[10] = checksum[0];
+		getLastEGVPage[11] = checksum[1];
 
 		dexcom.writeSerial(buf, function() {
 			dexcom.readSerial(2122, 20000, callback);
@@ -130,25 +139,8 @@ var dexcom = {
 				var bGValue = ((eGValue[1]<<8) + (eGValue[0] & 0xff)) & 0x3ff;
 
 				var dt = intFromBytes([tempRecord[7], tempRecord[6], tempRecord[5], tempRecord[4]]);
-				var d = 1230793200000 + dt * 1000;
+				var d = 1230793200000 + dt * 1000; // Jan 1 2009 12:00:00a
 				var display = new Date(d);
-				// I don't think this works
-				// byte [] dateTime = new byte[]{tempRecord[7],tempRecord[6],tempRecord[5],tempRecord[4]};
-
-				// ByteBuffer buffer = ByteBuffer.wrap(dateTime);
-				// int dt = buffer.getInt();//*1000;
-
-				// String string_date = "1-January-2009";
-				// SimpleDateFormat f = new SimpleDateFormat("dd-MMM-yyyy");
-				// Date d;
-				// try {
-				// 	d = f.parse(string_date);
-				// } catch (ParseException e) {
-				// 	Log.e(TAG, "unable to parse date: " + string_date + ", using current time", e);
-				// 	// TODO Auto-generated catch block
-				// 	d = new Date();
-				// }
-				// long milliseconds = d.getTime();
 
 				var trendArrow = getInt64Bytes(tempRecord[10] & 15)[7];
 				var trend = "Not Calculated";
@@ -192,7 +184,8 @@ var dexcom = {
 						break;
 					case (9):
 						trendA = String.fromCharCode(0x2194);
-						trend = "RATE OUT OF RANGE";
+						trend = "OUT OF RANGE";
+						bGValue = undefined;
 						break;
 
 				}
@@ -240,15 +233,65 @@ function toInt (b, flag) {
 			throw new Error("BitConverter:toInt");
 	}
 }
-function calculateCRC16 (buff, start, end) {
-	var crc = 0, i = 0;
-	for (i = start; i < end; i++) {
-		crc = ((crc  >>> 8) | (crc  << 8) )& 0xffff;
-		crc ^= (buff[i] & 0xff);
-		crc ^= ((crc & 0xff) >> 4);
-		crc ^= (crc << 12) & 0xffff;
-		crc ^= ((crc & 0xFF) << 5) & 0xffff;
+function calculateCRC16(buff, start, end) {
+	return int16_calculateCRC16(buff,start,end);
+}
+function int16_calculateCRC16 (buff, start, end) {
+	var crc = new Uint16Array(1);
+	var buffer = new Uint8Array(buff);
+	crc[0] = 0;
+	for (var i = start; i < end; i++) {
+		console.log(crc);
+		crc[0] = (crc[0] >>> 8) | (crc[0] << 8) & 0xffff;
+		console.log(crc);
+		crc[0] ^= (buffer[i] & 0xff);
+		console.log(crc);
+		crc[0] ^= ((crc[0] & 0xff) >> 4);
+		console.log(crc);
+		crc[0] ^= (crc[0] << 12) & 0xffff;
+		console.log(crc);
+		crc[0] ^= ((crc[0] & 0xff) << 5) & 0xffff;
 	}
-	crc &= 0xffff;
-	return crc;
+		console.log(crc);
+	crc[0] &= 0xffff;
+	return crc[0];
+}
+
+window.int32 = (function int32() {
+	var temp = new Int32Array(1);
+	return function int32(x) {
+		temp[0] = +x;
+		return temp[0];
+	};
+}).call();
+
+window.int16 = (function int16() {
+	var temp = new Int16Array(1);
+	return function int16(x) {
+		temp[0] = +x;
+		return temp[0];
+	};
+}).call();
+
+function getArrayBuffer(jsArray) {
+	var ab = new ArrayBuffer(jsArray.length);
+	for (var i = 0; i < jsArray.length; i++) {
+		ab[i] = jsArray[i];
+	}
+	return ab;
+}
+
+function int32at(jsBytes, ixStart, byteLength) {
+	var u8 = new Uint8Array(jsBytes);
+	var slice = u8.buffer.slice(ixStart, ixStart + byteLength);
+	return (new Int32Array(slice))[0];
+}
+
+
+function bytesOfInt(int32) {
+	var a = new Int32Array(1);
+	a[0] = int32;
+	var bytes = new Uint8Array(a.buffer);
+	console.log(bytes);
+	return bytes;
 }

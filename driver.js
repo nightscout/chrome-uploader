@@ -9,7 +9,7 @@ var dexcom = (function () {
 		for (var i = 0; i < x.length; ++i) {
 			val += x[i];
 			if (i < x.length-1) {
-					val = val << 8;
+				val = val << 8;
 			}
 		}
 		return val;
@@ -106,7 +106,7 @@ var dexcom = (function () {
 						);
 					}
 				};
-				var dex = "/dev/" + (Math.random(1) > 0.5? "tty": "cu") + ".usbmodem";
+				var dex = "/dev/tty.usbmodem";
 				ports.forEach(function(port) {
 					if (port.path.substr(0,dex.length) != dex) return;
 					dexcom.port = port;

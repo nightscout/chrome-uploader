@@ -1,5 +1,6 @@
 Promise.all([
 	new Promise(function(resolve) {
+		debugger;
 		dexcom.connect().then(function() {
 			dexcom.readFromReceiver(1, resolve);
 		});
@@ -10,11 +11,23 @@ Promise.all([
 	})
 ]).then(function(results) {
 	var data = results[0];
+	debugger;
 	var trend = data.map(function(plot) {
 		return [
-			plot.displayTime,
+			+plot.displayTime,
 			plot.bgValue
 		];
 	});
-	$.plot("#dexcomtrend", [ trend ]);
+	$.plot(
+		"#dexcomtrend",
+		[{
+			label: "#CGMthen",
+			data: trend
+		}],
+		{
+			xaxis: {
+				mode: "time"
+			}
+		}
+	);
 });

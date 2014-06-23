@@ -1,0 +1,33 @@
+{
+  "name": "chromadex",
+  "version": "0.0.0",
+  "main": "index.js",
+  "description": "Download Dexcom data on almost any platform Chrome runs on.",
+  "private": true,
+  "scripts": {
+    "postinstall": "bower install",
+    "build": "if [ -d \"./dist\" ]; then rm -rf ./dist; fi; broccoli build ./dist",
+    "test": "broccoli serve",
+    "start": "broccoli serve"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/altintx/chromadex.git"
+  },
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "author": "Brian Bosh <bbosh@alternateinterior.com>",
+  "license": "Unknown",
+  "bugs": {
+    "url": "https://github.com/altintx/chromadex"
+  },
+  "dependencies": {
+    "broccoli": "0.12.1",
+    "broccoli-es6-concatenator": "~0.1.6",
+    "broccoli-file-mover": "~0.3.5",
+    "broccoli-merge-trees": "0.1.3",
+    "broccoli-static-compiler": "0.1.4"
+  },
+  "devDependencies": {}
+}

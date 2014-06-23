@@ -168,8 +168,8 @@ var dexcom = (function () {
 			getLastEGVPage[11] = checksum[1];
 
 			dexcom.writeSerial(buf, function() {
-				console.log("[getLastFourPages] returned");
 				dexcom.readSerial(2122, 20000, callback);
+				console.log("[getLastFourPages] returned");
 			});
 			console.log("[getLastFourPages] called");
 		},

@@ -6,9 +6,8 @@
   "private": true,
   "scripts": {
     "postinstall": "bower install",
-    "build": "bin/build.js",
-    "pretest": "bin/build.js",
-    "test": "bin/run-tests.js",
+    "build": "if [ -d \"./dist\" ]; then rm -rf ./dist; fi; broccoli build ./dist",
+    "test": "broccoli serve",
     "start": "broccoli serve"
   },
   "repository": {

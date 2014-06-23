@@ -17,9 +17,10 @@ Download Dexcom data on almost any platform Chrome runs on. (Developed and teste
 5. Now run **dexcom.readFromReceiver(1, console.log.bind(console))**
 6. In about 30 seconds, you'll get a dump of Dex data.
 
-Lots of steps and right now the data is wrong about half the time. In dexcom.connect() I have it randomly picking between /dev/cu.usbmodem and /dev/tty.usbmodem. I **think** one is right and the other is wrong but I don't know which one is right.
+Lots of steps and right now. Often times you get no data back- if that happens, unplug, replug, go to chrome://extensions, and press the reload button on Dexcom upchuck.
 
 ###To Do
+* Move this to github issues
 * UI to browse results
 * Ability to upload to common providers
 * ~~Fix bugs in bit shifts (Most important)~~ Done (it was actually not clipping 4 bytes of header data)

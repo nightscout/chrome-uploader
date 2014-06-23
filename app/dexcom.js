@@ -20,16 +20,6 @@ var dexcom = (function () {
 		return bytes;
 	}
 
-	function toInt(b, flag) {
-		switch(flag){
-			case 0: //BitConverter.FLAG_JAVA:
-				return ((b[0] & 0xff)<<24) | ((b[1] & 0xff)<<16) | ((b[2] & 0xff)<<8) | (b[3] & 0xff);
-			case 1: //BitConverter.FLAG_REVERSE:
-				return ((b[3] & 0xff)<<24) | ((b[2] & 0xff)<<16) | ((b[1] & 0xff)<<8) | (b[0] & 0xff);
-			default:
-				throw new Error("BitConverter:toInt");
-		}
-	}
 	function calculateCRC16(buff, start, end) {
 		var crc = new Uint16Array(1);
 		var buffer = new Uint8Array(buff);
@@ -43,30 +33,6 @@ var dexcom = (function () {
 		}
 		crc[0] &= 0xffff;
 		return crc[0];
-	}
-
-	window.int32 = (function int32() {
-		var temp = new Int32Array(1);
-		return function int32(x) {
-			temp[0] = +x;
-			return temp[0];
-		};
-	}).call();
-
-	window.int16 = (function int16() {
-		var temp = new Int16Array(1);
-		return function int16(x) {
-			temp[0] = +x;
-			return temp[0];
-		};
-	}).call();
-
-	function getArrayBuffer(jsArray) {
-		var ab = new ArrayBuffer(jsArray.length);
-		for (var i = 0; i < jsArray.length; i++) {
-			ab[i] = jsArray[i];
-		}
-		return ab;
 	}
 
 	function int32at(jsBytes, ixStart, byteLength) {
@@ -94,6 +60,7 @@ var dexcom = (function () {
 						if (conn && "connectionId" in conn) {
 							dexcom.connection = conn;
 							dexcom.connected = true;
+							console.log("[connecting] successfully connected to port %o", conn);
 						} else {
 							throw new Error(
 								"Couldn't open USB connection. Unplug your Dexcom, plug it back in, and try again."
@@ -104,6 +71,7 @@ var dexcom = (function () {
 					ports.forEach(function(port) {
 						if (port.path.substr(0,dex.length) != dex) return;
 						dexcom.port = port;
+						console.log("[connecting] Found dexcom at port %o", port);
 						chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
 						resolve();
 					});
@@ -113,6 +81,7 @@ var dexcom = (function () {
 				chrome.serial.onReceive.addListener(function(info) {
 					if (dexcom.connected && info.connectionId == dexcom.connection.connectionId && info.data) {
 						var bufView=new Uint8Array(info.data);
+						console.log("[connection (low-level)] incoming data; %i bytes", bufView.byteLength);
 						for (var i=0; i<bufView.byteLength; i++) {
 								dexcom.buffer.push(bufView[i]);
 						}
@@ -139,9 +108,11 @@ var dexcom = (function () {
 		writeSerial: function(bytes, callback) {
 			dexcom.buffer = [];
 			chrome.serial.send(dexcom.connection.connectionId, bytes, callback);
+			console.log("[connection (low-level)] wrote command to serial");
 		},
 		readFromReceiver: function(pageOffset, callback) {
 			//locate the EGV data pages
+			console.log("read page %i from serial", pageOffset);
 			dexcom.getEGVDataPageRange(function(dexcomPageRange) {
 				dexcom.getLastFourPages(dexcomPageRange, pageOffset, function(databasePages) {
 					databasePages = databasePages.slice(4); // why? i dunno
@@ -162,8 +133,10 @@ var dexcom = (function () {
 			readEGVDataPageRange[5] = 0x8b;
 			readEGVDataPageRange[6] = 0xb8;
 			dexcom.writeSerial(buf, function() {
+				console.log("[getEGVDataPageRange] returned");
 				dexcom.readSerial(256, 200, callback);
 			});
+			console.log("[getEGVDataPageRange]");
 		},
 		getLastFourPages: function(dexcomPageRangeJS, pageOffset,callback) {
 			if (dexcomPageRangeJS.length === 0) {
@@ -195,14 +168,17 @@ var dexcom = (function () {
 			getLastEGVPage[11] = checksum[1];
 
 			dexcom.writeSerial(buf, function() {
+				console.log("[getLastFourPages] returned");
 				dexcom.readSerial(2122, 20000, callback);
 			});
+			console.log("[getLastFourPages] called");
 		},
 		parseDatabasePages: function(databasePages) {
 			var fourPages = [];
 			var recordCounts = [];
 			var totalRecordCount = 0;
 			var i = 0;
+			console.log("[parseDatabasePages] parsing raw results to eGV records");
 			
 			//we parse 4 pages at a time, calculate total record count while we do this
 			for (i = 0; i < 4; i++) {

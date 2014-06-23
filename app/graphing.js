@@ -1,8 +1,9 @@
 Promise.all([
 	new Promise(function(resolve) {
-		debugger;
 		dexcom.connect().then(function() {
-			dexcom.readFromReceiver(1, resolve);
+			setTimeout(function() {
+				dexcom.readFromReceiver(1, resolve);
+			}, 500);
 		});
 	}),
 	new Promise(function(resolve) {
@@ -11,7 +12,6 @@ Promise.all([
 	})
 ]).then(function(results) {
 	var data = results[0];
-	debugger;
 	var trend = data.map(function(plot) {
 		return [
 			+plot.displayTime,

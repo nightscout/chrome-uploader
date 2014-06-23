@@ -10,20 +10,8 @@
     }
   },
   "permissions": [
-    "usb",
     "serial"
   ],
-  "optional_permissions": [
-  {
-    "usbDevices": [
-      {
-        "vendorId": 8867,
-        "productId": 71
-      }
-    ]
-  }
-  ],
-
   "icons": {
     "16": "icon.png",
     "128": "icon.png"

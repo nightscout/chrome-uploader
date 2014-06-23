@@ -1,6 +1,9 @@
 {
   "name": "chromadex",
   "dependencies": {
+    "jquery": "^1.11.1",
+    "qunit": "~1.12.0",
+    "flot": "~0.8.3"
     "loader": "stefanpenner/loader.js#1.0.0",
     "qunit": "~1.12.0",
     "qunit-phantom-runner": "jonkemp/qunit-phantomjs-runner#3575d9f9850f4c5f30f3595e66e0d59866d53fa5"

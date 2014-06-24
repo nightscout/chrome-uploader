@@ -68,6 +68,7 @@ Promise.all([
 	},
 	saveToDiyPS = function(data) {
 		console.debug("[saveToDiyPS] firing off");
+		if (diypsconfig.length)
 		$.post(diypsconfig.endPoint,
 			{
 				records: JSON.stringify(data.map(function(plot) {

@@ -2,26 +2,20 @@
 Download Dexcom data on almost any platform Chrome runs on. (Developed and tested on Mac OSX). A good deal of this data is corrupt. 
 ##Don't use it for treatment. Seriously. A lot of this data is wrong. Not a little wrong. OMG WTF out of left field wrong.
 
+Important: Install directions updated. Do 6 and 7 if you haven't already.
+
 ###Install
 1. Get code in folder
 2. Go to chrome://extensions
 3. Check developer mode
 4. Load unpacked extension
 5. Pick your folder
+6. Set up /diypsconfig.json Dupe the sample files with these names. For DIYPS, add chromeext.php into DIYPS directory and point diypsconfig.json's endpoint to that resulting URL. If you don't use it, leave endPoint blank.
+7. Set up /mongoconfig.json. Not all the data HAS to be there. If you use it, uncomment code from app/graphing.js (lines 54-68, basically saveToMongoLab = function() { ... )
 
 ###Use
 1. Plug in your Dexcom
 2. Go to chrome://extensions
-3. Click "Background page" next to "Inspect views:"
-4. It'll open web inspector. Flip over to Console, and enter **dexcom.connect()**
-5. Now run **dexcom.readFromReceiver(1, console.log.bind(console))**
-6. In about 30 seconds, you'll get a dump of Dex data.
+3. Click launch
 
 Lots of steps and right now. Often times you get no data back- if that happens, unplug, replug, go to chrome://extensions, and press the reload button on Dexcom upchuck.
-
-###To Do
-* Move this to github issues
-* UI to browse results
-* Ability to upload to common providers
-* ~~Fix bugs in bit shifts (Most important)~~ Done (it was actually not clipping 4 bytes of header data)
-* ~~Auto detect the proper serial port. (Blast them all and see what responds?)~~ Done, always uses TTY.

@@ -10,7 +10,8 @@
     }
   },
   "permissions": [
-    "serial"
+    "serial",
+    "https://api.mongolab.com/"
   ],
   "icons": {
     "16": "public/assets/icon.png",

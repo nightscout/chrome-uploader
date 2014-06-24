@@ -100,10 +100,10 @@ var dexcom = (function () {
 				dexcom.buffer = [];
 				callback(packet);
 			} else {
-				var delta = Math.max(0, to - 500);
+				var delta = Math.max(0, to - 50);
 				setTimeout(function() {
 					dexcom.readSerial(bytes, delta, callback);
-				}, 500);
+				}, 50);
 			}
 		},
 		writeSerial: function(bytes, callback) {

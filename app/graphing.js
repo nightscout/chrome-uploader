@@ -1,3 +1,17 @@
+Number.prototype.milliseconds = function() { return this; };
+Number.prototype.seconds = function() {	return this.milliseconds() * 1000; };
+Number.prototype.minutes = function() { return this.seconds() * 60; };
+Number.prototype.hours = function() { return this.minutes() * 60; };
+Number.prototype.days = function() { return this.hours() * 24; };
+Number.prototype.weeks = function() { return this.days() * 7; };
+Number.prototype.months = function() { return this.days() * 30; };
+
+Number.prototype.toDays = function() { return this.toHours() / 24; };
+Number.prototype.toHours = function() { return this.toMinutes() / 60; };
+Number.prototype.toMinutes = function() { return this.toSeconds() / 60; };
+Number.prototype.toSeconds = function() { return this.toMilliseconds() / 1000; };
+Number.prototype.toMilliseconds = function() { return this; };
+
 Promise.all([
 	new Promise(function(resolve) {
 		dexcom.connect().then(function() {
@@ -45,34 +59,42 @@ Promise.all([
 	// 	type: "POST",
 	// 	contentType: "application/json"
 	// });
-	chrome.storage.local.get("egvrecords", function(storage) {
-		debugger;
-		var existing = storage.egvrecords || [];
-		var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
-		var to_save = existing.concat(data.filter(function(egv) {
-			return egv.displayTime > max_existing;
-		}).map(function(egv) {
-			return {
-				displayTime: +egv.displayTime,
-				bgValue: egv.bgValue,
-				trend: egv.trend
-			};
-		}));
-		chrome.storage.local.set({ egvrecords: to_save }, console.log.bind(console, "Saved results"));
-	});
-	
+	var updateLocalDb = function() {
+		chrome.storage.local.get("egvrecords", function(storage) {
+			var existing = storage.egvrecords || [];
+			var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
+			var to_save = existing.concat(data.filter(function(egv) {
+				return egv.displayTime > max_existing;
+			}).map(function(egv) {
+				return {
+					displayTime: +egv.displayTime,
+					bgValue: egv.bgValue,
+					trend: egv.trend
+				};
+			}));
+			chrome.storage.local.set({ egvrecords: to_save }, console.log.bind(console, "Saved results"));
+			$.post(diypsconfig.endPoint,
+				{
+					records: JSON.stringify(data.map(function(plot) {
+						return [
+							+plot.displayTime,
+							plot.bgValue,
+							plot.trend
+						];
+					}))
+				}
+			);
+		});
+	};
+	updateLocalDb();
+	setInterval(function() {
+		dexcom.readFromReceiver(1, function(data) {
+			updateLocalDb();
+		});
+	}, (5).minutes());
+});
 
-	$.post(diypsconfig.endPoint,
-		{
-			records: JSON.stringify(data.map(function(plot) {
-				return [
-					+plot.displayTime,
-					plot.bgValue,
-					plot.trend
-				];
-			}))
-		}
-	);
+function drawReceiverChart(data) {
 	var trend = data.map(function(plot) {
 		return [
 			+plot.displayTime,
@@ -91,4 +113,15 @@ Promise.all([
 			}
 		}
 	);
+}
+
+chrome.storage.onChanged.addListener(function(changes, namespace) {
+	debugger;
+	if ("egvrecords" in changes)
+		drawReceiverChart(changes.egvrecords.newValue);
+});
+
+chrome.storage.local.get("egvrecords", function(values) {
+	debugger;
+	drawReceiverChart(values.egvrecords);
 });

@@ -60,7 +60,7 @@ var dexcom = (function () {
 						if (conn && "connectionId" in conn) {
 							dexcom.connection = conn;
 							dexcom.connected = true;
-							console.log("[connecting] successfully connected to port %o", conn);
+							console.debug("[connecting] successfully connected to port %o", conn);
 						} else {
 							throw new Error(
 								"Couldn't open USB connection. Unplug your Dexcom, plug it back in, and try again."
@@ -71,23 +71,24 @@ var dexcom = (function () {
 					ports.forEach(function(port) {
 						if (port.path.substr(0,dex.length) != dex) return;
 						dexcom.port = port;
-						console.log("[connecting] Found dexcom at port %o", port);
+						console.debug("[connecting] Found dexcom at port %o", port);
 						chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
 						resolve();
 					});
 					if (!dexcom.connected) reject();
 				});
 
-				chrome.serial.onReceive.addListener(function(info) {
-					if (dexcom.connected && info.connectionId == dexcom.connection.connectionId && info.data) {
-						var bufView=new Uint8Array(info.data);
-						console.log("[connection (low-level)] incoming data; %i bytes", bufView.byteLength);
-						for (var i=0; i<bufView.byteLength; i++) {
-								dexcom.buffer.push(bufView[i]);
-						}
-					}
-				});
+				chrome.serial.onReceive.addListener(dexcom.serialOnReceiveListener);
 			});
+		},
+		serialOnReceiveListener: function(info) {
+			if (dexcom.connected && info.connectionId == dexcom.connection.connectionId && info.data) {
+				var bufView=new Uint8Array(info.data);
+				console.debug("[connection (low-level)] incoming data; %i bytes", bufView.byteLength);
+				for (var i=0; i<bufView.byteLength; i++) {
+						dexcom.buffer.push(bufView[i]);
+				}
+			}
 		},
 		readSerial: function(bytes, to, callback) {
 			var packet;
@@ -106,14 +107,28 @@ var dexcom = (function () {
 				}, 50);
 			}
 		},
+		disconnect: function() {
+			if (!dexcom.connected) {
+				throw new Error("Not connected");
+			}
+			chrome.serial.disconnect(dexcom.connection.connectionId, function() {
+				console.debug("[disconnect] completed");
+				dexcom.connected = false;
+				dexcom.connection = null;
+				dexcom.port = null;
+				dexcom.buffer = [];
+				chrome.serial.onReceive.removeListener(dexcom.serialOnReceiveListener);
+			});
+			console.debug("[disconnect] attempted");
+		},
 		writeSerial: function(bytes, callback) {
 			dexcom.buffer = [];
 			chrome.serial.send(dexcom.connection.connectionId, bytes, callback);
-			console.log("[connection (low-level)] wrote command to serial");
+			console.debug("[connection (low-level)] wrote command to serial");
 		},
 		readFromReceiver: function(pageOffset, callback) {
 			//locate the EGV data pages
-			console.log("read page %i from serial", pageOffset);
+			console.debug("[readFromReceiver] read page %i from serial", pageOffset);
 			dexcom.getEGVDataPageRange(function(dexcomPageRange) {
 				dexcom.getLastFourPages(dexcomPageRange, pageOffset, function(databasePages) {
 					databasePages = databasePages.slice(4); // why? i dunno
@@ -134,10 +149,10 @@ var dexcom = (function () {
 			readEGVDataPageRange[5] = 0x8b;
 			readEGVDataPageRange[6] = 0xb8;
 			dexcom.writeSerial(buf, function() {
-				console.log("[getEGVDataPageRange] returned");
+				console.debug("[getEGVDataPageRange] returned");
 				dexcom.readSerial(256, 200, callback);
 			});
-			console.log("[getEGVDataPageRange]");
+			console.debug("[getEGVDataPageRange]");
 		},
 		getLastFourPages: function(dexcomPageRangeJS, pageOffset,callback) {
 			if (dexcomPageRangeJS.length === 0) {
@@ -170,16 +185,16 @@ var dexcom = (function () {
 
 			dexcom.writeSerial(buf, function() {
 				dexcom.readSerial(2118, 5000, callback); // was 2122
-				console.log("[getLastFourPages] returned");
+				console.debug("[getLastFourPages] returned");
 			});
-			console.log("[getLastFourPages] called");
+			console.debug("[getLastFourPages] called");
 		},
 		parseDatabasePages: function(databasePages) {
 			var fourPages = [];
 			var recordCounts = [];
 			var totalRecordCount = 0;
 			var i = 0;
-			console.log("[parseDatabasePages] parsing raw results to eGV records");
+			console.debug("[parseDatabasePages] parsing raw results to eGV records");
 			
 			//we parse 4 pages at a time, calculate total record count while we do this
 			for (i = 0; i < 4; i++) {
@@ -257,6 +272,7 @@ var dexcom = (function () {
 					});
 				}
 			}
+			console.debug("[parseDatabasePages] done");
 			return recordsToReturn;
 		}
 	};

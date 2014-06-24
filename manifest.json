@@ -11,7 +11,7 @@
   },
   "permissions": [
     "serial",
-    "https://api.mongolab.com/",
+    "storage",
     "<all_urls>"
   ],
   "icons": {

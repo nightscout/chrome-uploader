@@ -45,6 +45,23 @@ Promise.all([
 	// 	type: "POST",
 	// 	contentType: "application/json"
 	// });
+	chrome.storage.local.get("egvrecords", function(storage) {
+		debugger;
+		var existing = storage.egvrecords || [];
+		var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
+		var to_save = existing.concat(data.filter(function(egv) {
+			return egv.displayTime > max_existing;
+		}).map(function(egv) {
+			return {
+				displayTime: +egv.displayTime,
+				bgValue: egv.bgValue,
+				trend: egv.trend
+			};
+		}));
+		chrome.storage.local.set({ egvrecords: to_save }, console.log.bind(console, "Saved results"));
+	});
+	
+
 	$.post(diypsconfig.endPoint,
 		{
 			records: JSON.stringify(data.map(function(plot) {
@@ -57,7 +74,6 @@ Promise.all([
 		}
 	);
 	var trend = data.map(function(plot) {
-
 		return [
 			+plot.displayTime,
 			plot.bgValue

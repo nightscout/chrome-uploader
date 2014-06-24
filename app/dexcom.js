@@ -100,9 +100,10 @@ var dexcom = (function () {
 				dexcom.buffer = [];
 				callback(packet);
 			} else {
+				var delta = Math.max(0, to - 500);
 				setTimeout(function() {
-					dexcom.readSerial(bytes, 0, callback);
-				}, to);
+					dexcom.readSerial(bytes, delta, callback);
+				}, 500);
 			}
 		},
 		writeSerial: function(bytes, callback) {
@@ -168,7 +169,7 @@ var dexcom = (function () {
 			getLastEGVPage[11] = checksum[1];
 
 			dexcom.writeSerial(buf, function() {
-				dexcom.readSerial(2122, 5000, callback);
+				dexcom.readSerial(2118, 5000, callback); // was 2122
 				console.log("[getLastFourPages] returned");
 			});
 			console.log("[getLastFourPages] called");

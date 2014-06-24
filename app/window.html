@@ -22,6 +22,18 @@
 		</style>
 	</head>
 	<body>
-		<div id="dexcomtrend"></div>
+		<div class="header">
+			<div id="cgmnow"></div><div id="cgmdirection"></div><div id="cgmtime"></div>
+		</div>
+		<div class="body">
+			<div id="dexcomtrend"></div>
+			<select id="timewindow">
+				<option value="1">1 Hour</option>
+				<option value="3" selected>3 Hours</option>
+				<option value="6">6 Hours</option>
+				<option value="12">12 Hours</option>
+				<option value="24">24 Hours</option>
+			</select>
+		</div>
 	</body>
 </html>

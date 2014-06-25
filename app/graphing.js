@@ -16,11 +16,9 @@ Promise.all([
 	new Promise(function(resolve) {
 		console.debug("[dexcom] loading");
 		dexcom.connect().then(function() {
-			debugger;
 			console.debug("[dexcom] loaded");
 			return dexcom.readFromReceiver(1);
 		}, function() {
-			debugger;
 			console.log("[dexcom] rejected");
 		}).then(function(d) {
 			console.debug("[dexcom] read; disconnecting");
@@ -183,7 +181,6 @@ chrome.storage.local.get("egvrecords", function(values) {
 });
 
 $(function() {
-	debugger;
 	$('#reset').confirmation({
 		title: "Are you sure? This will delete all your data and cannot be undone.",
 		onConfirm: function() {

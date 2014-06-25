@@ -1,3 +1,5 @@
+require(["dexcom"], function(dexcom) { 
+
 Promise.all([
 	new Promise(function(resolve, reject) {
 		console.debug("[dexcom] loading");
@@ -115,6 +117,8 @@ Promise.all([
 			console.debug(e);
 		}
 	}, (30).seconds());
+}, function(){
+	console.log(arguments);
 });
 
 var saveToMongoLab = function() {
@@ -217,4 +221,25 @@ $(function() {
 		};
 		dexcom.connect().then(reader);
 	});
+	$('.dropdown-toggle').dropdown();
+	$("#menuinsights").click(function() {
+		chrome.app.window.create('app/report/insights.html', {
+			id: "insightsreport",
+			bounds: {
+				width: 800,
+				height: 600
+			}
+		});
+	});
+	$("#menudailystats").click(function() {
+		chrome.app.window.create('app/report/dailystats.html', {
+			id: "dailystatsreport",
+			bounds: {
+				width: 800,
+				height: 600
+			}
+		});
+	});
+});
+
 });

@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<title>Line Chart</title>
-		<script src="dexcom.js"></script>
+		<script src="../vendor/requirejs/require.js"></script>
 		<script src="../vendor/jquery/dist/jquery.min.js"></script>
 		<script src="../vendor/flot/jquery.flot.js"></script>
 		<script src="../vendor/flot/jquery.flot.time.js"></script>
@@ -10,6 +10,7 @@
 		<script src="graphing.js"></script>
 		<link rel="stylesheet" href="/vendor/bootstrap/dist/css/bootstrap.min.css">
 		<script src="/vendor/bootstrap/dist/js/bootstrap.min.js"></script>
+		<script src="/vendor/bootstrap/js/dropdown.js"></script>
 		<script src="/vendor/bootstrap-confirmation/bootstrap-confirmation.js"></script>
 		<meta name = "viewport" content = "initial-scale = 1, user-scalable = no">
 		<style>
@@ -56,16 +57,26 @@
 					</button>
 					<a class="navbar-brand" href="#">Chromadex</a>
 				</div>
-				<nav class="navbar-collapse collapse" role="navigation">
+				<div class="navbar-collapse collapse" role="navigation">
 					<ul class="nav navbar-nav">
 						<li><a href="#">Receiver</a></li>
-						<li><a href="#">Reports</a></li>
+						<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Reports</a>
+							<ul class="dropdown-menu" role="menu">
+								<li><a href="#" id="menudailystats">Daily Stats</a></li>
+								<li><a href="#" id="menudailytrends">Daily Trends</a></li>
+								<li><a href="#" id="menudistribution">Distribution</a></li>
+								<li><a href="#" id="menuglucosetrends">Glucose Trends</a></li>
+								<li><a href="#" id="menuhourlystats">Hourly Stats</a></li>
+								<li><a href="#" id="menusuccessreport">Success Report</a></li>
+								<li><a href="#" id="menuinsights">Trends and Insights</a></li>
+							</ul>
+						</li>
 					</ul>
 					<form class="navbar-form navbar-right" role="form">
 						<button type="submit" class="btn btn-primary" id="import">Download all</button>
 						<button type="submit" class="btn btn-danger" id="reset" data-placement="bottom" data-tooltip="Are you sure you want to reset? This cannot be undone.">Reset</button>
 					</form>
-				</nav><!--/.navbar-collapse -->
+				</div><!--/.navbar-collapse -->
 			</div>
 		</div>
 		<div class="container">

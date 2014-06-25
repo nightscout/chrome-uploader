@@ -61,6 +61,16 @@ var dexcom = (function () {
 							dexcom.connection = conn;
 							dexcom.connected = true;
 							console.debug("[connecting] successfully connected to port %o", conn);
+							setTimeout(function() {
+								debugger;
+								try {
+									resolve();
+								} catch (e) {
+									debugger;
+									console.log(e);
+								}
+								
+							},100);
 						} else {
 							throw new Error(
 								"Couldn't open USB connection. Unplug your Dexcom, plug it back in, and try again."
@@ -73,7 +83,6 @@ var dexcom = (function () {
 						dexcom.port = port;
 						console.debug("[connecting] Found dexcom at port %o", port);
 						chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
-						resolve();
 					});
 					if (!dexcom.connected) reject();
 				});
@@ -127,14 +136,20 @@ var dexcom = (function () {
 			console.debug("[connection (low-level)] wrote command to serial");
 		},
 		readFromReceiver: function(pageOffset, callback) {
-			//locate the EGV data pages
-			console.debug("[readFromReceiver] read page %i from serial", pageOffset);
-			dexcom.getEGVDataPageRange(function(dexcomPageRange) {
-				dexcom.getLastFourPages(dexcomPageRange, pageOffset, function(databasePages) {
-					databasePages = databasePages.slice(4); // why? i dunno
-					callback(dexcom.parseDatabasePages(databasePages));
+			return new Promise(function(resolve,reject) {
+				console.debug("[readFromReceiver] read page %i from serial", pageOffset);
+				dexcom.getEGVDataPageRange(function(dexcomPageRange) {
+					dexcom.getLastFourPages(dexcomPageRange, pageOffset, function(databasePages) {
+						databasePages = databasePages.slice(4); // why? i dunno
+						var data = dexcom.parseDatabasePages(databasePages);
+						if (typeof callback == "function")
+							callback(data);
+						resolve(data);
+					});
 				});
 			});
+			//locate the EGV data pages
+			
 		},
 		getEGVDataPageRange: function(callback) {
 			if (!dexcom.connected) {

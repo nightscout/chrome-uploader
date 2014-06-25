@@ -61,16 +61,7 @@ var dexcom = (function () {
 							dexcom.connection = conn;
 							dexcom.connected = true;
 							console.debug("[connecting] successfully connected to port %o", conn);
-							setTimeout(function() {
-								debugger;
-								try {
-									resolve();
-								} catch (e) {
-									debugger;
-									console.log(e);
-								}
-								
-							},100);
+							setTimeout(resolve, 100);
 						} else {
 							throw new Error(
 								"Couldn't open USB connection. Unplug your Dexcom, plug it back in, and try again."
@@ -84,7 +75,7 @@ var dexcom = (function () {
 						console.debug("[connecting] Found dexcom at port %o", port);
 						chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
 					});
-					if (!dexcom.connected) reject();
+					// if (!dexcom.connected) reject();
 				});
 
 				chrome.serial.onReceive.addListener(dexcom.serialOnReceiveListener);

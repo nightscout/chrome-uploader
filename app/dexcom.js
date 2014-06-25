@@ -63,9 +63,9 @@ var dexcom = (function () {
 							console.debug("[connecting] successfully connected to port %o", conn);
 							setTimeout(resolve, 100);
 						} else {
-							throw new Error(
+							reject(new Error(
 								"Couldn't open USB connection. Unplug your Dexcom, plug it back in, and try again."
-							);
+							));
 						}
 					};
 					var dex = "/dev/tty.usbmodem";
@@ -75,7 +75,11 @@ var dexcom = (function () {
 						console.debug("[connecting] Found dexcom at port %o", port);
 						chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
 					});
-					// if (!dexcom.connected) reject();
+					if (dexcom.port == null) {
+						reject(new Error(
+							"Didn't find a Dexcom receiver plugged in"
+						));
+					}
 				});
 
 				chrome.serial.onReceive.addListener(dexcom.serialOnReceiveListener);

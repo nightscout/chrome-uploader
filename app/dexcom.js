@@ -1,4 +1,4 @@
-var dexcom = (function () {
+define(function () {
 	// http://stackoverflow.com/questions/8482309/converting-javascript-integer-to-byte-array-and-back
 	function intFromBytes(x) {
 		var val = 0;
@@ -48,7 +48,7 @@ var dexcom = (function () {
 		return bytes;
 	}
 
-	var driver = {
+	var dexcom = {
 		connected: false,
 		connection: null,
 		port: null,
@@ -75,7 +75,7 @@ var dexcom = (function () {
 						console.debug("[connecting] Found dexcom at port %o", port);
 						chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
 					});
-					if (dexcom.port == null) {
+					if (dexcom.port === null) {
 						reject(new Error(
 							"Didn't find a Dexcom receiver plugged in"
 						));
@@ -290,6 +290,5 @@ var dexcom = (function () {
 			return recordsToReturn;
 		}
 	};
-
-	return driver;
-})();
+	return dexcom;
+});

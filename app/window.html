@@ -19,11 +19,36 @@
 				width: 550px;
 				height: 250px;
 			}
+			#cgmnow {
+				width: 30%;
+				float: left;
+				font-size: 18pt;
+				text-align: right;
+			}
+			#cgmdirection {
+				float: left;
+				font-size: 18pt;
+				color: #aaa;
+				width: 15%;
+			}
+			#cgmtime {
+				float: left;
+				width: 35%;
+			}
+			#openreports {
+				width: 20%;
+			}
+			.header {
+				padding-bottom: 10px;
+			}
+			#reset {
+				float: right;
+			}
 		</style>
 	</head>
 	<body>
 		<div class="header">
-			<div id="cgmnow"></div><div id="cgmdirection"></div><div id="cgmtime"></div>
+			<div id="cgmnow"></div><div id="cgmdirection"></div><div id="cgmtime"></div><button id="#openreports">Reports</button>
 		</div>
 		<div class="body">
 			<div id="dexcomtrend"></div>
@@ -34,6 +59,7 @@
 				<option value="12">12 Hours</option>
 				<option value="24">24 Hours</option>
 			</select>
+			<button id="reset">Reset data</button>
 		</div>
 	</body>
 </html>

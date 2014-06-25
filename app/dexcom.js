@@ -55,6 +55,9 @@ define(function () {
 		buffer: [],
 		connect: function() {
 			return new Promise(function(resolve, reject) {
+				if (dexcom.connected) {
+					return resolve();
+				}
 				chrome.serial.getDevices(function(ports) {
 					var connected = function(conn) {
 						if (conn && "connectionId" in conn) {

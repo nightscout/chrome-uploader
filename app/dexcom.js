@@ -90,7 +90,7 @@ var dexcom = (function () {
 				var bufView=new Uint8Array(info.data);
 				console.debug("[connection (low-level)] incoming data; %i bytes", bufView.byteLength);
 				for (var i=0; i<bufView.byteLength; i++) {
-						dexcom.buffer.push(bufView[i]);
+					dexcom.buffer.push(bufView[i]);
 				}
 			}
 		},
@@ -132,16 +132,20 @@ var dexcom = (function () {
 		},
 		readFromReceiver: function(pageOffset, callback) {
 			return new Promise(function(resolve,reject) {
-				console.debug("[readFromReceiver] read page %i from serial", pageOffset);
-				dexcom.getEGVDataPageRange(function(dexcomPageRange) {
-					dexcom.getLastFourPages(dexcomPageRange, pageOffset, function(databasePages) {
-						databasePages = databasePages.slice(4); // why? i dunno
-						var data = dexcom.parseDatabasePages(databasePages);
-						if (typeof callback == "function")
-							callback(data);
-						resolve(data);
+				try {
+					console.debug("[readFromReceiver] read page %i from serial", pageOffset);
+					dexcom.getEGVDataPageRange(function(dexcomPageRange) {
+						dexcom.getLastFourPages(dexcomPageRange, pageOffset, function(databasePages) {
+							databasePages = databasePages.slice(4); // why? i dunno
+							var data = dexcom.parseDatabasePages(databasePages);
+							if (typeof callback == "function")
+								callback(data);
+							resolve(data);
+						});
 					});
-				});
+				} catch (e) {
+					reject(e);
+				}
 			});
 			//locate the EGV data pages
 			

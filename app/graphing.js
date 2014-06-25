@@ -16,15 +16,16 @@ Promise.all([
 	new Promise(function(resolve) {
 		console.debug("[dexcom] loading");
 		dexcom.connect().then(function() {
+			debugger;
 			console.debug("[dexcom] loaded");
-			setTimeout(function() {
-				console.debug("[dexcom] reading");
-				dexcom.readFromReceiver(1, function(d) {
-					console.debug("[dexcom] read; disconnecting");
-					dexcom.disconnect();
-					resolve(d);
-				});
-			}, 500);
+			return dexcom.readFromReceiver(1);
+		}, function() {
+			debugger;
+			console.log("[dexcom] rejected");
+		}).then(function(d) {
+			console.debug("[dexcom] read; disconnecting");
+			dexcom.disconnect();
+			resolve(d);
 		});
 	}),
 	new Promise(function(resolve) {
@@ -85,44 +86,45 @@ Promise.all([
 	var lastNewRecord = Date.now();
 	
 	var updateLocalDb = function(data) {
-		chrome.storage.local.get("egvrecords", function(storage) {
-			var existing = storage.egvrecords || [];
-			var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
-			var new_records = data.filter(function(egv) {
-				return +egv.displayTime > max_existing;
-			}).map(function(egv) {
-				return {
-					displayTime: +egv.displayTime,
-					bgValue: egv.bgValue,
-					trend: egv.trend
-				};
-			});
-			var to_save = existing.concat(new_records);
-			to_save.sort(function(a,b) {
-				return a.displayTime - b.displayTime;
-			})
-			chrome.storage.local.set({ egvrecords: to_save }, console.debug.bind(console, "[updateLocalDb] Saved results"));
-			console.log("%i new records", new_records.length);
-			if (new_records.length == 0) {
-				if (lastNewRecord + (5).minutes() < Date.now()) {
-					console.log("[updateLocalDb] Something's wrong. We should have new data by now.");
+		return new Promise(function(resolve) {
+			chrome.storage.local.get("egvrecords", function(storage) {
+				var existing = storage.egvrecords || [];
+				var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
+				var new_records = data.filter(function(egv) {
+					return +egv.displayTime > max_existing;
+				}).map(function(egv) {
+					return {
+						displayTime: +egv.displayTime,
+						bgValue: egv.bgValue,
+						trend: egv.trend
+					};
+				});
+				var to_save = existing.concat(new_records);
+				to_save.sort(function(a,b) {
+					return a.displayTime - b.displayTime;
+				})
+				chrome.storage.local.set({ egvrecords: to_save }, console.debug.bind(console, "[updateLocalDb] Saved results"));
+				console.log("%i new records", new_records.length);
+				if (new_records.length == 0) {
+					if (lastNewRecord + (5).minutes() < Date.now()) {
+						console.log("[updateLocalDb] Something's wrong. We should have new data by now.");
+					}
+				} else {
+					lastNewRecord = Date.now();
 				}
-			} else {
-				lastNewRecord = Date.now();
-			}
+				resolve();
+			});
 		});
+		
 	};
 	updateLocalDb(data);
 	setInterval(function() {
 		console.log("Attempting to refresh data");
 		try {
 			dexcom.connect().then(function() {
-				setTimeout(function() {
-					dexcom.readFromReceiver(1, function(data) {
-						dexcom.disconnect();
-						updateLocalDb(data);
-					});
-				}, 500);
+				return dexcom.readFromReceiver(1);
+			}).then(updateLocalDb).then(function() {
+				dexcom.disconnect();
 			});
 		} catch (e) {
 			console.debug(e);

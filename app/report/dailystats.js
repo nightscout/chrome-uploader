@@ -13,12 +13,12 @@ new Promise(function(ready) {
 	var minForDay, maxForDay;
 	var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
 
-	var data = data.filter(function(record) {
+	data = data.filter(function(record) {
 		return record.displayTime > sevendaysago;
 	});
 	var table = $("<table>");
-	debugger;
 	var thead = $("<tr/>");
+	$("<th></th>").appendTo(thead);
 	$("<th>Date</th>").appendTo(thead);
 	$("<th>Lows</th>").appendTo(thead);
 	$("<th>Normal</th>").appendTo(thead);
@@ -28,7 +28,7 @@ new Promise(function(ready) {
 	$("<th>Max</th>").appendTo(thead);
 	thead.appendTo(table);
 
-	for (var day = days; day > 0; day--) {
+	[7,6,5,4,3,2,1].forEach(function(day) {
 		var tr = $("<tr>");
 		var dayInQuestion = new Date(Date.now() - (day).days());
 		dayInQuestion.setSeconds(0);
@@ -39,7 +39,6 @@ new Promise(function(ready) {
 
 
 
-		$("<td>" + (months[dayInQuestion.getMonth()] + "/" + dayInQuestion.getDate()) + "</td>").appendTo(tr);
 		var daysRecords = data.filter(function(r) {
 			return r.displayTime >= dayInQuestion.getTime() && r.displayTime <= dayEnds;
 		});
@@ -61,6 +60,36 @@ new Promise(function(ready) {
 			normal: 0,
 			highs: 0
 		});
+		$("<td><div id=\"chart" + day.toString() + "\" class=\"inlinepiechart\"></div></td>").appendTo(tr);
+		setTimeout(function() {
+			var inrange = [
+				{
+					label: "Low",
+					data: Math.floor(stats.lows * 100 / daysRecords.length)
+				},
+				{
+					label: "In range",
+					data: Math.floor(stats.normal * 100 / daysRecords.length)
+				},
+				{
+					label: "High",
+					data: Math.floor(stats.highs * 100 / daysRecords.length)
+				}
+			];
+			$.plot(
+				"#chart" + day.toString(),
+				inrange,
+				{
+					series: {
+						pie: {
+							show: true
+						}
+					},
+					colors: ["#f88", "#8f8", "#ff8"]
+				}
+			);
+		}, 50);
+		$("<td>" + (months[dayInQuestion.getMonth()] + "/" + dayInQuestion.getDate()) + "</td>").appendTo(tr);
 		$("<td>" + Math.floor((100 * stats.lows) / daysRecords.length) + "%</td>").appendTo(tr);
 		$("<td>" + Math.floor((100 * stats.normal) / daysRecords.length) + "%</td>").appendTo(tr);
 		$("<td>" + Math.floor((100 * stats.highs) / daysRecords.length) + "%</td>").appendTo(tr);
@@ -70,7 +99,7 @@ new Promise(function(ready) {
 
 
 		table.append(tr);
-	}
+	});
 
 	report.append(table);
 

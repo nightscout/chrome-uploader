@@ -3,8 +3,8 @@ chrome.app.runtime.onLaunched.addListener(function() {
 	var app = chrome.app.window.create('app/window.html', {
 		id: "dexcomcharting",
 		bounds: {
-			width: 600,
-			height: 300
+			width: 800,
+			height: 350
 		}
 	});
 });

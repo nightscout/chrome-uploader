@@ -139,7 +139,7 @@ var saveToDiyPS = function() {
 }
 
 function drawReceiverChart(data) {
-	var t = parseInt($("#timewindow").val(),10);
+	var t = 3; //parseInt($("#timewindow").val(),10);
 	var now = (new Date()).getTime();
 	var trend = data.map(function(plot) {
 		return [
@@ -181,14 +181,24 @@ chrome.storage.local.get("egvrecords", function(values) {
 });
 
 $(function() {
-	$("#timewindow").change(function(t) {
-		chrome.storage.local.get("egvrecords", function(values) {
-			drawReceiverChart(values.egvrecords);
-		});
-	});
-	$("#reset").click(function(b) {
-		if (confirm("Are you want to delete all this data? There's no undo.")) {
+	debugger;
+	$('#reset').confirmation({
+		title: "Are you sure? This will delete all your data and cannot be undone.",
+		onConfirm: function() {
 			chrome.storage.local.remove("egvrecords", function() { });
 		}
 	});
-});
+})
+
+// $(function() {
+// 	$("#timewindow").change(function(t) {
+// 		chrome.storage.local.get("egvrecords", function(values) {
+// 			drawReceiverChart(values.egvrecords);
+// 		});
+// 	});
+// 	// $("#reset").click(function(b) {
+// 	// 	if (confirm("Are you want to delete all this data? There's no undo.")) {
+// 	// 		chrome.storage.local.remove("egvrecords", function() { });
+// 	// 	}
+// 	// });
+// });

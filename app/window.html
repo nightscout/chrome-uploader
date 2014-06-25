@@ -7,17 +7,20 @@
 		<script src="../vendor/flot/jquery.flot.js"></script>
 		<script src="../vendor/flot/jquery.flot.time.js"></script>
 		<script src="graphing.js"></script>
+		<link rel="stylesheet" href="/vendor/bootstrap/dist/css/bootstrap.min.css">
+		<script src="/vendor/bootstrap/dist/js/bootstrap.min.js"></script>
+		<script src="/vendor/bootstrap-confirmation/bootstrap-confirmation.js"></script>
 		<meta name = "viewport" content = "initial-scale = 1, user-scalable = no">
 		<style>
 			canvas{
 			}
 			body {
 				background-color: #222;
-				color: #eee;
+				padding-top: 60px;
 			}
 			#dexcomtrend {
-				width: 550px;
-				height: 250px;
+				width: 100%;
+				height: 100%;
 			}
 			#cgmnow {
 				width: 30%;
@@ -26,40 +29,52 @@
 				text-align: right;
 			}
 			#cgmdirection {
-				float: left;
 				font-size: 18pt;
 				color: #aaa;
 				width: 15%;
 			}
 			#cgmtime {
-				float: left;
 				width: 35%;
 			}
 			#openreports {
 				width: 20%;
 			}
-			.header {
-				padding-bottom: 10px;
-			}
-			#reset {
-				float: right;
-			}
 		</style>
 	</head>
 	<body>
-		<div class="header">
-			<div id="cgmnow"></div><div id="cgmdirection"></div><div id="cgmtime"></div><button id="#openreports">Reports</button>
+		<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#">Chromadex</a>
+				</div>
+				<nav class="navbar-collapse collapse" role="navigation">
+					<ul class="nav navbar-nav">
+						<li><a href="#">Receiver</a></li>
+						<li><a href="#">Reports</a></li>
+					</ul>
+					<form class="navbar-form navbar-right" role="form">
+						<button type="submit" class="btn btn-danger" id="reset" data-placement="bottom" data-tooltip="Are you sure you want to reset? This cannot be undone.">Reset</button>
+					</form>
+				</nav><!--/.navbar-collapse -->
+			</div>
 		</div>
-		<div class="body">
-			<div id="dexcomtrend"></div>
-			<select id="timewindow">
-				<option value="1">1 Hour</option>
-				<option value="3" selected>3 Hours</option>
-				<option value="6">6 Hours</option>
-				<option value="12">12 Hours</option>
-				<option value="24">24 Hours</option>
-			</select>
-			<button id="reset">Reset data</button>
+		<div class="container">
+			<div class="row">
+				<div class="container col-xs-10" style="background-color:#222; height:250px;">
+					<div id="dexcomtrend"></div>
+				</div>
+				<div class="container col-xs-2">
+					<div id="cgmnow"></div>
+					<div id="cgmdirection"></div>
+					<div id="cgmtime"></div>
+				</div>
+			</div>
 		</div>
 	</body>
 </html>

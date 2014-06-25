@@ -1,11 +1,12 @@
 Promise.all([
-	new Promise(function(resolve) {
+	new Promise(function(resolve, reject) {
 		console.debug("[dexcom] loading");
 		dexcom.connect().then(function() {
 			console.debug("[dexcom] loaded");
 			return dexcom.readFromReceiver(1);
-		}, function() {
+		}, function(e) {
 			console.log("[dexcom] rejected");
+			reject(e);
 		}).then(function(d) {
 			console.debug("[dexcom] read; disconnecting");
 			dexcom.disconnect();
@@ -173,17 +174,47 @@ $(function() {
 			chrome.storage.local.remove("egvrecords", function() { });
 		}
 	});
-})
+	$('#import').click(function(b){
+		var i = 1;
+		var data = [];
+		debugger;
+		var compile = function(i) {
+			return new Promise(function(resolve,reject) {
+				dexcom.readFromReceiver(i).then(function(d) {
+					data.push(d);
 
-// $(function() {
-// 	$("#timewindow").change(function(t) {
-// 		chrome.storage.local.get("egvrecords", function(values) {
-// 			drawReceiverChart(values.egvrecords);
-// 		});
-// 	});
-// 	// $("#reset").click(function(b) {
-// 	// 	if (confirm("Are you want to delete all this data? There's no undo.")) {
-// 	// 		chrome.storage.local.remove("egvrecords", function() { });
-// 	// 	}
-// 	// });
-// });
+					if (d.length) {
+						resolve(d);	
+					} else {
+						reject();
+					}
+				});
+			});
+		},
+		reader = function() {
+			compile(i).then(function() {
+				i++;
+				reader();
+			}, function() {
+				dexcom.disconnect();
+				var existing = [];
+				var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
+					return {
+						displayTime: +egv.displayTime,
+						bgValue: egv.bgValue,
+						trend: egv.trend
+					};
+				});
+				var to_save = existing.concat(new_records);
+				to_save.sort(function(a,b) {
+					return a.displayTime - b.displayTime;
+				});
+				chrome.storage.local.remove("egvrecords", function() {
+					chrome.storage.local.set({ egvrecords: to_save }, console.debug.bind(console, "[updateLocalDb] Saved results"));
+				});
+				console.log("%i new records (about %i days)", new_records.length, Math.ceil(data.length * 3 / 4)); // 1 page holds about 18h (3/4 of 1 day)
+			});
+		};
+		dexcom.connect().then(reader);
+	});
+});

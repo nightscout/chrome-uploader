@@ -76,7 +76,6 @@ new Promise(function(ready) {
 
 
 	setTimeout(function() {
-		debugger;
 		// var data = $.plot.candlestick.createCandlestick({
 		// 	label:"my Company",
 		// 	data:stats,

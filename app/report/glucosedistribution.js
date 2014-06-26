@@ -58,7 +58,6 @@ new Promise(function(ready) {
 		$("<td>" + rangeRecords[midpoint].bgValue + "</td>").appendTo(tr);
 		$("<td>" + Math.floor(Statician.standard_deviation(bgValues)*10)/10 + "</td>").appendTo(tr);
 
-
 		table.append(tr);
 	});
 

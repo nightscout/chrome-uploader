@@ -11,7 +11,7 @@ new Promise(function(ready) {
 	var sevendaysago = Date.now() - days.days();
 	var report = $("#report");
 	var minForDay, maxForDay;
-	var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
+	var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
 
 	data = data.filter(function(record) {
 		return record.displayTime > sevendaysago;
@@ -26,6 +26,10 @@ new Promise(function(ready) {
 	$("<th>Readings</th>").appendTo(thead);
 	$("<th>Min</th>").appendTo(thead);
 	$("<th>Max</th>").appendTo(thead);
+	$("<th>StDev</th>").appendTo(thead);
+	$("<th>25%</th>").appendTo(thead);
+	$("<th>Median</th>").appendTo(thead);
+	$("<th>75%</th>").appendTo(thead);
 	thead.appendTo(table);
 
 	[7,6,5,4,3,2,1].forEach(function(day) {
@@ -60,20 +64,21 @@ new Promise(function(ready) {
 			normal: 0,
 			highs: 0
 		});
+		var bgValues = daysRecords.map(function(r) { return r.bgValue; });
 		$("<td><div id=\"chart" + day.toString() + "\" class=\"inlinepiechart\"></div></td>").appendTo(tr);
 		setTimeout(function() {
 			var inrange = [
 				{
 					label: "Low",
-					data: Math.floor(stats.lows * 100 / daysRecords.length)
+					data: Math.floor(stats.lows * 1000 / daysRecords.length) / 10
 				},
 				{
 					label: "In range",
-					data: Math.floor(stats.normal * 100 / daysRecords.length)
+					data: Math.floor(stats.normal * 1000 / daysRecords.length) / 10
 				},
 				{
 					label: "High",
-					data: Math.floor(stats.highs * 100 / daysRecords.length)
+					data: Math.floor(stats.highs * 1000 / daysRecords.length) / 10
 				}
 			];
 			$.plot(
@@ -89,13 +94,18 @@ new Promise(function(ready) {
 				}
 			);
 		}, 50);
-		$("<td>" + (months[dayInQuestion.getMonth()] + "/" + dayInQuestion.getDate()) + "</td>").appendTo(tr);
+		$("<td>" + (months[dayInQuestion.getMonth()] + " " + dayInQuestion.getDate()) + "</td>").appendTo(tr);
 		$("<td>" + Math.floor((100 * stats.lows) / daysRecords.length) + "%</td>").appendTo(tr);
 		$("<td>" + Math.floor((100 * stats.normal) / daysRecords.length) + "%</td>").appendTo(tr);
 		$("<td>" + Math.floor((100 * stats.highs) / daysRecords.length) + "%</td>").appendTo(tr);
 		$("<td>" + daysRecords.length +"</td>").appendTo(tr);
 		$("<td>" + minForDay +"</td>").appendTo(tr);
 		$("<td>" + maxForDay +"</td>").appendTo(tr);
+		$("<td>" + Math.floor(ss.standard_deviation(bgValues)) + "</td>").appendTo(tr);
+		$("<td>" + ss.quantile(bgValues, 0.25) + "</td>").appendTo(tr);
+		$("<td>" + ss.quantile(bgValues, 0.5) + "</td>").appendTo(tr);
+		$("<td>" + ss.quantile(bgValues, 0.75) + "</td>").appendTo(tr);
+
 
 
 		table.append(tr);

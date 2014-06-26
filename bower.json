@@ -8,6 +8,7 @@
     "qunit-phantom-runner": "jonkemp/qunit-phantomjs-runner#3575d9f9850f4c5f30f3595e66e0d59866d53fa5",
     "bootstrap": "~3.1.1",
     "bootstrap-confirmation": "*",
-    "requirejs": "~2.1.14"
+    "requirejs": "~2.1.14",
+    "simple-statistics": "~0.8.1"
   }
 }

@@ -1,6 +1,8 @@
 require(["dexcom"], function(dexcom) { 
 
 Promise.all([
+	// load config-y stuff
+
 	new Promise(function(resolve, reject) {
 		console.debug("[dexcom] loading");
 		dexcom.connect().then(function() {
@@ -40,7 +42,8 @@ Promise.all([
 	mongoconfig = results[1],
 	diypsconfig = results[2];
 	var lastNewRecord = Date.now();
-	
+
+	// update my db
 	var updateLocalDb = function(data) {
 		return new Promise(function(resolve) {
 			chrome.storage.local.get("egvrecords", function(storage) {
@@ -73,7 +76,11 @@ Promise.all([
 		});
 		
 	};
+
+	// do it
 	updateLocalDb(data);
+
+	// again and again
 	setInterval(function() {
 		console.log("Attempting to refresh data");
 		try {
@@ -140,12 +147,14 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
 	}
 });
 
-// first load
+// first load, before receiver's returned data
 chrome.storage.local.get("egvrecords", function(values) {
 	drawReceiverChart(values.egvrecords);
 });
 
 $(function() {
+	// event handlers
+
 	$('#reset').confirmation({
 		title: "Are you sure? This will delete all your data and cannot be undone.",
 		onConfirm: function() {
@@ -155,7 +164,6 @@ $(function() {
 	$('#import').click(function(b){
 		var i = 1;
 		var data = [];
-		debugger;
 		var compile = function(i) {
 			return new Promise(function(resolve,reject) {
 				dexcom.readFromReceiver(i).then(function(d) {
@@ -173,7 +181,7 @@ $(function() {
 			compile(i).then(function() {
 				i++;
 				reader();
-			}, function() {
+			}, function() { // no more data
 				dexcom.disconnect();
 				var existing = [];
 				var new_records = Array.prototype.concat.apply([], data).map(function(egv) {

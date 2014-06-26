@@ -101,11 +101,13 @@ define(function () {
 			var packet;
 			if (dexcom.buffer.length >= bytes) {
 				packet = dexcom.buffer.slice(0,bytes);
+				console.info("0x" + packet.map(function(byte) { return ("0" + byte.toString(16)).substr(-2); }).join("") );
 				dexcom.buffer = dexcom.buffer.slice(0 - bytes);
 				callback(packet);
 			} else if (to === 0) {
 				packet = dexcom.buffer;
 				dexcom.buffer = [];
+				console.info("0x" + packet.map(function(byte) { return ("0" + byte.toString(16)).substr(-2); }).join("") );
 				callback(packet);
 			} else {
 				var delta = Math.max(0, to - 50);

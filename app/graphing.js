@@ -61,10 +61,10 @@ Promise.all([
 				var to_save = existing.concat(new_records);
 				to_save.sort(function(a,b) {
 					return a.displayTime - b.displayTime;
-				})
+				});
 				chrome.storage.local.set({ egvrecords: to_save }, console.debug.bind(console, "[updateLocalDb] Saved results"));
 				console.log("%i new records", new_records.length);
-				if (new_records.length == 0) {
+				if (new_records.length === 0) {
 					if (lastNewRecord + (5).minutes() < Date.now()) {
 						console.log("[updateLocalDb] Something's wrong. We should have new data by now.");
 					}
@@ -107,7 +107,7 @@ var saveToMongoLab = function(data) {
 var saveToDiyPS = function(data) {
 	if (diypsconfig.endPoint) require(["./datasource/diyps"], function(diyps) {
 		diyps.replace(data, diypsconfig);
-	})
+	});
 };
 
 function drawReceiverChart(data) {

@@ -36,40 +36,9 @@ Promise.all([
 		});
 	})
 ]).then(function(results) {
-	var data = results[0],
-		mongoconfig = results[1],
-		diypsconfig = results[2];
-	saveToMongoLab = function(data) {
-		// $.ajax({
-		// 	url: "https://api.mongolab.com/api/1/databases/dexcomhistory/collections/egv?apiKey=" + mongoconfig.apikey,
-		// 	data: JSON.stringify(data.map(function(plot) {
-		// 		return {
-		// 			device: "dexcom",
-		// 			timestamp: +plot.displayTime,
-		// 			bg: plot.bgValue,
-		// 			direction: plot.trend
-		// 		};
-		// 	})),
-		// 	type: "POST",
-		// 	contentType: "application/json"
-		// });	
-	},
-	saveToDiyPS = function(data) {
-		console.debug("[saveToDiyPS] firing off");
-		if (diypsconfig.length)
-		$.post(diypsconfig.endPoint,
-			{
-				records: JSON.stringify(data.map(function(plot) {
-					return [
-						+plot.displayTime,
-						plot.bgValue,
-						plot.trend
-					];
-				}))
-			}
-		);
-	};
-
+	var data = results[0];
+	mongoconfig = results[1],
+	diypsconfig = results[2];
 	var lastNewRecord = Date.now();
 	
 	var updateLocalDb = function(data) {
@@ -121,13 +90,18 @@ Promise.all([
 	console.log(arguments);
 });
 
-var saveToMongoLab = function() {
-	// stub
-}
+var mongoconfig = {}, diypsconfig = {};
+var saveToMongoLab = function(data) {
+	if (mongoconfig.apikey) require(["datasource/mongolab"], function(mongolab) {
+		mongolab.insert(data[data.length - 1], mongoconfig);
+	});
+};
 
-var saveToDiyPS = function() {
-	// stub
-}
+var saveToDiyPS = function(data) {
+	if (diypsconfig.endPoint) require(["./datasource/diyps"], function(diyps) {
+		diyps.replace(data, diypsconfig);
+	})
+};
 
 function drawReceiverChart(data) {
 	var t = 3; //parseInt($("#timewindow").val(),10);

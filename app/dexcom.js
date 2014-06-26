@@ -56,7 +56,7 @@ define(function () {
 		connect: function() {
 			return new Promise(function(resolve, reject) {
 				if (dexcom.connected) {
-					return resolve();
+					return reject(new Error("Wait for existing process to finish"));
 				}
 				chrome.serial.getDevices(function(ports) {
 					var connected = function(conn) {

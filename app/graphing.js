@@ -235,8 +235,26 @@ $(function() {
 		chrome.app.window.create('app/report/dailystats.html', {
 			id: "dailystatsreport",
 			bounds: {
-				width: 800,
-				height: 600
+				width: 600,
+				height: 650
+			}
+		});
+	});
+	$("#menudistribution").click(function() {
+		chrome.app.window.create('app/report/glucosedistribution.html', {
+			id: "glucosedistribution",
+			bounds: {
+				width: 960,
+				height: 400
+			}
+		});
+	});
+	$("#menuhourlystats").click(function() {
+		chrome.app.window.create('app/report/hourlystats.html', {
+			id: "hourlystats",
+			bounds: {
+				width: 960,
+				height: 800
 			}
 		});
 	});

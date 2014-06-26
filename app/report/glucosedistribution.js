@@ -3,9 +3,12 @@ new Promise(function(ready) {
 	chrome.storage.local.get("egvrecords", function(values) {
 		ready(values.egvrecords);
 	});
+}),
+new Promise(function(ready) {
+	require(["../stats"], ready);
 })
 ]).then(function(o) {
-	var data = o[0];
+	var data = o[0], Statician = o[1];
 	var days = 3 * 30; // months
 	var config = { low: 70, high: 180 };
 	var threemonthsago = new Date(Date.now() - days.days());
@@ -43,12 +46,21 @@ new Promise(function(ready) {
 			}
 		});
 		stats.push(rangeRecords.length);
+		rangeRecords.sort(function(a,b) {
+			return a.bgValue - b.bgValue;
+		});
+
+		var midpoint = Math.floor(rangeRecords.length / 2);
+		var statistics = (new Statician(rangeRecords.map(function(r) { return r.bgValue; }))).stats;
 
 		$("<td>" + range + "</td>").appendTo(tr);
 		$("<td>" + Math.floor(100 * rangeRecords.length / data.length) + "%</td>").appendTo(tr);
 		$("<td>" + rangeRecords.length + "</td>").appendTo(tr);
-		$("<td>" + Math.floor(rangeRecords.map(function(r) { return r.bgValue; }).reduce(function(o,v) { return o+v; }, 0) / rangeRecords.length) + "</td>").appendTo(tr);
-		$("<td colspan=\"2\">I didn't calculate this because I don't care</td>").appendTo(tr);
+		$("<td>" + Math.floor(10*statistics.mean)/10 + "</td>").appendTo(tr);
+		// $("<td colspan=\"2\">I didn't calculate this because I don't care</td>").appendTo(tr);
+		$("<td>" + rangeRecords[midpoint].bgValue + "</td>").appendTo(tr);
+		$("<td>" + Math.floor(10*statistics.deviation)/10 + "</td>").appendTo(tr);
+
 
 		table.append(tr);
 	});

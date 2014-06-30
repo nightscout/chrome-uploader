@@ -5,6 +5,7 @@ new Promise(function(ready) {
 	});
 })
 ]).then(function(o) {
+	var todo = [];
 	var data = o[0];
 	var days = 7;
 	var config = { low: 70, high: 180 };
@@ -46,27 +47,14 @@ new Promise(function(ready) {
 		var daysRecords = data.filter(function(r) {
 			return r.displayTime >= dayInQuestion.getTime() && r.displayTime <= dayEnds;
 		});
-		minForDay = daysRecords[0].bgValue;
-		maxForDay = daysRecords[0].bgValue;
-		var stats = daysRecords.reduce(function(out, record) {
-			if (record.bgValue < config.low) {
-				out.lows++;
-			} else if (record.bgValue < config.high) {
-				out.normal++;
-			} else {
-				out.highs++;
-			}
-			if (minForDay > record.bgValue) minForDay = record.bgValue;
-			if (maxForDay < record.bgValue) maxForDay = record.bgValue;
-			return out;
-		}, {
-			lows: 0,
-			normal: 0,
-			highs: 0
-		});
-		var bgValues = daysRecords.map(function(r) { return r.bgValue; });
-		$("<td><div id=\"chart" + day.toString() + "\" class=\"inlinepiechart\"></div></td>").appendTo(tr);
-		setTimeout(function() {
+		if (daysRecords.length == 0) {
+			$("<td/>").appendTo(tr);
+			$("<td>" + (months[dayInQuestion.getMonth()] + " " + dayInQuestion.getDate()) +  "</td>").appendTo(tr);
+			$("<td colspan=\"10\">No data available</td>").appendTo(tr);
+			table.append(tr);
+			return;
+		}
+		todo.push(function() {
 			var inrange = [
 				{
 					label: "Low",
@@ -93,8 +81,57 @@ new Promise(function(ready) {
 					colors: ["#f88", "#8f8", "#ff8"]
 				}
 			);
-		}, 50);
-		
+		});
+
+		minForDay = daysRecords[0].bgValue;
+		maxForDay = daysRecords[0].bgValue;
+		var stats = daysRecords.reduce(function(out, record) {
+			if (record.bgValue < config.low) {
+				out.lows++;
+			} else if (record.bgValue < config.high) {
+				out.normal++;
+			} else {
+				out.highs++;
+			}
+			if (minForDay > record.bgValue) minForDay = record.bgValue;
+			if (maxForDay < record.bgValue) maxForDay = record.bgValue;
+			return out;
+		}, {
+			lows: 0,
+			normal: 0,
+			highs: 0
+		});
+		var bgValues = daysRecords.map(function(r) { return r.bgValue; });
+		$("<td><div id=\"chart" + day.toString() + "\" class=\"inlinepiechart\"></div></td>").appendTo(tr);
+		todo.push(function() {
+			var inrange = [
+				{
+					label: "Low",
+					data: Math.floor(stats.lows * 1000 / daysRecords.length) / 10
+				},
+				{
+					label: "In range",
+					data: Math.floor(stats.normal * 1000 / daysRecords.length) / 10
+				},
+				{
+					label: "High",
+					data: Math.floor(stats.highs * 1000 / daysRecords.length) / 10
+				}
+			];
+			$.plot(
+				"#chart" + day.toString(),
+				inrange,
+				{
+					series: {
+						pie: {
+							show: true
+						}
+					},
+					colors: ["#f88", "#8f8", "#ff8"]
+				}
+			);
+		});
+
 		$("<td>" + (months[dayInQuestion.getMonth()] + " " + dayInQuestion.getDate()) + "</td>").appendTo(tr);
 		$("<td>" + Math.floor((100 * stats.lows) / daysRecords.length) + "%</td>").appendTo(tr);
 		$("<td>" + Math.floor((100 * stats.normal) / daysRecords.length) + "%</td>").appendTo(tr);
@@ -111,4 +148,11 @@ new Promise(function(ready) {
 	});
 
 	report.append(table);
+
+
+	setTimeout(function() {
+		todo.forEach(function(fn) {
+			fn();
+		});
+	}, 50);
 });

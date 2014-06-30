@@ -15,7 +15,6 @@ new Promise(function(ready) {
 	threemonthsago.setMilliseconds(0);
 	var report = $("#report");
 	var minForDay, maxForDay;
-	var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
 	var stats = [];
 
 	data = data.filter(function(record) {

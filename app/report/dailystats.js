@@ -94,6 +94,7 @@ new Promise(function(ready) {
 				}
 			);
 		}, 50);
+		
 		$("<td>" + (months[dayInQuestion.getMonth()] + " " + dayInQuestion.getDate()) + "</td>").appendTo(tr);
 		$("<td>" + Math.floor((100 * stats.lows) / daysRecords.length) + "%</td>").appendTo(tr);
 		$("<td>" + Math.floor((100 * stats.normal) / daysRecords.length) + "%</td>").appendTo(tr);
@@ -106,11 +107,8 @@ new Promise(function(ready) {
 		$("<td>" + ss.quantile(bgValues, 0.5) + "</td>").appendTo(tr);
 		$("<td>" + ss.quantile(bgValues, 0.75) + "</td>").appendTo(tr);
 
-
-
 		table.append(tr);
 	});
 
 	report.append(table);
-
 });

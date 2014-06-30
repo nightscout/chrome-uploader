@@ -15,10 +15,17 @@
 html {
 	overflow-y: scroll;
 }
+
+@media print {
+	.print {
+		display:none;
+	}
+}
 </style>
 </head>
 <body>
 <h1>Daily Stats for last 7 Days</h1>
+<button class="print">Print</button>
 <div id="report">
 </div>
 </body>

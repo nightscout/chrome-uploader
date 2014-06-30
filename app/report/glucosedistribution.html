@@ -13,10 +13,16 @@
 	height: 3in;
 	float:left;
 }
+@media print {
+	.print {
+		display:none;
+	}
+}
 </style>
 </head>
 <body>
 <h1>Glucose distribution over 3 months</h1>
+<button class="print">Print</button>
 <div id="overviewchart"></div>
 <div id="report">
 </div>

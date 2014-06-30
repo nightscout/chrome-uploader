@@ -149,6 +149,11 @@ new Promise(function(ready) {
 
 	report.append(table);
 
+	$(".print").click(function(e) {
+		e.preventDefault();
+		window.print();
+	});
+
 
 	setTimeout(function() {
 		todo.forEach(function(fn) {

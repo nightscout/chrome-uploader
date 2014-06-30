@@ -13,14 +13,21 @@
 <body>
 <style>
 #overviewchart {
-	width: 12in;
+	width: 100%;
+	min-width: 6.5in;
 	height: 5in;
 }
 html {
 	overflow-y: scroll;
 }
+@media print {
+	.print {
+		display:none;
+	}
+}
 </style>
 <h1>Hourly Stat Report over last 3 months</h1>
+<button class="print">Print</button>
 <div id="overviewchart"></div>
 <div id="report">
 </div>

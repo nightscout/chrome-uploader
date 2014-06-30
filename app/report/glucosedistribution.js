@@ -64,17 +64,21 @@ new Promise(function(ready) {
 
 	setTimeout(function() {
 		$.plot(
-				"#overviewchart",
-				stats,
-				{
-					series: {
-						pie: {
-							show: true
-						}
-					},
-					colors: ["#f88", "#8f8", "#ff8"]
-				}
-			);
+			"#overviewchart",
+			stats,
+			{
+				series: {
+					pie: {
+						show: true
+					}
+				},
+				colors: ["#f88", "#8f8", "#ff8"]
+			}
+		);
 	});
 
+	$(".print").click(function(e) {
+		e.preventDefault();
+		window.print();
+	});
 });

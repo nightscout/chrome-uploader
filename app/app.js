@@ -34,7 +34,15 @@ Promise.all([
 						bgValue: egv.bgValue,
 						trend: egv.trend
 					};
-				}).filter(function(row) {
+				});
+				if (new_records.length === 0) {
+					if (lastNewRecord + (5).minutes() < Date.now()) {
+						console.log("[updateLocalDb] Something's wrong. We should have new data by now.");
+					}
+				} else {
+					lastNewRecord = Date.now();
+				}
+				new_records = new_records.filter(function(row) {
 					return row.bgValue > 30;
 				});
 				var to_save = existing.concat(new_records);
@@ -43,13 +51,7 @@ Promise.all([
 				});
 				chrome.storage.local.set({ egvrecords: to_save }, console.debug.bind(console, "[updateLocalDb] Saved results"));
 				console.log("%i new records", new_records.length);
-				if (new_records.length === 0) {
-					if (lastNewRecord + (5).minutes() < Date.now()) {
-						console.log("[updateLocalDb] Something's wrong. We should have new data by now.");
-					}
-				} else {
-					lastNewRecord = Date.now();
-				}
+				
 				resolve();
 			});
 		});

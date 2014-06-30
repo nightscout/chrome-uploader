@@ -34,6 +34,8 @@ Promise.all([
 						bgValue: egv.bgValue,
 						trend: egv.trend
 					};
+				}).filter(function(row) {
+					return row.bgValue > 30;
 				});
 				var to_save = existing.concat(new_records);
 				to_save.sort(function(a,b) {
@@ -80,8 +82,10 @@ $(function() {
 
 	$('#reset').confirmation({
 		title: "Are you sure? This will delete all your data and cannot be undone.",
-		onConfirm: function() {
-			chrome.storage.local.remove("egvrecords", function() { });
+		onConfirm: function(e) {
+			chrome.storage.local.remove("egvrecords", function() {
+				console.log("removed records");
+			});
 		}
 	});
 	$('#import').click(function(b){
@@ -105,23 +109,36 @@ $(function() {
 				i++;
 				reader();
 			}, function() { // no more data
-				dexcom.disconnect();
-				var existing = [];
-				var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
-					return {
-						displayTime: +egv.displayTime,
-						bgValue: egv.bgValue,
-						trend: egv.trend
-					};
+				chrome.storage.local.get("egvrecords", function(values) {
+					dexcom.disconnect();
+					var existing = values.egvrecords;
+					var existing_ts = existing.map(function(row) {
+						return row.displayTime;
+					});
+					var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
+					debugger;
+					var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
+						return {
+							displayTime: +egv.displayTime,
+							bgValue: egv.bgValue,
+							trend: egv.trend
+						};
+					}).filter(function(row) {
+						return existing_ts.filter(function(ts) {
+							return ts == row.displayTime;
+						}).length == 0;
+					}).filter(function(row) {
+						return row.bgValue > 30;
+					});
+					var to_save = existing.concat(new_records);
+					to_save.sort(function(a,b) {
+						return a.displayTime - b.displayTime;
+					});
+					chrome.storage.local.set({ egvrecords: to_save },
+						console.debug.bind(console, "[updateLocalDb] Saved results")
+					);
+					console.log("%i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
 				});
-				var to_save = existing.concat(new_records);
-				to_save.sort(function(a,b) {
-					return a.displayTime - b.displayTime;
-				});
-				chrome.storage.local.remove("egvrecords", function() {
-					chrome.storage.local.set({ egvrecords: to_save }, console.debug.bind(console, "[updateLocalDb] Saved results"));
-				});
-				console.log("%i new records (about %i days)", new_records.length, Math.ceil(data.length * 3 / 4)); // 1 page holds about 18h (3/4 of 1 day)
 			});
 		};
 		dexcom.connect().then(reader);

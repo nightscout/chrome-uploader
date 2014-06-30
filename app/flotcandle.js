@@ -2,6 +2,7 @@
     var options = {
         series: { candle: null } // or number/string
     };
+    var offset, x, y;
 
     function init(plot) {
         plot.hooks.processOptions.push(processOptions);
@@ -18,9 +19,10 @@
         function drawSeries(plot, ctx, serie){
             if (serie.candle) {
                 offset = plot.getPlotOffset();
+                offset.left = offset.left;
                 var x1 = serie.xaxis.p2c(serie.data[0][0]);
                 var x2 = serie.xaxis.p2c(serie.data[1][0]);
-                var width = x2 - x1;
+                var width = (x2 - x1) * 4 / 5;
                 for (var j = 0; j < serie.data.length; j++) { getAndDrawCandle(ctx, serie, width, serie.data[j]);}
             }
         }
@@ -43,7 +45,7 @@
                 ctx.fillStyle = "#FF0000";
             }
             ctx.strokeStyle = "#000000";
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 0;
             x = offset.left + serie.xaxis.p2c(dt);
             
             //body

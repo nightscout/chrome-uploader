@@ -27,16 +27,19 @@ new Promise(function(ready) {
 		var d = new Date(record.displayTime);
 		pivotedByHour[d.getHours()].push(record);
 	});
-	var table = $("<table>");
+	var table = $("<table width=\"100%\" border=\"1\">");
 	var thead = $("<tr/>");
 	$("<th>Time</th>").appendTo(thead);
 	$("<th>Readings</th>").appendTo(thead);
 	$("<th>Avg</th>").appendTo(thead);
+	$("<th>Min</th>").appendTo(thead);
 	$("<th>Quartile 25</th>").appendTo(thead);
 	$("<th>Median</th>").appendTo(thead);
+	$("<th>Quartile 75</th>").appendTo(thead);
 	$("<th>Max</th>").appendTo(thead);
 	$("<th>St Dev</th>").appendTo(thead);
 	thead.appendTo(table);
+	debugger;
 
 	[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23].forEach(function(hour) {
 		var tr = $("<tr>");
@@ -52,23 +55,31 @@ new Promise(function(ready) {
 		}
 
 		var avg = Math.floor(pivotedByHour[hour].map(function(r) { return r.bgValue; }).reduce(function(o,v){ return o+v; }, 0) / pivotedByHour[hour].length);
-		var d = new Date(); 
-		d.setHours(hour);
-		d.setMinutes(0);
-		d.setSeconds(0);
-		d.setMilliseconds(0);
+		var d = new Date(hour.hours()); 
+		// d.setHours(hour);
+		// d.setMinutes(0);
+		// d.setSeconds(0);
+		// d.setMilliseconds(0);
+
+		var dev = ss.standard_deviation(pivotedByHour[hour].map(function(r) { return r.bgValue; }));
 		stats.push([
-			d,
-			// display,
-			avg - 5,
-			avg + 5,
-			Math.min.apply(Math, pivotedByHour[hour].map(function(r) { return r.bgValue; })),  
-			Math.max.apply(Math, pivotedByHour[hour].map(function(r) { return r.bgValue; }))
+			new Date(d),
+			ss.quantile(pivotedByHour[hour].map(function(r) { return r.bgValue; }), 0.25),
+			ss.quantile(pivotedByHour[hour].map(function(r) { return r.bgValue; }), 0.75),
+			avg - dev,
+			avg + dev
+			// Math.min.apply(Math, pivotedByHour[hour].map(function(r) { return r.bgValue; })),  
+			// Math.max.apply(Math, pivotedByHour[hour].map(function(r) { return r.bgValue; }))
 		]);
 		$("<td>" + display + "</td>").appendTo(tr);
 		$("<td>" + pivotedByHour[hour].length + " (" + Math.floor(100 * pivotedByHour[hour].length / data.length) + "%)</td>").appendTo(tr);
 		$("<td>" + avg + "</td>").appendTo(tr);
-		$("<td colspan=\"4\">Not calculated</td>").appendTo(tr);
+		$("<td>" + Math.min.apply(Math, pivotedByHour[hour].map(function(r) { return r.bgValue; })) + "</td>").appendTo(tr);
+		$("<td>" + ss.quantile(pivotedByHour[hour].map(function(r) { return r.bgValue; }), 0.25) + "</td>").appendTo(tr);
+		$("<td>" + ss.quantile(pivotedByHour[hour].map(function(r) { return r.bgValue; }), 0.5) + "</td>").appendTo(tr);
+		$("<td>" + ss.quantile(pivotedByHour[hour].map(function(r) { return r.bgValue; }), 0.75) + "</td>").appendTo(tr);
+		$("<td>" + Math.max.apply(Math, pivotedByHour[hour].map(function(r) { return r.bgValue; })) + "</td>").appendTo(tr);
+		$("<td>" + Math.floor(dev*10)/10 + "</td>").appendTo(tr);
 		table.append(tr);
 	});
 
@@ -97,7 +108,9 @@ new Promise(function(ready) {
 				},
 				xaxis: {
 					mode: "time",
-					timeFormat: "%h:00"
+					timeFormat: "%h:00",
+					min: 0,
+					max: (24).hours()-(1).seconds()
 				},
 				yaxis: {
 					min: 0,

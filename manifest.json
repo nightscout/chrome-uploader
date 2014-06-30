@@ -6,7 +6,7 @@
   "version": "1.0",
   "app": {
     "background": {
-      "scripts": ["app/driver.js"]
+      "scripts": ["app/background.js"]
     }
   },
   "permissions": [

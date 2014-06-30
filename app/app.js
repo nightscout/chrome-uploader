@@ -1,5 +1,4 @@
-require(["dexcom"], function(dexcom) { 
-
+require(["dexcom", "./datasource/diyps", "./datasource/mongolab"], function(dexcom, diyps, nightscout) { 
 Promise.all([
 	// load config-y stuff
 
@@ -16,31 +15,9 @@ Promise.all([
 			dexcom.disconnect();
 			resolve(d);
 		});
-	}),
-	new Promise(function(resolve) {
-		console.debug("[mongoconfig] Loading");
-		$.ajax({
-			url: "../mongoconfig.json", 
-			success: function(d) {
-				console.debug("[mongoconfig] loaded");
-				resolve(JSON.parse(d));
-			}
-		});
-	}),
-	new Promise(function(resolve) {
-		console.debug("[diypsconfig] Loading");
-		$.ajax({
-			url: "../diypsconfig.json", 
-			success: function(d) {
-				console.debug("[diypsconfig] loaded");
-				resolve(JSON.parse(d));
-			}
-		});
 	})
 ]).then(function(results) {
 	var data = results[0];
-	mongoconfig = results[1],
-	diypsconfig = results[2];
 	var lastNewRecord = Date.now();
 
 	// update my db
@@ -97,60 +74,6 @@ Promise.all([
 	console.log(arguments);
 });
 
-var mongoconfig = {}, diypsconfig = {};
-var saveToMongoLab = function(data) {
-	if (mongoconfig.apikey) require(["datasource/mongolab"], function(mongolab) {
-		mongolab.insert(data[data.length - 1], mongoconfig);
-	});
-};
-
-var saveToDiyPS = function(data) {
-	if (diypsconfig.endPoint) require(["./datasource/diyps"], function(diyps) {
-		diyps.replace(data, diypsconfig);
-	});
-};
-
-function drawReceiverChart(data) {
-	var t = 3; //parseInt($("#timewindow").val(),10);
-	var now = (new Date()).getTime();
-	var trend = data.map(function(plot) {
-		return [
-			+plot.displayTime,
-			plot.bgValue
-		];
-	}).filter(function(plot) {
-		return plot[0] + t.hours() > now;
-	});
-	$.plot(
-		"#dexcomtrend",
-		[{
-			label: "#CGMthen",
-			data: trend
-		}],
-		{
-			xaxis: {
-				mode: "time"
-			}
-		}
-	);
-	$("#cgmnow").text(data[data.length - 1].bgValue);
-	$("#cgmdirection").text(data[data.length - 1].trend);
-	$("#cgmtime").text((new Date(data[data.length - 1].displayTime)).toTimeString());
-}
-
-// updated database
-chrome.storage.onChanged.addListener(function(changes, namespace) {
-	if ("egvrecords" in changes)  {
-		drawReceiverChart(changes.egvrecords.newValue);
-		saveToMongoLab(changes.egvrecords.newValue);
-		saveToDiyPS(changes.egvrecords.newValue);
-	}
-});
-
-// first load, before receiver's returned data
-chrome.storage.local.get("egvrecords", function(values) {
-	drawReceiverChart(values.egvrecords);
-});
 
 $(function() {
 	// event handlers

@@ -213,6 +213,15 @@ define(function () {
 			var recordCounts = [];
 			var totalRecordCount = 0;
 			var i = 0;
+			var dexcomTime = -800; //PST
+			var localTime = (new Date().toString().match(/([-\+][0-9]+)\s/)[1]);
+			delta = dexcomTime - localTime;
+			var delta = {
+				h: Math.floor(delta/100),
+				m: delta % 100
+			};
+			delta.ms = (delta.h < 0? -1: 1) * (Math.abs(delta.h).hours() + delta.m.minutes());
+
 			console.debug("[parseDatabasePages] parsing raw results to eGV records");
 			
 			//we parse 4 pages at a time, calculate total record count while we do this
@@ -233,7 +242,7 @@ define(function () {
 					var bGValue = ((eGValue[1]<<8) + (eGValue[0] & 0xff)) & 0x3ff;
 
 					var dt = intFromBytes([tempRecord[7], tempRecord[6], tempRecord[5], tempRecord[4]]);
-					var d = 1230793200000 + dt * 1000; // Jan 1 2009 12:00:00a
+					var d = 1230793200000 + dt * 1000 + delta.ms; // Jan 1 2009 12:00:00a
 					var display = new Date(d);
 
 					var trendArrow = getInt64Bytes(tempRecord[10] & 15)[7];

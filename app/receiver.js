@@ -1,5 +1,5 @@
 function drawReceiverChart(data) {
-	var t = 3; //parseInt($("#timewindow").val(),10);
+	var t = 6; //parseInt($("#timewindow").val(),10);
 	var now = (new Date()).getTime();
 	var trend = data.map(function(plot) {
 		return [
@@ -12,18 +12,21 @@ function drawReceiverChart(data) {
 	$.plot(
 		"#dexcomtrend",
 		[{
-			label: "#CGMthen",
 			data: trend
 		}],
 		{
 			xaxis: {
-				mode: "time"
+				mode: "time",
+				timezone: "browser",
+				timeformat: "%I:%m",
+				twelveHourClock: true,
+				minTickSize: [1, "hour"]
 			}
 		}
 	);
 	$("#cgmnow").text(data[data.length - 1].bgValue);
 	$("#cgmdirection").text(data[data.length - 1].trend);
-	$("#cgmtime").text((new Date(data[data.length - 1].displayTime)).toTimeString());
+	$("#cgmtime").text((new Date(data[data.length - 1].displayTime)).format("h:ia"));
 }
 
 // updated database

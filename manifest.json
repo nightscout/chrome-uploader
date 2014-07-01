@@ -12,7 +12,8 @@
   "permissions": [
     "serial",
     "storage",
-    "<all_urls>"
+    "<all_urls>",
+    "notifications"
   ],
   "icons": {
     "16": "public/assets/icon.png",

@@ -2,7 +2,6 @@ require(["dexcom", "./datasource/diyps", "./datasource/mongolab"], function(dexc
 var attempts = 0;
 var connect = function() {
 	var connectionErrorCB = function(notification_id, button) {
-		debugger;
 		if (button == 0) {
 			attempts = 0;
 			connect().then(onConnected,onConnectError);
@@ -22,7 +21,6 @@ var connect = function() {
 			if (attempts++ < 3) {
 				connect().then(onConnect, onError);
 			} else {
-				debugger;
 				chrome.notifications.create("", {
 					type: "basic",
 					title: "Chromadex",
@@ -49,8 +47,7 @@ var connect = function() {
 		});
 	})
 },
-onConnected = function(results) {
-	var data = results[0];
+onConnected = function(data) {
 	var lastNewRecord = Date.now();
 
 	// update my db
@@ -95,17 +92,9 @@ onConnected = function(results) {
 	updateLocalDb(data);
 
 	// again and again
-	setInterval(function() {
+	setTimeout(function() {
 		console.log("Attempting to refresh data");
-		try {
-			dexcom.connect().then(function() {
-				return dexcom.readFromReceiver(1);
-			}).then(updateLocalDb).then(function() {
-				dexcom.disconnect();
-			});
-		} catch (e) {
-			console.debug(e);
-		}
+		connect().then(onConnected, onConnectError);
 	}, (30).seconds());
 },
 onConnectError = function(){

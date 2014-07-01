@@ -153,7 +153,27 @@ define(function () {
 				}
 			});
 			//locate the EGV data pages
-			
+		},
+		getDexcomSystemTime: function() {
+			return new Promise(function(done, reject) {
+				return done(new Date()); // I just don't need it. YOU make it work! :)
+				if (!dexcom.connected) {
+					return reject(new Error("Not connected"));
+				}
+				var buf = new ArrayBuffer(7);
+				readEGVDataPageRange =new Uint8Array(buf);
+				readEGVDataPageRange[0] = 0x01;
+				readEGVDataPageRange[1] = 0x07;
+				readEGVDataPageRange[3] = 34; // 0x22? 0x34?
+				readEGVDataPageRange[4] = 0x04;
+				readEGVDataPageRange[5] = 0x8b;
+				readEGVDataPageRange[6] = 0xb8;
+				dexcom.writeSerial(buf, function() {
+					console.debug("[getDexcomSystemTime] returned");
+					dexcom.readSerial(32, 200, callback);
+				});
+				console.debug("[getDexcomSystemTime]");
+			});
 		},
 		getEGVDataPageRange: function(callback) {
 			if (!dexcom.connected) {
@@ -220,6 +240,9 @@ define(function () {
 				h: Math.floor(delta/100),
 				m: delta % 100
 			};
+			if ((new Date()).dst()) {
+				delta.h++;
+			}
 			delta.ms = (delta.h < 0? -1: 1) * (Math.abs(delta.h).hours() + delta.m.minutes());
 
 			console.debug("[parseDatabasePages] parsing raw results to eGV records");

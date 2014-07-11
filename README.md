@@ -10,8 +10,8 @@ Important: Install directions updated. Do 6 and 7 if you haven't already.
 3. Check developer mode
 4. Load unpacked extension
 5. Pick your folder
-6. Set up /diypsconfig.json Dupe the sample files with these names. For DIYPS, add chromeext.php into DIYPS directory and point diypsconfig.json's endpoint to that resulting URL. If you don't use it, leave endPoint blank.
-7. Dupe /mongoconfig.sample.json to /mongoconfig.json. Your API key is the important part.
+6. If you use NightScout- Dupe /mongoconfig.sample.json to /mongoconfig.json. Your API key is the important part. IF YOU DON'T USE NIGHTSCOUT YOU CAN SKIP THIS STEP.
+7. If you use DIYPS- Duple /diypsconfig.sample.json to /diypsconfig.json. Add chromeext.php into DIYPS directory and point diypsconfig.json's endpoint to that resulting URL. IF YOU DON'T USE DIYPS YOU CAN SKIP THIS STEP.
 
 ###Use
 1. Plug in your Dexcom

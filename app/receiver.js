@@ -1,5 +1,5 @@
 function drawReceiverChart(data) {
-	var t = 6; //parseInt($("#timewindow").val(),10);
+	var t = 3; //parseInt($("#timewindow").val(),10);
 	var now = (new Date()).getTime();
 	var trend = data.map(function(plot) {
 		return [
@@ -20,7 +20,7 @@ function drawReceiverChart(data) {
 				timezone: "browser",
 				timeformat: "%I:%m",
 				twelveHourClock: true,
-				minTickSize: [1, "hour"]
+				minTickSize: [45, "minute"]
 			}
 		}
 	);

@@ -2,7 +2,7 @@ require(["dexcom", "./datasource/diyps", "./datasource/mongolab"], function(dexc
 var attempts = 0;
 var connect = function() {
 	var connectionErrorCB = function(notification_id, button) {
-		if (button == 0) {
+		if (button === 0) {
 			attempts = 0;
 			connect().then(onConnected,onConnectError);
 		} else {
@@ -32,8 +32,7 @@ var connect = function() {
 						title: "Cancel"
 					}]
 				}, function(notification_id) {
-					console.log(arguments)
-					debugger;
+					console.log(arguments);
 					attempts = 0;
 					chrome.notifications.onButtonClicked.addListener(connectionErrorCB);
 				});
@@ -45,7 +44,7 @@ var connect = function() {
 			dexcom.disconnect();
 			resolve(d);
 		});
-	})
+	});
 },
 onConnected = function(data) {
 	var lastNewRecord = Date.now();
@@ -113,7 +112,7 @@ $(function() {
 				egvrecords: []
 			}, function() {
 				console.log("removed records");
-				$('#reset').confirmation('hide')
+				$('#reset').confirmation('hide');
 			});
 		}
 	});
@@ -169,7 +168,7 @@ $(function() {
 							}).filter(function(row) {
 								return existing_ts.filter(function(ts) {
 									return ts == row.displayTime;
-								}).length == 0;
+								}).length === 0;
 							}).filter(function(row) {
 								return row.bgValue > 30;
 							});

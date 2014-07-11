@@ -48,6 +48,10 @@ define(function () {
 		return bytes;
 	}
 
+	var config = $.getJSON("/dexcomserialport.json", function(d) {
+		console.debug("[dexcom] loaded serial config");
+	});
+
 	var dexcom = {
 		connected: false,
 		connection: null,
@@ -72,18 +76,21 @@ define(function () {
 							));
 						}
 					};
-					var dex = "/dev/tty.usbmodem";
-					ports.forEach(function(port) {
-						if (port.path.substr(0,dex.length) != dex) return;
-						dexcom.port = port;
-						console.debug("[connecting] Found dexcom at port %o", port);
-						chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
-					});
-					if (dexcom.port === null) {
-						reject(new Error(
-							"Didn't find a Dexcom receiver plugged in"
-						));
-					}
+					config.then(function(dex) {
+						// var dex = "/dev/tty.usbmodem";
+						ports.forEach(function(port) {
+							if (port.path.substr(0,dex.serialport.length) != dex.serialport) return;
+							dexcom.port = port;
+							console.debug("[connecting] Found dexcom at port %o", port);
+							chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
+						});
+						if (dexcom.port === null) {
+							reject(new Error(
+								"Didn't find a Dexcom receiver plugged in"
+							));
+						}
+					})
+
 				});
 
 			});
@@ -246,7 +253,7 @@ define(function () {
 			delta.ms = (delta.h < 0? -1: 1) * (Math.abs(delta.h).hours() + delta.m.minutes());
 
 			console.debug("[parseDatabasePages] parsing raw results to eGV records");
-			
+
 			//we parse 4 pages at a time, calculate total record count while we do this
 			for (i = 0; i < 4; i++) {
 				fourPages[i] = databasePages.slice(528 * i, 528 * (i + 1));
@@ -255,7 +262,7 @@ define(function () {
 			}
 			var recordsToReturn = [];
 			var k = 0, j = 0;
-			
+
 			//parse each record, plenty of room for improvement
 			var tempRecord = [];
 			for (i = 0; i < 4; i++) {

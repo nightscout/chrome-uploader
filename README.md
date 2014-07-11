@@ -2,8 +2,6 @@
 Download Dexcom data on almost any platform Chrome runs on. (Developed and tested on Mac OSX). A good deal of this data is corrupt. 
 ##Don't use it for treatment. Seriously. A lot of this data is wrong. Not a little wrong. OMG WTF out of left field wrong.
 
-Important: Install directions updated. Do 6 and 7 if you haven't already.
-
 ###Install
 1. Get code in folder
 2. Go to chrome://extensions

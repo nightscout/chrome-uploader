@@ -4,12 +4,16 @@ Download Dexcom data on almost any platform Chrome runs on. (Developed and teste
 
 ###Install
 1. Get code in folder
-2. Go to chrome://extensions
-3. Check developer mode
-4. Load unpacked extension
-5. Pick your folder
-6. If you use NightScout- Dupe /mongoconfig.sample.json to /mongoconfig.json. Your API key is the important part. IF YOU DON'T USE NIGHTSCOUT YOU CAN SKIP THIS STEP.
-7. If you use DIYPS- Duple /diypsconfig.sample.json to /diypsconfig.json. Add chromeext.php into DIYPS directory and point diypsconfig.json's endpoint to that resulting URL. IF YOU DON'T USE DIYPS YOU CAN SKIP THIS STEP.
+2. Open a terminal and CD to that folder
+3. Install bower if you haven't already (npm install bower)
+4. Install bower dependencies (bower install)
+5. You're done with your terminal. Give yourself a pat on the back.
+6. Go to chrome://extensions
+7. Check developer mode
+8. Load unpacked extension
+9. Pick your folder
+10. If you use NightScout- Dupe FOLDER/mongoconfig.sample.json to FOLDER/mongoconfig.json. Your API key is the important part. IF YOU DON'T USE NIGHTSCOUT YOU CAN SKIP THIS STEP.
+11. If you use DIYPS- Dupe FOLDER/diypsconfig.sample.json to /diypsconfig.json. Add chromeext.php into DIYPS directory and point diypsconfig.json's endpoint to that resulting URL. IF YOU DON'T USE DIYPS YOU CAN SKIP THIS STEP.
 
 ###Use
 1. Plug in your Dexcom

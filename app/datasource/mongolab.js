@@ -16,18 +16,20 @@ define(function() {
 			direction: plot.trend
 		});
 	};
-	var mongolabUrl = "https://api.mongolab.com/api/1/databases/dexcomhistory/collections/egv?apiKey=";
+	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
 
 	var mongolab = { };
 	mongolab.insert = function(plot) { config.then(function(mongoconfig) {
 		// have a unique constraint on date to keep it from inserting too much data.
 		// mongolab returns a 400 when duplicate attempted
-		
+
 		console.log("[mongolab] Writing most recent record to MongoLab");
 		if (!("apikey" in mongoconfig || mongoconfig.apikey.length > 0)) return;
+		if (!("collection" in mongoconfig || mongoconfig.database.length > 0)) return;
+		if (!("database" in mongoconfig || mongoconfig.database.length > 0)) return;
 
 		$.ajax({
-			url: mongolabUrl + mongoconfig.apikey,
+			url: mongolabUrl + mongoconfig.database + "/collections/" + mongoconfig.collection + "?apiKey=" + mongoconfig.apikey,
 			data: formatData(plot),
 			type: "POST",
 			contentType: "application/json"

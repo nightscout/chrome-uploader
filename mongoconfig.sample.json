@@ -1,6 +1,5 @@
 {
 	"baseuri": "",
-	"user": "",
-	"password": "",
-	"apikey": ""
+	"apikey": "",
+	"databasename": ""
 }

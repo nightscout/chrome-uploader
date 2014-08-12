@@ -1,5 +1,6 @@
 {
 	"baseuri": "",
 	"apikey": "",
-	"databasename": ""
+	"database": "",
+	"collection": ""
 }

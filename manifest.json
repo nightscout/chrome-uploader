@@ -3,7 +3,7 @@
 
   "name": "Dexcom Uploader",
   "description": "Report #cgmnow, run reports, and upload data to #diyps or NightScout.",
-  "version": "0.1.0.1",
+  "version": "0.1.0.2",
   "app": {
     "background": {
       "scripts": ["app/background.js"]

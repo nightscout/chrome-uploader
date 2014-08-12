@@ -1,5 +1,9 @@
 ##chromadex
 Download Dexcom data on almost any platform Chrome runs on. (Developed and tested on Mac OSX). A good deal of this data is corrupt. 
+
+###Changelog
+mongolabconfig.json has dropped "baseUri", "user" and "password" and added "collection" and "database." So If you're integrated against Nightscout be sure to update that file.
+
 ##Don't use it for treatment. Seriously. A lot of this data is wrong. Not a little wrong. OMG WTF out of left field wrong.
 
 ###Install

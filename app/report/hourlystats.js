@@ -1,13 +1,27 @@
+var convertBg;
 Promise.all([
 new Promise(function(ready) {
-	chrome.storage.local.get("egvrecords", function(values) {
-		ready(values.egvrecords);
+	chrome.storage.local.get(["egvrecords", "config"], function(values) {
+		if (values.config.unit == "mmol") {
+			convertBg = function(n) {
+				return Math.ceil(n * 0.5555) / 10;
+			};
+		} else {
+			convertBg = function(n) {
+				return n;
+			}
+		}
+
+		ready(values.egvrecords.map(function(r) {
+			r.localBg = convertBg(r.bgValue);
+			return r;
+		}));
 	});
 })
 ]).then(function(o) {
 	var data = o[0];
 	var days = 3 * 30; // months
-	var config = { low: 70, high: 180 };
+	var config = { low: convertBg(70), high: convertBg(180) };
 	var threemonthsago = new Date(Date.now() - days.days());
 	threemonthsago.setSeconds(0);
 	threemonthsago.setMinutes(0);
@@ -43,7 +57,7 @@ new Promise(function(ready) {
 	[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23].forEach(function(hour) {
 		var tr = $("<tr>");
 		var display = hour % 12;
-		if (hour === 0) { 
+		if (hour === 0) {
 			display = "12";
 		}
 		display += ":00 ";
@@ -53,31 +67,31 @@ new Promise(function(ready) {
 			display += "AM";
 		}
 
-		var avg = Math.floor(pivotedByHour[hour].map(function(r) { return r.bgValue; }).reduce(function(o,v){ return o+v; }, 0) / pivotedByHour[hour].length);
-		var d = new Date(hour.hours()); 
+		var avg = Math.floor(pivotedByHour[hour].map(function(r) { return r.localBg; }).reduce(function(o,v){ return o+v; }, 0) / pivotedByHour[hour].length);
+		var d = new Date(hour.hours());
 		// d.setHours(hour);
 		// d.setMinutes(0);
 		// d.setSeconds(0);
 		// d.setMilliseconds(0);
 
-		var dev = ss.standard_deviation(pivotedByHour[hour].map(function(r) { return r.bgValue; }));
+		var dev = ss.standard_deviation(pivotedByHour[hour].map(function(r) { return r.localBg; }));
 		stats.push([
 			new Date(d),
-			ss.quantile(pivotedByHour[hour].map(function(r) { return r.bgValue; }), 0.25),
-			ss.quantile(pivotedByHour[hour].map(function(r) { return r.bgValue; }), 0.75),
+			ss.quantile(pivotedByHour[hour].map(function(r) { return r.localBg; }), 0.25),
+			ss.quantile(pivotedByHour[hour].map(function(r) { return r.localBg; }), 0.75),
 			avg - dev,
 			avg + dev
-			// Math.min.apply(Math, pivotedByHour[hour].map(function(r) { return r.bgValue; })),  
-			// Math.max.apply(Math, pivotedByHour[hour].map(function(r) { return r.bgValue; }))
+			// Math.min.apply(Math, pivotedByHour[hour].map(function(r) { return r.localBg; })),
+			// Math.max.apply(Math, pivotedByHour[hour].map(function(r) { return r.localBg; }))
 		]);
 		$("<td>" + display + "</td>").appendTo(tr);
 		$("<td>" + pivotedByHour[hour].length + " (" + Math.floor(100 * pivotedByHour[hour].length / data.length) + "%)</td>").appendTo(tr);
 		$("<td>" + avg + "</td>").appendTo(tr);
-		$("<td>" + Math.min.apply(Math, pivotedByHour[hour].map(function(r) { return r.bgValue; })) + "</td>").appendTo(tr);
-		$("<td>" + ss.quantile(pivotedByHour[hour].map(function(r) { return r.bgValue; }), 0.25) + "</td>").appendTo(tr);
-		$("<td>" + ss.quantile(pivotedByHour[hour].map(function(r) { return r.bgValue; }), 0.5) + "</td>").appendTo(tr);
-		$("<td>" + ss.quantile(pivotedByHour[hour].map(function(r) { return r.bgValue; }), 0.75) + "</td>").appendTo(tr);
-		$("<td>" + Math.max.apply(Math, pivotedByHour[hour].map(function(r) { return r.bgValue; })) + "</td>").appendTo(tr);
+		$("<td>" + Math.min.apply(Math, pivotedByHour[hour].map(function(r) { return r.localBg; })) + "</td>").appendTo(tr);
+		$("<td>" + ss.quantile(pivotedByHour[hour].map(function(r) { return r.localBg; }), 0.25) + "</td>").appendTo(tr);
+		$("<td>" + ss.quantile(pivotedByHour[hour].map(function(r) { return r.localBg; }), 0.5) + "</td>").appendTo(tr);
+		$("<td>" + ss.quantile(pivotedByHour[hour].map(function(r) { return r.localBg; }), 0.75) + "</td>").appendTo(tr);
+		$("<td>" + Math.max.apply(Math, pivotedByHour[hour].map(function(r) { return r.localBg; })) + "</td>").appendTo(tr);
 		$("<td>" + Math.floor(dev*10)/10 + "</td>").appendTo(tr);
 		table.append(tr);
 	});
@@ -113,7 +127,7 @@ new Promise(function(ready) {
 				},
 				yaxis: {
 					min: 0,
-					max: 400,
+					max: convertBg(400),
 					show: true
 				},
 				grid: {

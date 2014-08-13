@@ -1,14 +1,28 @@
+var convertBg;
 Promise.all([
 new Promise(function(ready) {
-	chrome.storage.local.get("egvrecords", function(values) {
-		ready(values.egvrecords);
+	chrome.storage.local.get(["egvrecords", "config"], function(values) {
+		if (values.config.unit == "mmol") {
+			convertBg = function(n) {
+				return Math.ceil(n * 0.5555) / 10;
+			};
+		} else {
+			convertBg = function(n) {
+				return n;
+			}
+		}
+
+		ready(values.egvrecords.map(function(r) {
+			r.localBg = convertBg(r.bgValue);
+			return r;
+		}));
 	});
 })
 ]).then(function(o) {
 	var todo = [];
 	var data = o[0];
 	var days = 7;
-	var config = { low: 70, high: 180 };
+	var config = { low: convertBg(70), high: convertBg(180) };
 	var sevendaysago = Date.now() - days.days();
 	var report = $("#report");
 	var minForDay, maxForDay;
@@ -83,25 +97,25 @@ new Promise(function(ready) {
 			);
 		});
 
-		minForDay = daysRecords[0].bgValue;
-		maxForDay = daysRecords[0].bgValue;
+		minForDay = daysRecords[0].localBg;
+		maxForDay = daysRecords[0].localBg;
 		var stats = daysRecords.reduce(function(out, record) {
-			if (record.bgValue < config.low) {
+			if (record.localBg < config.low) {
 				out.lows++;
-			} else if (record.bgValue < config.high) {
+			} else if (record.localBg < config.high) {
 				out.normal++;
 			} else {
 				out.highs++;
 			}
-			if (minForDay > record.bgValue) minForDay = record.bgValue;
-			if (maxForDay < record.bgValue) maxForDay = record.bgValue;
+			if (minForDay > record.localBg) minForDay = record.localBg;
+			if (maxForDay < record.localBg) maxForDay = record.localBg;
 			return out;
 		}, {
 			lows: 0,
 			normal: 0,
 			highs: 0
 		});
-		var bgValues = daysRecords.map(function(r) { return r.bgValue; });
+		var bgValues = daysRecords.map(function(r) { return r.localBg; });
 		$("<td><div id=\"chart" + day.toString() + "\" class=\"inlinepiechart\"></div></td>").appendTo(tr);
 		todo.push(function() {
 			var inrange = [

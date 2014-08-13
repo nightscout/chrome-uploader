@@ -1,8 +1,4 @@
 define(function() {
-	console.debug("[mongolab] loading config");
-	var config = $.getJSON("/mongoconfig.json", function(d) {
-		console.debug("[mongolab] loaded config");
-	});
 	var formatDate = function(d) {
 		return d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate() + " " + d.getHours() + ":" + d.getMinutes();
 	};
@@ -19,22 +15,31 @@ define(function() {
 	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
 
 	var mongolab = { };
-	mongolab.insert = function(plot) { config.then(function(mongoconfig) {
-		// have a unique constraint on date to keep it from inserting too much data.
-		// mongolab returns a 400 when duplicate attempted
+	mongolab.insert = function(plot) {
+		if (!plot) return;
+			
+		(new Promise(function(done) {
+			chrome.storage.local.get("config", function(local) {
+				done(local.config);
+			});
+		})).then(function(config) {
+			// have a unique constraint on date to keep it from inserting too much data.
+			// mongolab returns a 400 when duplicate attempted
 
-		console.log("[mongolab] Writing most recent record to MongoLab");
-		if (!("apikey" in mongoconfig || mongoconfig.apikey.length > 0)) return;
-		if (!("collection" in mongoconfig || mongoconfig.database.length > 0)) return;
-		if (!("database" in mongoconfig || mongoconfig.database.length > 0)) return;
+			console.log("[mongolab] Writing most recent record to MongoLab");
+			if (!("mongolab" in config)) return;
+			if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
+			if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
+			if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
 
-		$.ajax({
-			url: mongolabUrl + mongoconfig.database + "/collections/" + mongoconfig.collection + "?apiKey=" + mongoconfig.apikey,
-			data: formatData(plot),
-			type: "POST",
-			contentType: "application/json"
+			$.ajax({
+				url: mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey,
+				data: formatData(plot),
+				type: "POST",
+				contentType: "application/json"
+			});
 		});
-	}); };
+	};
 
 	// updated database
 	chrome.storage.onChanged.addListener(function(changes, namespace) {

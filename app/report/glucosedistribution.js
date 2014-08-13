@@ -1,13 +1,27 @@
+var convertBg;
 Promise.all([
 new Promise(function(ready) {
-	chrome.storage.local.get("egvrecords", function(values) {
-		ready(values.egvrecords);
+	chrome.storage.local.get(["egvrecords", "config"], function(values) {
+		if (values.config.unit == "mmol") {
+			convertBg = function(n) {
+				return Math.ceil(n * 0.5555) / 10;
+			};
+		} else {
+			convertBg = function(n) {
+				return n;
+			}
+		}
+		
+		ready(values.egvrecords.map(function(r) {
+			r.localBg = convertBg(r.bgValue);
+			return r;
+		}));
 	});
 })
 ]).then(function(o) {
 	var data = o[0], Statician = ss;
 	var days = 3 * 30; // months
-	var config = { low: 70, high: 180 };
+	var config = { low: convertBg(70), high: convertBg(180) };
 	var threemonthsago = new Date(Date.now() - days.days());
 	threemonthsago.setSeconds(0);
 	threemonthsago.setMinutes(0);
@@ -34,28 +48,28 @@ new Promise(function(ready) {
 		var tr = $("<tr>");
 		var rangeRecords = data.filter(function(r) {
 			if (range == "Low") {
-				return r.bgValue > 0 && r.bgValue < config.low;
+				return r.localBg > 0 && r.localBg < config.low;
 			} else if (range == "Normal") {
-				return r.bgValue >= config.low && r.bgValue < config.high;
+				return r.localBg >= config.low && r.localBg < config.high;
 			} else {
-				return r.bgValue >= config.high;
+				return r.localBg >= config.high;
 			}
 		});
 		stats.push(rangeRecords.length);
 		rangeRecords.sort(function(a,b) {
-			return a.bgValue - b.bgValue;
+			return a.localBg - b.localBg;
 		});
-		var bgValues = rangeRecords.map(function(r) { return r.bgValue; });
+		var localBgs = rangeRecords.map(function(r) { return r.localBg; });
 
 		var midpoint = Math.floor(rangeRecords.length / 2);
-		//var statistics = ss.(new Statician(rangeRecords.map(function(r) { return r.bgValue; }))).stats;
+		//var statistics = ss.(new Statician(rangeRecords.map(function(r) { return r.localBg; }))).stats;
 
 		$("<td>" + range + "</td>").appendTo(tr);
 		$("<td>" + Math.floor(100 * rangeRecords.length / data.length) + "%</td>").appendTo(tr);
 		$("<td>" + rangeRecords.length + "</td>").appendTo(tr);
-		$("<td>" + Math.floor(10*Statician.mean(bgValues))/10 + "</td>").appendTo(tr);
-		$("<td>" + rangeRecords[midpoint].bgValue + "</td>").appendTo(tr);
-		$("<td>" + Math.floor(Statician.standard_deviation(bgValues)*10)/10 + "</td>").appendTo(tr);
+		$("<td>" + Math.floor(10*Statician.mean(localBgs))/10 + "</td>").appendTo(tr);
+		$("<td>" + rangeRecords[midpoint].localBg + "</td>").appendTo(tr);
+		$("<td>" + Math.floor(Statician.standard_deviation(localBgs)*10)/10 + "</td>").appendTo(tr);
 
 		table.append(tr);
 	});

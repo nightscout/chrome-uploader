@@ -1,4 +1,4 @@
-require(["dexcom", "./datasource/diyps", "./datasource/mongolab"], function(dexcom, diyps, nightscout) { 
+require(["dexcom", "./datasource/mongolab"], function(dexcom, diyps, nightscout) {
 var attempts = 0;
 var connect = function() {
 	var connectionErrorCB = function(notification_id, button) {
@@ -52,7 +52,7 @@ onConnected = function(data) {
 	// update my db
 	var updateLocalDb = function(data) {
 		return new Promise(function(resolve) {
-			chrome.storage.local.get("egvrecords", function(storage) {
+			chrome.storage.local.get(["egvrecords", "config"], function(storage) {
 				var existing = storage.egvrecords || [];
 				var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
 				var new_records = data.filter(function(egv) {
@@ -80,11 +80,11 @@ onConnected = function(data) {
 				});
 				chrome.storage.local.set({ egvrecords: to_save }, console.debug.bind(console, "[updateLocalDb] Saved results"));
 				console.log("%i new records", new_records.length);
-				
+
 				resolve();
 			});
 		});
-		
+
 	};
 
 	// do it
@@ -101,10 +101,8 @@ onConnectError = function(){
 };
 connect().then(onConnected, onConnectError);
 
-
 $(function() {
 	// event handlers
-
 	$('#reset').confirmation({
 		title: "Are you sure? This will delete all your data and cannot be undone.",
 		onConfirm: function(e) {
@@ -132,7 +130,7 @@ $(function() {
 						data.push(d);
 
 						if (d.length) {
-							resolve(d);	
+							resolve(d);
 						} else {
 							reject();
 						}
@@ -150,7 +148,7 @@ $(function() {
 					chrome.notifications.update(notification_id, {
 						progress: 85,
 						message: "Still downloading. This part is harder and this might appear to lock up for 30 seconds. No big deal."
-					}, function() { 
+					}, function() {
 						setTimeout(function() {
 						chrome.storage.local.get("egvrecords", function(values) {
 							dexcom.disconnect();
@@ -226,6 +224,66 @@ $(function() {
 			}
 		});
 	});
+	$("#openoptions").click(function(){
+		new Promise(function(done) {
+			chrome.storage.local.get("config", function(config) {
+				config.config.serialport = config.config.serialport || "/dev/tty.usbmodem";
+				config.config.unit = config.config.unit || "mgdl";
+				done(config.config);
+			});
+		}).then(function(config) {
+			console.log(config);
+			function getValue(param, options) {
+				var parts = param.split(".");
+				var key = parts.shift();
+				if (parts.length > 0) {
+					return getValue(parts.join("."), options[key]);
+				} else {
+					return (typeof options == "object" && key in options)? options[key]: "";
+				}
+			}
+			$("#optionsui input,#optionsui select").map(function(ix) {
+				$(this).val(getValue(this.name, config));
+			});
+		});
+		$("#optionsui").show();
+		$("#receiverui").hide();
+
+	});
+	chrome.serial.getDevices(function(ports) {
+		document.getElementById("serialportlist").innerHTML += ports.map(function(sp) {
+			return "<li><code>" + sp.path + "</code></li>";
+		}).join("")
+		$("#serialportlist code").click(function(event) {
+			$("input[name=serialport]").val(this.textContent);
+		})
+	});
+	$("#savesettings").click(function() {
+		chrome.storage.local.set({
+			config: $("#optionsui input, #optionsui select").toArray().reduce(function(out, field) {
+				var parts = field.name.split(".");
+				var key = parts.shift();
+				var working = out;
+				while (parts.length > 0) {
+					if (!(key in working)) {
+						working[key] = {};
+					}
+					working = working[key];
+					key = parts.shift();
+				}
+				working[key] = field.value;
+				return out;
+			}, {})
+		}, function() {
+			console.log("saved settings");
+			$("#optionsui").hide();
+			$("#receiverui").show();
+		});
+	})
+	$("#resetchanged").click(function() {
+		$("#optionsui").hide();
+		$("#receiverui").show();
+	})
 });
 
 });

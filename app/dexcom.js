@@ -48,8 +48,12 @@ define(function () {
 		return bytes;
 	}
 
-	var config = $.getJSON("/dexcomserialport.json", function(d) {
-		console.debug("[dexcom] loaded serial config");
+	var config = new Promise(function(done) {
+		chrome.storage.local.get("config", function(local) {
+			local.config = local.config || {};
+			local.config.serialport = local.config.serialport || "/dev/tty.usbmodem";
+			done(local.config);
+		});
 	});
 
 	var dexcom = {
@@ -76,10 +80,9 @@ define(function () {
 							));
 						}
 					};
-					config.then(function(dex) {
-						// var dex = "/dev/tty.usbmodem";
+					config.then(function(config) {
 						ports.forEach(function(port) {
-							if (port.path.substr(0,dex.serialport.length) != dex.serialport) return;
+							if (port.path.substr(0,config.serialport.length) != config.serialport) return;
 							dexcom.port = port;
 							console.debug("[connecting] Found dexcom at port %o", port);
 							chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);

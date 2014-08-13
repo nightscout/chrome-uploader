@@ -94,7 +94,7 @@ onConnected = function(data) {
 	setTimeout(function() {
 		console.log("Attempting to refresh data");
 		connect().then(onConnected, onConnectError);
-	}, (30).seconds());
+	}, (60).seconds());
 },
 onConnectError = function(){
 	console.log(arguments);

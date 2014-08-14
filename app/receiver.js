@@ -54,7 +54,7 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
 
 // first load, before receiver's returned data
 chrome.storage.local.get(["egvrecords", "config"], function(values) {
-	if (values.config.unit == "mmol") {
+	if ("config" in values && values.config.unit == "mmol") {
 		convertBg = function(n) {
 			return Math.ceil(n * 0.5555) / 10;
 		};

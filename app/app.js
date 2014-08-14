@@ -114,78 +114,81 @@ $(function() {
 			});
 		}
 	});
-	$('#import').click(function(b){
-		chrome.notifications.create("", {
-			type: "progress",
-			title: "Chromadex",
-			message: "Downloading entire history from Dexcom receiver.",
-			iconUrl: "/public/assets/icon.png",
-			progress: 0
-		}, function(notification_id) {
-			var i = 1;
-			var data = [];
-			var compile = function(i) {
-				return new Promise(function(resolve,reject) {
-					dexcom.readFromReceiver(i).then(function(d) {
-						data.push(d);
+	$('#import').confirmation({
+		title: "You usually only need to download once. Chromadex automatically gets the last 18h data, but this will download everything else (So if you plugged in yesterday, no need to do this. If you plugged in last week, or this is your first time using Chromadex, go ahead)",
+		onConfirm: function(b){
+			chrome.notifications.create("", {
+				type: "progress",
+				title: "Chromadex",
+				message: "Downloading entire history from Dexcom receiver.",
+				iconUrl: "/public/assets/icon.png",
+				progress: 0
+			}, function(notification_id) {
+				var i = 1;
+				var data = [];
+				var compile = function(i) {
+					return new Promise(function(resolve,reject) {
+						dexcom.readFromReceiver(i).then(function(d) {
+							data.push(d);
 
-						if (d.length) {
-							resolve(d);
-						} else {
-							reject();
-						}
-					});
-				});
-			},
-			reader = function() {
-				compile(i).then(function() {
-					chrome.notifications.update(notification_id, {
-						progress: i
-					}, function() { });
-					i++;
-					reader();
-				}, function() { // no more data
-					chrome.notifications.update(notification_id, {
-						progress: 85,
-						message: "Still downloading. This part is harder and this might appear to lock up for 30 seconds. No big deal."
-					}, function() {
-						setTimeout(function() {
-						chrome.storage.local.get("egvrecords", function(values) {
-							dexcom.disconnect();
-							var existing = values.egvrecords;
-							var existing_ts = existing.map(function(row) {
-								return row.displayTime;
-							});
-							var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
-							var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
-								return {
-									displayTime: +egv.displayTime,
-									bgValue: egv.bgValue,
-									trend: egv.trend
-								};
-							}).filter(function(row) {
-								return existing_ts.filter(function(ts) {
-									return ts == row.displayTime;
-								}).length === 0;
-							}).filter(function(row) {
-								return row.bgValue > 30;
-							});
-							var to_save = existing.concat(new_records);
-							to_save.sort(function(a,b) {
-								return a.displayTime - b.displayTime;
-							});
-							chrome.storage.local.set({ egvrecords: to_save },
-								console.debug.bind(console, "[updateLocalDb] Saved results")
-							);
-							chrome.notifications.clear(notification_id, function() { });
-							console.log("%i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
+							if (d.length) {
+								resolve(d);
+							} else {
+								reject();
+							}
 						});
-						}, 300);
 					});
-				});
-			};
-			dexcom.connect().then(reader);
-		});
+				},
+				reader = function() {
+					compile(i).then(function() {
+						chrome.notifications.update(notification_id, {
+							progress: i
+						}, function() { });
+						i++;
+						reader();
+					}, function() { // no more data
+						chrome.notifications.update(notification_id, {
+							progress: 85,
+							message: "Still downloading. This part is harder and this might appear to lock up for 30 seconds. No big deal."
+						}, function() {
+							setTimeout(function() {
+							chrome.storage.local.get("egvrecords", function(values) {
+								dexcom.disconnect();
+								var existing = values.egvrecords;
+								var existing_ts = existing.map(function(row) {
+									return row.displayTime;
+								});
+								var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
+								var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
+									return {
+										displayTime: +egv.displayTime,
+										bgValue: egv.bgValue,
+										trend: egv.trend
+									};
+								}).filter(function(row) {
+									return existing_ts.filter(function(ts) {
+										return ts == row.displayTime;
+									}).length === 0;
+								}).filter(function(row) {
+									return row.bgValue > 30;
+								});
+								var to_save = existing.concat(new_records);
+								to_save.sort(function(a,b) {
+									return a.displayTime - b.displayTime;
+								});
+								chrome.storage.local.set({ egvrecords: to_save },
+									console.debug.bind(console, "[updateLocalDb] Saved results")
+								);
+								chrome.notifications.clear(notification_id, function() { });
+								console.log("%i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
+							});
+							}, 300);
+						});
+					});
+				};
+				dexcom.connect().then(reader);
+			});
+		}
 	});
 	$('.dropdown-toggle').dropdown();
 	$("#menuinsights").click(function() {

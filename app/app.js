@@ -116,6 +116,8 @@ $(function() {
 	});
 	$('#import').confirmation({
 		title: "You usually only need to download once. Chromadex automatically gets the last 18h data, but this will download everything else (So if you plugged in yesterday, no need to do this. If you plugged in last week, or this is your first time using Chromadex, go ahead)",
+		btnOkLabel: "Download",
+		btnOkClass: "btn btn-sm btn-primary",
 		onConfirm: function(b){
 			chrome.notifications.create("", {
 				type: "progress",

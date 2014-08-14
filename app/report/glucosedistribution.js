@@ -1,4 +1,5 @@
 var convertBg;
+var low, high;
 Promise.all([
 new Promise(function(ready) {
 	chrome.storage.local.get(["egvrecords", "config"], function(values) {
@@ -11,6 +12,14 @@ new Promise(function(ready) {
 				return n;
 			}
 		}
+
+		if ("config" in values && "targetrange" in values.config) {
+			low = values.config.targetrange.low || 70;
+			high = values.config.targetrange.high || 180;
+		} else {
+			low = 70;
+			high = 180;
+		}
 		
 		ready(values.egvrecords.map(function(r) {
 			r.localBg = convertBg(r.bgValue);
@@ -21,7 +30,7 @@ new Promise(function(ready) {
 ]).then(function(o) {
 	var data = o[0], Statician = ss;
 	var days = 3 * 30; // months
-	var config = { low: convertBg(70), high: convertBg(180) };
+	var config = { low: convertBg(low), high: convertBg(high) };
 	var threemonthsago = new Date(Date.now() - days.days());
 	threemonthsago.setSeconds(0);
 	threemonthsago.setMinutes(0);

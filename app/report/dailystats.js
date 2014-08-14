@@ -1,4 +1,5 @@
 var convertBg;
+var low, high;
 Promise.all([
 new Promise(function(ready) {
 	chrome.storage.local.get(["egvrecords", "config"], function(values) {
@@ -12,6 +13,14 @@ new Promise(function(ready) {
 			}
 		}
 
+		if ("config" in values && "targetrange" in values.config) {
+			low = values.config.targetrange.low || 70;
+			high = values.config.targetrange.high || 180;
+		} else {
+			low = 70;
+			high = 180;
+		}
+
 		ready(values.egvrecords.map(function(r) {
 			r.localBg = convertBg(r.bgValue);
 			return r;
@@ -22,7 +31,7 @@ new Promise(function(ready) {
 	var todo = [];
 	var data = o[0];
 	var days = 7;
-	var config = { low: convertBg(70), high: convertBg(180) };
+	var config = { low: convertBg(low), high: convertBg(high) };
 	var sevendaysago = Date.now() - days.days();
 	var report = $("#report");
 	var minForDay, maxForDay;

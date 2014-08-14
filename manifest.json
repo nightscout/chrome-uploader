@@ -3,7 +3,7 @@
 
   "name": "Chromadex",
   "description": "Report #cgmnow, run reports, and upload data to #diyps or NightScout.",
-  "version": "0.1.0.5",
+  "version": "0.1.0.6",
   "app": {
     "background": {
       "scripts": ["app/background.js"]

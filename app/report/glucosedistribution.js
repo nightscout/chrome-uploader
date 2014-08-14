@@ -2,7 +2,7 @@ var convertBg;
 Promise.all([
 new Promise(function(ready) {
 	chrome.storage.local.get(["egvrecords", "config"], function(values) {
-		if (values.config.unit == "mmol") {
+		if ("config" in values && values.config.unit == "mmol") {
 			convertBg = function(n) {
 				return Math.ceil(n * 0.5555) / 10;
 			};

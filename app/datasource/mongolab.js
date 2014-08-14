@@ -20,7 +20,7 @@ define(function() {
 			
 		(new Promise(function(done) {
 			chrome.storage.local.get("config", function(local) {
-				done(local.config);
+				done(local.config || {});
 			});
 		})).then(function(config) {
 			// have a unique constraint on date to keep it from inserting too much data.

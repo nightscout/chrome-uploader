@@ -1,48 +1,57 @@
-require(["dexcom", "./datasource/mongolab"], function(dexcom, diyps, nightscout) {
+require(["dexcom", "./datasource/mongolab"], function(dexcom, mongolab) {
+var isWindows = !!~window.navigator.appVersion.indexOf("Win");
 var attempts = 0;
 var connect = function() {
+	var chrome_notification_id = 0;
 	var connectionErrorCB = function(notification_id, button) {
+		chrome.notifications.onButtonClicked.removeListener(connectionErrorCB);
+		if (notification_id != chrome_notification_id) return;
+
 		if (button === 0) {
 			attempts = 0;
 			connect().then(onConnected,onConnectError);
-		} else {
-			chrome.notifications.onButtonClicked.removeListener(connectionErrorCB);
-			window.close();
 		}
 	};
 	return new Promise(function(resolve, reject) {
-		console.debug("[dexcom] loading");
-		dexcom.connect().then(function() {
-			console.debug("[dexcom] loaded");
-			chrome.notifications.onButtonClicked.removeListener(connectionErrorCB);
-			return dexcom.readFromReceiver(1);
-		}, function(e) {
-			console.log("[dexcom] rejected");
-			if (attempts++ < 3) {
-				connect().then(onConnect, onError);
-			} else {
-				chrome.notifications.create("", {
-					type: "basic",
-					title: "Chromadex",
-					message: "Could not connect to Dexcom receiver. Unplug it and plug it back in. Be gentle, Dexcom's USB port is fragile. I like to unplug from the computer's side.",
-					iconUrl: "/public/assets/error.png",
-					buttons: [{
-						title: "Try again"
-					}, {
-						title: "Cancel"
-					}]
-				}, function(notification_id) {
-					console.log(arguments);
-					attempts = 0;
-					chrome.notifications.onButtonClicked.addListener(connectionErrorCB);
-				});
-				console.log(e);
-			}
-			reject(e);
-		}).then(function(d) {
-			console.debug("[dexcom] read; disconnecting");
-			dexcom.disconnect();
-			resolve(d);
+		chrome.storage.local.get("config", function(local) {
+			console.debug("[dexcom] loading");
+			var serialport = local.config.serialport || (isWindows? "COM3": "/dev/tty.usbmodem");
+			dexcom.connect(serialport).then(function() {
+				console.debug("[dexcom] loaded");
+				chrome.notifications.onButtonClicked.removeListener(connectionErrorCB);
+				return dexcom.readFromReceiver(1);
+			}, function(e) {
+				console.log("[dexcom] rejected");
+				if (attempts++ < 3) {
+					connect().then(onConnect, onConnectError);
+				} else {
+					chrome.notifications.create("", {
+						type: "basic",
+						title: "Chromadex",
+						message: "Could not connect to Dexcom receiver. Unplug it and plug it back in. Be gentle, Dexcom's USB port is fragile. I like to unplug from the computer's side.",
+						iconUrl: "/public/assets/error.png",
+						buttons: [{
+							title: "Try again"
+						}, {
+							title: "Cancel"
+						}]
+					}, function(notification_id) {
+						console.log(arguments);
+						chrome_notification_id = notification_id;
+						attempts = 0;
+						chrome.notifications.onButtonClicked.addListener(connectionErrorCB);
+					});
+					console.log(e);
+				}
+				reject(e);
+			}).then(function(d) {
+				console.debug("[dexcom] read; disconnecting");
+				dexcom.disconnect();
+				resolve(d);
+			}, function(d) {
+				console.debug("[dexcom] error occured; bailing out");
+				reject(d);
+			});
 		});
 	});
 },
@@ -256,8 +265,9 @@ $(function() {
 
 	});
 	chrome.serial.getDevices(function(ports) {
-		document.getElementById("serialportlist").innerHTML += ports.map(function(sp) {
-			return "<li><code>" + sp.path + "</code></li>";
+		var isWindows = !!~window.navigator.appVersion.indexOf("Win");
+		document.getElementById("serialportlist").innerHTML += (isWindows? "<li>Default is <code>COM3</code>. Other's available when Chromadex started include</li>": "<li>Default is <code>/dev/tty.usbmodem</code>. Others available when Chromadex started include</li>") + ports.map(function(sp) {
+			if (!isWindows || sp.path != "COM3") return "<li><code>" + sp.path + "</code></li>"; else return "";
 		}).join("")
 		$("#serialportlist code").click(function(event) {
 			$("input[name=serialport]").val(this.textContent);
@@ -284,11 +294,63 @@ $(function() {
 			$("#optionsui").hide();
 			$("#receiverui").show();
 		});
-	})
+	});
 	$("#resetchanged").click(function() {
 		$("#optionsui").hide();
 		$("#receiverui").show();
-	})
+	});
+	$("#testconnection").click(function() {
+		var config = $("#optionsdatabase input").toArray().reduce(function(out, field) {
+			out[field.name] = field.value;
+			return out;
+		}, {});
+		var worker = function() { };
+		var applyChoice = function(notification_id, button) {
+			worker.apply(this,arguments);
+		}
+		chrome.notifications.onButtonClicked.removeListener(applyChoice);
+		mongolab.testConnection(config["mongolab.apikey"], config["mongolab.database"], config["mongolab.collection"]).then(function ok() {
+			console.log("[mongolab] connection check ok");
+			chrome.notifications.create("", {
+				type: "message",
+				title: "Chromadex",
+				message: "This mongolab configuration checks out ok",
+				iconUrl: "/public/assets/icon.png"
+			}, function(chrome_notification_id) {
+			});
+		}, function fail(error) {
+			console.log("[mongolab] " + error.error, error.avlb);
+			chrome.notifications.create("", {
+				type: "list",
+				title: error.error + ": " + error.selected,
+				message: "Here are some possible valid answers",
+				iconUrl: "/public/assets/icon.png",
+				buttons: (error.avlb.length > 0 && error.avlb.length <= 2)? error.avlb.map(function(choice) {
+					return { title: "Use " + choice };
+				}) : undefined,
+				items: error.avlb.map(function(option) {
+					return {
+						title: option,
+						message: error.type
+					};
+				})
+			}, function(chrome_notification_id) {
+				worker = function(notification_id, button) {
+					if (notification_id == chrome_notification_id) {
+						var selection = error.avlb[button];
+						var fields = {
+							database: "#options-database-name",
+							collection: "#options-database-collection",
+							apikey: "#options-database-apiuser"
+						};
+						$(fields[error.type]).val(selection);
+					}
+					chrome.notifications.onButtonClicked.removeListener(applyChoice);
+				}
+				chrome.notifications.onButtonClicked.addListener(applyChoice);
+			});
+		});
+	});
 });
 
 });

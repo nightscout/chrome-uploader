@@ -47,21 +47,13 @@ define(function () {
 		var bytes = new Uint8Array(a.buffer);
 		return bytes;
 	}
-
-	var config = new Promise(function(done) {
-		chrome.storage.local.get("config", function(local) {
-			local.config = local.config || {};
-			local.config.serialport = local.config.serialport || "/dev/tty.usbmodem";
-			done(local.config);
-		});
-	});
-
+	
 	var dexcom = {
 		connected: false,
 		connection: null,
 		port: null,
 		buffer: [],
-		connect: function() {
+		connect: function(serialport) {
 			return new Promise(function(resolve, reject) {
 				if (dexcom.connected) {
 					return reject(new Error("Wait for existing process to finish"));
@@ -80,22 +72,18 @@ define(function () {
 							));
 						}
 					};
-					config.then(function(config) {
-						ports.forEach(function(port) {
-							if (port.path.substr(0,config.serialport.length) != config.serialport) return;
-							dexcom.port = port;
-							console.debug("[connecting] Found dexcom at port %o", port);
-							chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
-						});
-						if (dexcom.port === null) {
-							reject(new Error(
-								"Didn't find a Dexcom receiver plugged in"
-							));
-						}
-					})
-
+					ports.forEach(function(port) {
+						if (port.path.substr(0,serialport.length).toLowerCase() != serialport.toLowerCase()) return;
+						dexcom.port = port;
+						console.debug("[connecting] Found dexcom at port %o", port);
+						chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
+					});
+					if (dexcom.port === null) {
+						reject(new Error(
+							"Didn't find a Dexcom receiver plugged in"
+						));
+					}
 				});
-
 			});
 		},
 		serialOnReceiveListener: function(info) {
@@ -199,7 +187,7 @@ define(function () {
 			readEGVDataPageRange[6] = 0xb8;
 			dexcom.writeSerial(buf, function() {
 				console.debug("[getEGVDataPageRange] returned");
-				dexcom.readSerial(256, 200, callback);
+				dexcom.readSerial(256, 2000, callback);
 			});
 			console.debug("[getEGVDataPageRange]");
 		},
@@ -233,7 +221,7 @@ define(function () {
 			getLastEGVPage[11] = checksum[1];
 
 			dexcom.writeSerial(buf, function() {
-				dexcom.readSerial(2118, 5000, callback); // was 2122
+				dexcom.readSerial(2118, 10000, callback); // was 2122
 				console.debug("[getLastFourPages] returned");
 			});
 			console.debug("[getLastFourPages] called");

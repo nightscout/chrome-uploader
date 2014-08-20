@@ -191,6 +191,11 @@ $(function() {
 									console.debug.bind(console, "[updateLocalDb] Saved results")
 								);
 								chrome.notifications.clear(notification_id, function() { });
+								chrome.notifications.create("", {
+									title: "Download complete",
+									type: "basic",
+									message: "Downloaded " + new_records.length + " new records (about " + Math.ceil(new_records.length / 216) + " day(s) worth."
+								}, function() { });
 								console.log("%i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
 							});
 							}, 300);
@@ -273,6 +278,16 @@ $(function() {
 			$("input[name=serialport]").val(this.textContent);
 		})
 	});
+	$("#pulldatabase").click(function() {
+		mongolab.populateLocalStorage().then(function(r) {
+			chrome.notifications.create("", {
+				type: "basic",
+				title: "Chromadex",
+				message: "Pulled " + r.length + " records from MongoLab. You might have already had some, and any duplicates were discarded.",
+				iconUrl: "/public/assets/icon.png"
+			}, function(chrome_notification_id) { });
+		})
+	});
 	$("#savesettings").click(function() {
 		chrome.storage.local.set({
 			config: $("#optionsui input, #optionsui select").toArray().reduce(function(out, field) {
@@ -312,12 +327,11 @@ $(function() {
 		mongolab.testConnection(config["mongolab.apikey"], config["mongolab.database"], config["mongolab.collection"]).then(function ok() {
 			console.log("[mongolab] connection check ok");
 			chrome.notifications.create("", {
-				type: "message",
+				type: "basic",
 				title: "Chromadex",
 				message: "This mongolab configuration checks out ok",
 				iconUrl: "/public/assets/icon.png"
-			}, function(chrome_notification_id) {
-			});
+			}, function(chrome_notification_id) { });
 		}, function fail(error) {
 			console.log("[mongolab] " + error.error, error.avlb);
 			chrome.notifications.create("", {

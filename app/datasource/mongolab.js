@@ -68,38 +68,41 @@ define(function() {
 	};
 
 	mongolab.populateLocalStorage = function() {
-		(new Promise(function(done) {
-			chrome.storage.local.get("config", function(local) {
-				done(local.config || {});
-			});
-		})).then(function(config) {
-			// have a unique constraint on date to keep it from inserting too much data.
-			// mongolab returns a 400 when duplicate attempted
+		return new Promise(function(complete) {
+			(new Promise(function(done) {
+				chrome.storage.local.get("config", function(local) {
+					done(local.config || {});
+				});
+			})).then(function(config) {
+				// have a unique constraint on date to keep it from inserting too much data.
+				// mongolab returns a 400 when duplicate attempted
 
-			console.log("[mongolab] Requesting all data from MongoLab");
-			if (!("mongolab" in config)) return;
-			if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
-			if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
-			if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
+				console.log("[mongolab] Requesting all data from MongoLab");
+				if (!("mongolab" in config)) return;
+				if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
+				if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
+				if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
 
-			$.getJSON(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey).then(function(data) {
-				chrome.storage.local.get("egvrecords", function(local) {
-					var records = (local.egvrecords || []).concat(data.map(function(record) {
-						return {
-							displayTime: record.date,
-							bgValue: record.sgv,
-							trend: record.direction
-						};
-					}));
-					records.sort(function(a,b) {
-						return a.displayTime - b.displayTime;
+				$.getJSON(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey).then(function(data) {
+					chrome.storage.local.get("egvrecords", function(local) {
+						var records = (local.egvrecords || []).concat(data.map(function(record) {
+							return {
+								displayTime: record.date,
+								bgValue: record.sgv,
+								trend: record.direction
+							};
+						}));
+						records.sort(function(a,b) {
+							return a.displayTime - b.displayTime;
+						});
+						records = records.filter(function(rec, ix, all) {
+							if (ix === 0) return true;
+							return all[ix - 1].displayTime != rec.displayTime;
+						});
+
+						chrome.storage.local.set({ egvrecords: records }, console.debug.bind(console, "[mongolab] grabbed all records from interwebs"));
+						complete(records);
 					});
-					records = records.filter(function(rec, ix, all) {
-						if (ix === 0) return true;
-						return all[ix - 1].displayTime != rec.displayTime;
-					});
-
-					chrome.storage.local.set({ egvrecords: records }, console.debug.bind(console, "[mongolab] grabbed all records from interwebs"));
 				});
 			});
 		});

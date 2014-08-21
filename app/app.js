@@ -273,10 +273,10 @@ $(function() {
 		var isWindows = !!~window.navigator.appVersion.indexOf("Win");
 		document.getElementById("serialportlist").innerHTML += (isWindows? "<li>Default is <code>COM3</code>. Other's available when Chromadex started include</li>": "<li>Default is <code>/dev/tty.usbmodem</code>. Others available when Chromadex started include</li>") + ports.map(function(sp) {
 			if (!isWindows || sp.path != "COM3") return "<li><code>" + sp.path + "</code></li>"; else return "";
-		}).join("")
+		}).join("");
 		$("#serialportlist code").click(function(event) {
 			$("input[name=serialport]").val(this.textContent);
-		})
+		});
 	});
 	$("#pulldatabase").click(function() {
 		mongolab.populateLocalStorage().then(function(r) {
@@ -286,7 +286,7 @@ $(function() {
 				message: "Pulled " + r.length + " records from MongoLab. You might have already had some, and any duplicates were discarded.",
 				iconUrl: "/public/assets/icon.png"
 			}, function(chrome_notification_id) { });
-		})
+		});
 	});
 	$("#savesettings").click(function() {
 		chrome.storage.local.set({
@@ -322,7 +322,7 @@ $(function() {
 		var worker = function() { };
 		var applyChoice = function(notification_id, button) {
 			worker.apply(this,arguments);
-		}
+		};
 		chrome.notifications.onButtonClicked.removeListener(applyChoice);
 		mongolab.testConnection(config["mongolab.apikey"], config["mongolab.database"], config["mongolab.collection"]).then(function ok() {
 			console.log("[mongolab] connection check ok");
@@ -334,35 +334,104 @@ $(function() {
 			}, function(chrome_notification_id) { });
 		}, function fail(error) {
 			console.log("[mongolab] " + error.error, error.avlb);
-			chrome.notifications.create("", {
-				type: "list",
-				title: error.error + ": " + error.selected,
-				message: "Here are some possible valid answers",
-				iconUrl: "/public/assets/icon.png",
-				buttons: (error.avlb.length > 0 && error.avlb.length <= 2)? error.avlb.map(function(choice) {
-					return { title: "Use " + choice };
-				}) : undefined,
-				items: error.avlb.map(function(option) {
-					return {
-						title: option,
-						message: error.type
-					};
-				})
-			}, function(chrome_notification_id) {
-				worker = function(notification_id, button) {
-					if (notification_id == chrome_notification_id) {
-						var selection = error.avlb[button];
-						var fields = {
-							database: "#options-database-name",
-							collection: "#options-database-collection",
-							apikey: "#options-database-apiuser"
+			if (error.type == "database") {
+				chrome.notifications.create("", {
+					type: (error.avlb.length > 0? "list": "basic"),
+					title:  error.error + ": " + error.selected,
+					message: "The " + error.type + " was not correct",
+					iconUrl: "/public/assets/icon.png",
+					buttons: (error.avlb.length > 0 && error.avlb.length <= 2)? error.avlb.map(function(choice) {
+						return { title: "Use " + choice };
+					}) : undefined,
+					items: error.avlb.map(function(option) {
+						return {
+							title: option,
+							message: error.type
 						};
-						$(fields[error.type]).val(selection);
-					}
-					chrome.notifications.onButtonClicked.removeListener(applyChoice);
+					})
+				}, function(chrome_notification_id) {
+					worker = function(notification_id, button) {
+						if (notification_id == chrome_notification_id) {
+							var selection = error.avlb[button];
+							var fields = {
+								database: "#options-database-name",
+								collection: "#options-database-collection",
+								apikey: "#options-database-apiuser"
+							};
+							$(fields[error.type]).val(selection);
+						}
+						chrome.notifications.onButtonClicked.removeListener(applyChoice);
+					};
+					chrome.notifications.onButtonClicked.addListener(applyChoice);
+				});
+			} else if (error.type == "collection") {
+				debugger;
+				if (error.avlb.length > 0) {
+					chrome.notifications.create("", {
+						type: "list",
+						iconUrl: "/public/assets/icon.png",
+						title: "Collection not found",
+						message: "",
+						buttons: error.avlb.map(function(choice) {
+							return { title: "Use " + choice };
+						}).concat([{
+							title: "Keep " + error.selected + " (creates new collection)"
+						}]).slice(0,2),
+						items: error.avlb.map(function(option) {
+							return {
+								title: option,
+								message: error.type
+							};
+						})
+					}, function(chrome_notification_id) {
+						worker = function(notification_id, button) {
+							if (notification_id == chrome_notification_id) {
+								var selection = error.avlb[button] || error.selected;
+								var fields = {
+									database: "#options-database-name",
+									collection: "#options-database-collection",
+									apikey: "#options-database-apiuser"
+								};
+								$(fields[error.type]).val(selection);
+							}
+							chrome.notifications.onButtonClicked.removeListener(applyChoice);
+						};
+						chrome.notifications.onButtonClicked.addListener(applyChoice);
+					});
+				} else {
+					console.log("collection name not found but it will be automatically made");
 				}
-				chrome.notifications.onButtonClicked.addListener(applyChoice);
-			});
+			} else {
+				chrome.notifications.create("", {
+					type: error.avlb.length > 0? "list": "basic",
+					title:  error.error + ": " + error.selected,
+					message: "The " + error.type + " was not correct",
+					iconUrl: "/public/assets/icon.png",
+					buttons: (error.avlb.length > 0 && error.avlb.length <= 2)? error.avlb.map(function(choice) {
+						return { title: "Use " + choice };
+					}) : undefined,
+					items: error.avlb.map(function(option) {
+						return {
+							title: option,
+							message: error.type
+						};
+					})
+				}, function(chrome_notification_id) {
+					worker = function(notification_id, button) {
+						if (notification_id == chrome_notification_id) {
+							var selection = error.avlb[button];
+							var fields = {
+								database: "#options-database-name",
+								collection: "#options-database-collection",
+								apikey: "#options-database-apiuser"
+							};
+							$(fields[error.type]).val(selection);
+						}
+						chrome.notifications.onButtonClicked.removeListener(applyChoice);
+					};
+					chrome.notifications.onButtonClicked.addListener(applyChoice);
+				});
+			}
 		});
 	});
 });

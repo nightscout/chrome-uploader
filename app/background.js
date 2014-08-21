@@ -7,7 +7,7 @@ chrome.app.runtime.onLaunched.addListener(function() {
 		id: "dexcomcharting",
 		bounds: {
 			width: 800,
-			height: 350
+			height: 400
 		}
 	}, function(window) {
 		isOpen = true;
@@ -36,7 +36,7 @@ function monitorForConnection () {
 					id: "dexcomcharting",
 					bounds: {
 						width: 800,
-						height: 350
+						height: 400
 					}
 				}, function(w) {
 					app = w;

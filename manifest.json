@@ -13,7 +13,16 @@
     "serial",
     "storage",
     "<all_urls>",
-    "notifications"
+    "notifications",
+    "usb",
+    {
+      "usbDevices": [
+        {
+          "vendorId": 8867,
+          "productId": 71
+        }
+      ]
+    }
   ],
   "icons": {
     "16": "public/assets/icon.png",

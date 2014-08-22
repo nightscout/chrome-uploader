@@ -29,14 +29,18 @@ define(function() {
 		return (1900 + d.getFullYear()) + "/" + (d.getMonth() + 1) + "/" + d.getDate() + " " + d.getHours() + ":" + d.getMinutes();
 	};
 
-	var formatData = function(plot) {
-		return JSON.stringify({
+	var structureData = function(plot) {
+		return {
 			device: "dexcom",
 			date: plot.displayTime,
 			dateString: formatDate(new Date(plot.displayTime)),
 			sgv: plot.bgValue,
 			direction: plot.trend
-		});
+		};
+	};
+
+	var formatData = function(plot) {
+		return JSON.stringify(structureData(plot));
 	};
 	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
 
@@ -104,6 +108,32 @@ define(function() {
 						complete(records);
 					});
 				});
+			});
+		});
+	};
+
+	mongolab.publish = function(records) {
+		return new Promise(function(complete) {
+			(new Promise(function(done) {
+				chrome.storage.local.get("config", function(local) {
+					done(local.config || {});
+				});
+			})).then(function(config) {
+				// have a unique constraint on date to keep it from inserting too much data.
+				// mongolab returns a 400 when duplicate attempted
+
+				console.log("[mongolab] Publishing all data to MongoLab");
+				if (!("mongolab" in config)) return;
+				if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
+				if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
+				if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
+
+				$.ajax({
+					url: mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey,
+					data: JSON.stringify(records.map(structureData)),
+					type: "POST",
+					contentType: "application/json"
+				}).then(complete);
 			});
 		});
 	};

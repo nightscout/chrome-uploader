@@ -19,11 +19,24 @@ var connect = function() {
 			dexcom.connect(serialport).then(function() {
 				console.debug("[dexcom] loaded");
 				chrome.notifications.onButtonClicked.removeListener(connectionErrorCB);
-				return dexcom.readFromReceiver(1);
+				try {
+					return dexcom.readFromReceiver(1).then(function() {
+						console.debug("[dexcom] read; disconnecting");
+						dexcom.disconnect();
+						resolve(d);
+					});
+				} catch (e) {
+					console.log("[dexcom] %o", e);
+					reject(e);
+				}
 			}, function(e) {
 				console.log("[dexcom] rejected");
 				if (attempts++ < 3) {
-					connect().then(onConnect, onConnectError);
+					try {
+						connect().then(onConnect, onConnectError);
+					} catch (e) {
+						// it didn't work
+					}
 				} else {
 					chrome.notifications.create("", {
 						type: "basic",
@@ -44,13 +57,6 @@ var connect = function() {
 					console.log(e);
 				}
 				reject(e);
-			}).then(function(d) {
-				console.debug("[dexcom] read; disconnecting");
-				dexcom.disconnect();
-				resolve(d);
-			}, function(d) {
-				console.debug("[dexcom] error occured; bailing out");
-				reject(d);
 			});
 		});
 	});
@@ -112,6 +118,50 @@ connect().then(onConnected, onConnectError);
 
 $(function() {
 	// event handlers
+	chrome.storage.local.get(["config", "acknowledgements"], function(local) {
+		$("#openmongolablink").attr("href", "https://www.mongolab.com/databases/" + local.config.mongolab.database + "/collections/" + local.config.mongolab.collection + '#indexes');
+		if (local.acknowledgements.seenUniqueIndex) {
+			$("#adduniqueindexpointer").hide();
+			$("#receiverui").show();
+		}
+	});
+
+	$("#disclaimer").modal();
+	$("#disclaimer").show();
+	$("#acknowledge-agree").click(function() {
+		$("#disclaimer.modal").modal('hide');
+		$("#receiverui").show();
+	});
+	$("#acknowledge-disagree").click(function() {
+		window.close();
+	});
+
+	$("#backfilldatabase").click(function() {
+		chrome.storage.local.get("egvrecords", function(local) {
+			mongolab.publish(local.egvrecords).then(function() {
+				chrome.notifications.create("", {
+						type: "basic",
+						title: "Chromadex",
+						message: "Published " + local.egvrecords.length + " records to MongoLab",
+						iconUrl: "/public/assets/icon.png",
+					}, function(notification_id) {
+				});
+				console.log("[publishtomongolab] publish complete, %i records", local.egvrecords.length);
+			});
+		});
+	});
+
+	$("#dismissunique").click(function() {
+		chrome.storage.local.get("acknowledgements", function(local) {
+			local.acknowledgements = local.acknowledgements || {};
+			local.acknowledgements.seenUniqueIndex = true;
+			chrome.storage.local.set(local, function() {
+				$("#adduniqueindexpointer").hide();
+				$("#receiverui").show();
+			});
+		});
+	});
+
 	$('#reset').confirmation({
 		title: "Are you sure? This will delete all your data and cannot be undone.",
 		onConfirm: function(e) {
@@ -123,22 +173,19 @@ $(function() {
 			});
 		}
 	});
-	$('#import').confirmation({
-		title: "You usually only need to download once. Chromadex automatically gets the last 18h data, but this will download everything else (So if you plugged in yesterday, no need to do this. If you plugged in last week, or this is your first time using Chromadex, go ahead)",
-		btnOkLabel: "Download",
-		btnOkClass: "btn btn-sm btn-primary",
-		onConfirm: function(b){
-			chrome.notifications.create("", {
-				type: "progress",
-				title: "Chromadex",
-				message: "Downloading entire history from Dexcom receiver.",
-				iconUrl: "/public/assets/icon.png",
-				progress: 0
-			}, function(notification_id) {
-				var i = 1;
-				var data = [];
-				var compile = function(i) {
-					return new Promise(function(resolve,reject) {
+	var downloadTheWorld = function(b){
+		chrome.notifications.create("", {
+			type: "progress",
+			title: "Chromadex",
+			message: "Downloading entire history from Dexcom receiver.",
+			iconUrl: "/public/assets/icon.png",
+			progress: 0
+		}, function(notification_id) {
+			var i = 1;
+			var data = [];
+			var compile = function(i) {
+				return new Promise(function(resolve,reject) {
+					try {
 						dexcom.readFromReceiver(i).then(function(d) {
 							data.push(d);
 
@@ -148,63 +195,85 @@ $(function() {
 								reject();
 							}
 						});
-					});
-				},
-				reader = function() {
-					compile(i).then(function() {
-						chrome.notifications.update(notification_id, {
-							progress: i
-						}, function() { });
-						i++;
-						reader();
-					}, function() { // no more data
-						chrome.notifications.update(notification_id, {
-							progress: 85,
-							message: "Still downloading. This part is harder and this might appear to lock up for 30 seconds. No big deal."
-						}, function() {
-							setTimeout(function() {
-							chrome.storage.local.get("egvrecords", function(values) {
-								dexcom.disconnect();
-								var existing = values.egvrecords;
-								var existing_ts = existing.map(function(row) {
-									return row.displayTime;
-								});
-								var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
-								var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
-									return {
-										displayTime: +egv.displayTime,
-										bgValue: egv.bgValue,
-										trend: egv.trend
-									};
-								}).filter(function(row) {
-									return existing_ts.filter(function(ts) {
-										return ts == row.displayTime;
-									}).length === 0;
-								}).filter(function(row) {
-									return row.bgValue > 30;
-								});
-								var to_save = existing.concat(new_records);
-								to_save.sort(function(a,b) {
-									return a.displayTime - b.displayTime;
-								});
-								chrome.storage.local.set({ egvrecords: to_save },
-									console.debug.bind(console, "[updateLocalDb] Saved results")
-								);
-								chrome.notifications.clear(notification_id, function() { });
-								chrome.notifications.create("", {
-									title: "Download complete",
-									type: "basic",
-									message: "Downloaded " + new_records.length + " new records (about " + Math.ceil(new_records.length / 216) + " day(s) worth."
-								}, function() { });
-								console.log("%i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
+					} catch (e) {
+						reject(e);
+					}
+				});
+			},
+			reader = function() {
+				compile(i).then(function() {
+					chrome.notifications.update(notification_id, {
+						progress: i
+					}, function() { });
+					i++;
+					reader();
+				}, function() { // no more data
+					chrome.notifications.update(notification_id, {
+						progress: 85,
+						message: "Still downloading. This part is harder and this might appear to lock up for 30 seconds. No big deal."
+					}, function() {
+						setTimeout(function() {
+						chrome.storage.local.get("egvrecords", function(values) {
+							dexcom.disconnect();
+							var existing = values.egvrecords;
+							var existing_ts = existing.map(function(row) {
+								return row.displayTime;
 							});
-							}, 300);
+							var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
+							var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
+								return {
+									displayTime: +egv.displayTime,
+									bgValue: egv.bgValue,
+									trend: egv.trend
+								};
+							}).filter(function(row) {
+								return existing_ts.filter(function(ts) {
+									return ts == row.displayTime;
+								}).length === 0;
+							}).filter(function(row) {
+								return row.bgValue > 30;
+							});
+							var to_save = existing.concat(new_records);
+							to_save.sort(function(a,b) {
+								return a.displayTime - b.displayTime;
+							});
+							chrome.storage.local.set({ egvrecords: to_save },
+								console.debug.bind(console, "[updateLocalDb] Saved results")
+							);
+							chrome.notifications.clear(notification_id, function() { });
+							chrome.notifications.create("", {
+								title: "Download complete",
+								type: "basic",
+								message: "Downloaded " + new_records.length + " new records (about " + Math.ceil(new_records.length / 216) + " day(s) worth."
+							}, function() { });
+							console.log("%i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
 						});
+						}, 300);
 					});
-				};
-				dexcom.connect().then(reader);
+				});
+			};
+			chrome.storage.local.get("config", function(local) {
+				try {
+					dexcom.connect(local.config.serialport).then(reader, function() {
+						chrome.notifications.update(notification_id, {
+							message: "Could not find a connected Dexcom from which to download.",
+							iconUrl: "/public/assets/error.png"
+						}, function() { });
+					});
+				} catch (e) {
+					chrome.notifications.update(notification_id, {
+						message: "Could not find a connected Dexcom to download from"
+					}, function() { });
+				}
 			});
-		}
+		});
+	};
+	$(".downloadallfromdexcom").click(downloadTheWorld);
+	var downloadAllConfirmation = $('#import').confirmation({
+		title: "You usually only need to download once. Chromadex automatically gets the last 18h data, but this will download everything else (So if you plugged in yesterday, no need to do this. If you plugged in last week, or this is your first time using Chromadex, go ahead)",
+		btnOkLabel: "Download",
+		btnOkClass: "btn btn-sm btn-primary",
+		onConfirm: downloadTheWorld
 	});
 	$('.dropdown-toggle').dropdown();
 	$("#menuinsights").click(function() {
@@ -365,7 +434,6 @@ $(function() {
 					chrome.notifications.onButtonClicked.addListener(applyChoice);
 				});
 			} else if (error.type == "collection") {
-				debugger;
 				if (error.avlb.length > 0) {
 					chrome.notifications.create("", {
 						type: "list",

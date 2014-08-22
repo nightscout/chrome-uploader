@@ -1,5 +1,14 @@
 var convertBg = function(n) { return n; };
 
+var jqShow = $.fn.show;
+$.fn.show = function(domid) {
+	var o = jqShow.apply(this, [domid]);
+	if (this.selector === "#receiverui") {
+		window.requestAnimationFrame(firstLoad);
+	}
+	return o;
+}
+
 function drawReceiverChart(data) {
 	var t = 3; //parseInt($("#timewindow").val(),10);
 	var now = (new Date()).getTime();
@@ -53,15 +62,19 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
 });
 
 // first load, before receiver's returned data
-chrome.storage.local.get(["egvrecords", "config"], function(values) {
-	if ("config" in values && values.config.unit == "mmol") {
-		convertBg = function(n) {
-			return Math.ceil(n * 0.5555) / 10;
-		};
-	} else {
-		convertBg = function(n) {
-			return n;
-		};
-	}
-	drawReceiverChart(values.egvrecords);
-});
+var firstLoad = function() {
+	chrome.storage.local.get(["egvrecords", "config"], function(values) {
+		if ("config" in values && values.config.unit == "mmol") {
+			convertBg = function(n) {
+				return Math.ceil(n * 0.5555) / 10;
+			};
+		} else {
+			convertBg = function(n) {
+				return n;
+			};
+		}
+		drawReceiverChart(values.egvrecords);
+	});
+}
+
+firstLoad();

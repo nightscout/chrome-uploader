@@ -7,8 +7,8 @@
 		<script src="../vendor/flot/jquery.flot.js"></script>
 		<script src="../vendor/flot/jquery.flot.time.js"></script>
 		<script src="time.js"></script>
-		<script src="app.js"></script>
 		<script src="receiver.js"></script>
+		<script src="app.js"></script>
 		<link rel="stylesheet" href="/vendor/bootstrap/dist/css/bootstrap.min.css">
 		<script src="/vendor/bootstrap/dist/js/bootstrap.min.js"></script>
 		<script src="/vendor/bootstrap/js/dropdown.js"></script>
@@ -54,9 +54,43 @@
 			.tab-content form {
 				background-color: #eee;
 			}
+			#receiverui {
+				display: none;
+			}
+
+			/* http://stackoverflow.com/questions/18432394/how-to-make-twitter-bootstrap-modal-full-screen */
+			.modal-dialog {
+				width: 100%;
+				height: 100%;
+				padding: 0;
+			}
+
+			.modal-content {
+				height: 100%;
+				border-radius: 0;
+			}
 		</style>
 	</head>
 	<body>
+		<div id="disclaimer" class="modal fade" role="dialog">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title" id="myModalLabel">Disclaimer</h4>
+					</div>
+					<div class="modal-body">
+						<p>This is pre-release software. It's reverse engineered. Don't rely on it. Don't make decisions around it. Don't blame the author for anything. You're choosing to use this, and accept any responsibility stemming from that.</p>
+					</div>
+					<div class="modal-footer">
+						<button id="acknowledge-agree" class="btn">I agree</button>
+						<button id="acknowledge-disagree" class="btn">I disagree</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
 		<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
 			<div class="container">
 				<div class="navbar-header">
@@ -70,7 +104,6 @@
 				</div>
 				<div class="navbar-collapse collapse" role="navigation">
 					<ul class="nav navbar-nav">
-						<li><a href="#">Receiver</a></li>
 						<li><a href="#" id="openoptions">Options</a></li>
 						<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Reports</a>
 							<ul class="dropdown-menu" role="menu">
@@ -85,15 +118,37 @@
 						</li>
 					</ul>
 					<form class="navbar-form navbar-right" role="form" action="javascript:void">
-						<button type="submit" class="btn btn-primary" id="import" data-placement="bottom" data-tooltip="You usually only need to download once. Chromadex automatically gets the last 18h data, but this will download everything else (So if you plugged in yesterday, no need to do this. If you plugged in last week, go ahead)">Download all</button>
-						<button type="submit" class="btn btn-danger" id="reset" data-placement="bottom" data-tooltip="Are you sure you want to reset? This cannot be undone.">Reset</button>
+						<div class="btn-group">
+							<div class="btn-group">
+								<button type="button" class="btn btn-primary" id="import" data-placement="bottom" data-tooltip="You usually only need to download once. Chromadex automatically gets the last 18h data, but this will download everything else (So if you plugged in yesterday, no need to do this. If you plugged in last week, go ahead)">Download all</button>
+								<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+									<span class="caret"></span>
+									<span class="sr-only">Toggle Dropdown</span>
+								</button>
+								<ul class="dropdown-menu" role="menu">
+									<li><a href="#" class="downloadallfromdexcom">From Dexcom</a></li>
+									<li><a href="#" id="pulldatabase">From Mongolab</a></li>
+									<li class="divider"></li>
+									<li><a href="#" id="backfilldatabase">Backfill Mongolab</a></li>
+								</ul>
+							</div>
+							<button type="submit" class="btn btn-danger" id="reset" data-placement="bottom" data-tooltip="Are you sure you want to reset? This cannot be undone.">Reset</button>
+						</div>
 					</form>
 				</div><!--/.navbar-collapse -->
 			</div>
 		</div>
+
+		<div class="jumbotron" id="adduniqueindexpointer">
+			<p>If you haven't already: Please <a id="openmongolablink" href="https://www.mongolab.com" target="_blank">open MongoLab, and add a "unique index"</a> on your collection.</p>
+			<ul><li>Press Add Index</li><li>Change <code>fieldName</code> to <code>date</code></li><li>Check the <code>Unique</code> option.</li><li>Press Create in background</li></ul>
+			<p>It won't let you? </p>
+			<ul><li>Press the dropdown next to Download All.</li><li>Choose From MongoLab.</li><li>From MongoLab via the link above, choose the Documents tab</li><li>Press Delete all.</li><li>Make the unique index.</li><li>Back in Chromadex, press the button beside Downlaod All, and choose Backfill MongoLab.</li></ul></p>
+			<button id="dismissunique" class="btn">OK</button>
+		</div> 
 		<div class="container" id="receiverui">
 			<div class="row">
-				<div class="container col-xs-10" style="background-color:#222; height:250px;">
+				<div class="container col-xs-10" style="background-color:#222; height:350px;">
 					<div id="dexcomtrend"></div>
 				</div>
 				<div class="container col-xs-2">
@@ -129,11 +184,9 @@
 							<div class="col-sm-8"><input class="form-control" type="text" name="mongolab.apikey" id="options-database-apiuser" placeholder="API user from Mongolab" />
 							<p>Find API key via <a href="http://docs.mongolab.com/restapi/#authentication" target="_blank">Mongolab's documentation</a>.</p></div>
 						</div>
-						<div class="form-group">
-							<button class="btn btn-primary" id="testconnection">Test Mongolab Connection</button>
-							<button class="btn" id="pulldatabase">Fill database from Mongolab</button>
-						</div>
+						<button class="btn btn-primary" id="testconnection" style="margin:1em;">Test Mongolab Connection</button>
 					</form>
+
 					<form class="tab-pane form-horizontal" id="optionsserial">
 						<div class="well well-sm"><p class="bg-info">If you have multiple serial devices, you may need to pick a serial port. Probably not. But maybe. It's considered a match if a found serial port starts with this listed name.</p></div>
 						<div class="form-group">

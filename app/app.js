@@ -20,7 +20,7 @@ var connect = function() {
 				console.debug("[dexcom] loaded");
 				chrome.notifications.onButtonClicked.removeListener(connectionErrorCB);
 				try {
-					return dexcom.readFromReceiver(1).then(function() {
+					return dexcom.readFromReceiver(1).then(function(d) {
 						console.debug("[dexcom] read; disconnecting");
 						dexcom.disconnect();
 						resolve(d);

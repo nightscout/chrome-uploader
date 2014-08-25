@@ -87,25 +87,40 @@ define(function() {
 				if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
 				if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
 
-				$.getJSON(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey).then(function(data) {
-					chrome.storage.local.get("egvrecords", function(local) {
-						var records = (local.egvrecords || []).concat(data.map(function(record) {
-							return {
-								displayTime: record.date,
-								bgValue: record.sgv,
-								trend: record.direction
-							};
-						}));
-						records.sort(function(a,b) {
-							return a.displayTime - b.displayTime;
-						});
-						records = records.filter(function(rec, ix, all) {
-							if (ix === 0) return true;
-							return all[ix - 1].displayTime != rec.displayTime;
-						});
+				// get count (can't transfer more than 1000 at a time)
+				$.getJSON(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?c=true&apiKey=" + config.mongolab.apikey).then(function(total) {
+					var requests = [];
+					do {
+						requests.push(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey + "&l=1000&skip=" + 1000 * requests.length);
+						total -= 1000;
+					} while (total > 0);
+					Promise.all(requests.map(function(url) {
+						return $.getJSON(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey);
+					})).then(function() {
+						debugger;
+						var data = [];
+						var args = Array.prototype.slice.call(arguments, 0);
+						while (args.length) data = Array.prototype.concat.apply(data, args.shift());
 
-						chrome.storage.local.set({ egvrecords: records }, console.debug.bind(console, "[mongolab] grabbed all records from interwebs"));
-						complete(records);
+						chrome.storage.local.get("egvrecords", function(local) {
+							var records = (local.egvrecords || []).concat(data.map(function(record) {
+								return {
+									displayTime: record.date,
+									bgValue: record.sgv,
+									trend: record.direction
+								};
+							}));
+							records.sort(function(a,b) {
+								return a.displayTime - b.displayTime;
+							});
+							records = records.filter(function(rec, ix, all) {
+								if (ix === 0) return true;
+								return all[ix - 1].displayTime != rec.displayTime;
+							});
+
+							chrome.storage.local.set({ egvrecords: records }, console.debug.bind(console, "[mongolab] grabbed all records from interwebs"));
+							complete(records, data);
+						});
 					});
 				});
 			});
@@ -128,12 +143,19 @@ define(function() {
 				if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
 				if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
 
-				$.ajax({
-					url: mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey,
-					data: JSON.stringify(records.map(structureData)),
-					type: "POST",
-					contentType: "application/json"
-				}).then(complete);
+				var record_sections = [];
+				do {
+					record_sections.push(records.slice(record_sections.length * 1000, (record_sections.length + 1) * 1000);
+				} while ((record_sections.length * 1000) < records.length);
+
+				Promise.all(record_sections.map(function(records) {
+					return $.ajax({
+						url: mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey,
+						data: JSON.stringify(records.map(structureData)),
+						type: "POST",
+						contentType: "application/json"
+					});
+				})).then(complete);
 			});
 		});
 	};

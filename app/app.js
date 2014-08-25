@@ -348,11 +348,11 @@ $(function() {
 		});
 	});
 	$("#pulldatabase").click(function() {
-		mongolab.populateLocalStorage().then(function(r) {
+		mongolab.populateLocalStorage().then(function(r, ml) {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "Pulled " + r.length + " records from MongoLab. You might have already had some, and any duplicates were discarded.",
+				message: "Pulled " + ml.length + " records from MongoLab. You might have already had some, and any duplicates were discarded.",
 				iconUrl: "/public/assets/icon.png"
 			}, function(chrome_notification_id) { });
 		});

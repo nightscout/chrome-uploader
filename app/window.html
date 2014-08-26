@@ -164,9 +164,10 @@
 				<button class="btn btn-primary pull-right" id="resetchanged">Undo Changes</button>
 				<ul class="nav nav-tabs">
 					<li class="nav active"><a href="#optionsdatabase" data-toggle="tab">Mongolab</a></li>
-					<li class="nav"><a href="#optionsserial" data-toggle="tab">Serial Port</a></li>
+					<li class="nav"><a href="#optionsglukit" data-toggle="tab">Glukit</a></li>
 					<li class="nav"><a href="#optionsunits" data-toggle="tab">Units</a></li>
 					<li class="nav"><a href="#optionstarget" data-toggle="tab">Range</a></li>
+					<li class="nav"><a href="#optionsserial" data-toggle="tab">Serial Port</a></li>
 				</ul>
 				<div class="tab-content">
 					<form class="tab-pane active form-horizontal" id="optionsdatabase">
@@ -185,6 +186,11 @@
 							<p>Find API key via <a href="http://docs.mongolab.com/restapi/#authentication" target="_blank">Mongolab's documentation</a>.</p></div>
 						</div>
 						<button class="btn btn-primary" id="testconnection" style="margin:1em;">Test Mongolab Connection</button>
+					</form>
+
+					<form class="tab-panel form-horizontal" id="optionsglukit">
+						<p>Check out <a href="http://www.mygluk.it">My Glu Kit</a>.</p>
+						<button type="button" class="btn" id="authorizeglukit">Authorize your Google Account</button>
 					</form>
 
 					<form class="tab-pane form-horizontal" id="optionsserial">

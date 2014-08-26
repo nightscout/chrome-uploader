@@ -14,6 +14,7 @@
     "storage",
     "<all_urls>",
     "notifications",
+    "identity",
     "usb",
     {
       "usbDevices": [

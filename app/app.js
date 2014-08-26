@@ -1,6 +1,7 @@
-require(["dexcom", "./datasource/mongolab"], function(dexcom, mongolab) {
+require(["dexcom", "./datasource/mongolab", "./datasource/trending_alerts"], function(dexcom, mongolab, alerts) {
 var isWindows = !!~window.navigator.appVersion.indexOf("Win");
 var attempts = 0;
+
 var connect = function() {
 	var chrome_notification_id = 0;
 	var connectionErrorCB = function(notification_id, button) {
@@ -93,6 +94,7 @@ onConnected = function(data) {
 				to_save.sort(function(a,b) {
 					return a.displayTime - b.displayTime;
 				});
+				var last_record = to_save[to_save.length - 1];
 				chrome.storage.local.set({ egvrecords: to_save }, console.debug.bind(console, "[updateLocalDb] Saved results"));
 				console.log("%i new records", new_records.length);
 
@@ -142,11 +144,11 @@ $(function() {
 		chrome.storage.local.get("egvrecords", function(local) {
 			mongolab.publish(local.egvrecords).then(function() {
 				chrome.notifications.create("", {
-						type: "basic",
-						title: "Chromadex",
-						message: "Published " + local.egvrecords.length + " records to MongoLab",
-						iconUrl: "/public/assets/icon.png",
-					}, function(notification_id) {
+					type: "basic",
+					title: "Chromadex",
+					message: "Published " + local.egvrecords.length + " records to MongoLab",
+					iconUrl: "/public/assets/icon.png",
+				}, function(notification_id) {
 				});
 				console.log("[publishtomongolab] publish complete, %i records", local.egvrecords.length);
 			});
@@ -312,6 +314,18 @@ $(function() {
 				width: 960,
 				height: 800
 			}
+		});
+	});
+	$("#authorizeglukit").click(function() {
+		debugger;
+		chrome.identity.launchWebAuthFlow({
+			'url': 'https://glukit.appspot.com/authorize?client_id=chromadex1.mygluk.it&response_type=code&redirect_uri=' + encodeURIComponent('https://' + chrome.runtime.id + '.chromiumapp.org/provider_cb'),
+			'interactive': true
+		},
+		function(redirect_url) {
+			debugger;
+			console.log(redirect_url);
+			/* Extract token from redirect_url */
 		});
 	});
 	$("#openoptions").click(function(){

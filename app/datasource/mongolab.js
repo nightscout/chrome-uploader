@@ -145,7 +145,7 @@ define(function() {
 
 				var record_sections = [];
 				do {
-					record_sections.push(records.slice(record_sections.length * 1000, (record_sections.length + 1) * 1000);
+					record_sections.push(records.slice(record_sections.length * 1000, (record_sections.length + 1) * 1000));
 				} while ((record_sections.length * 1000) < records.length);
 
 				Promise.all(record_sections.map(function(records) {

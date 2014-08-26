@@ -35,9 +35,11 @@ function drawReceiverChart(data) {
 			}
 		}
 	);
-	$("#cgmnow").text(convertBg(data[data.length - 1].bgValue));
-	$("#cgmdirection").text(data[data.length - 1].trend);
-	$("#cgmtime").text((new Date(data[data.length - 1].displayTime)).format("h:ia"));
+	if (data.length) {
+		$("#cgmnow").text(convertBg(data[data.length - 1].bgValue));
+		$("#cgmdirection").text(data[data.length - 1].trend);
+		$("#cgmtime").text((new Date(data[data.length - 1].displayTime)).format("h:ia"));
+	}
 }
 
 // updated database

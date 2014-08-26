@@ -119,7 +119,9 @@ connect().then(onConnected, onConnectError);
 $(function() {
 	// event handlers
 	chrome.storage.local.get(["config", "acknowledgements"], function(local) {
-		$("#openmongolablink").attr("href", "https://www.mongolab.com/databases/" + local.config.mongolab.database + "/collections/" + local.config.mongolab.collection + '#indexes');
+		if ("mongolab" in local.config) {
+			$("#openmongolablink").attr("href", "https://www.mongolab.com/databases/" + local.config.mongolab.database + "/collections/" + local.config.mongolab.collection + '#indexes');
+		}
 		if (local.acknowledgements.seenUniqueIndex) {
 			$("#adduniqueindexpointer").hide();
 			$("#receiverui").show();

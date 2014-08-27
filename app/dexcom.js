@@ -55,35 +55,63 @@ define(function () {
 		buffer: [],
 		connect: function(serialport) {
 			return new Promise(function(resolve, reject) {
+				chrome.serial.getDevices(function(ports) {
+					for (var i=0; i<ports.length; i++) {
+						var port = ports[i];
+						console.log("Checking port for dexcom device ID: %s", port.path);
+						if (port.vendorId == 8867 && port.productId == 71) {
+							console.debug("Found dexcom serial port at %s", port.path);
+							dexcom.oldConnect(port, true).then(resolve, reject);
+							return;
+						}
+					}
+					dexcom.oldConnect(serialport, false).then(resolve, reject);
+				});
+			});
+		},
+		oldConnect: function(serialport, foundActualDevice) {
+			console.log("getDevices in oldConnect with device: %o", serialport);
+			return new Promise(function(resolve, reject) {
 				if (dexcom.connected) {
 					return reject(new Error("Wait for existing process to finish"));
 				}
-				chrome.serial.getDevices(function(ports) {
-					var connected = function(conn) {
-						if (conn && "connectionId" in conn) {
-							dexcom.connection = conn;
-							dexcom.connected = true;
-							console.debug("[connecting] successfully connected to port %o", conn);
-							setTimeout(resolve, 100);
-							chrome.serial.onReceive.addListener(dexcom.serialOnReceiveListener);
-						} else {
-							reject(new Error(
-								"Couldn't open USB connection. Unplug your Dexcom, plug it back in, and try again."
-							));
+				var connected = function(conn) {
+					if (conn && "connectionId" in conn) {
+						dexcom.connection = conn;
+						dexcom.connected = true;
+						console.debug("[connecting] successfully connected to port %o", conn);
+						setTimeout(resolve, 100);
+						chrome.serial.onReceive.addListener(dexcom.serialOnReceiveListener);
+					} else {
+						console.error("Couldn't open USB connection to port %o", conn);
+						reject(new Error(
+							"Couldn't open USB connection. Unplug your Dexcom, plug it back in, and try again."
+						));
+					}
+				};
+				var tryPort = function(port) {
+						console.log("Trying port: " + port);
+						if (!foundActualDevice &&
+							 (port.path.substr(0,serialport.length).toLowerCase() != serialport.toLowerCase())) {
+							 return;
 						}
-					};
-					ports.forEach(function(port) {
-						if (port.path.substr(0,serialport.length).toLowerCase() != serialport.toLowerCase()) return;
 						dexcom.port = port;
 						console.debug("[connecting] Found dexcom at port %o", port);
 						chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
+				}
+				if (foundActualDevice) {
+					tryPort(serialport);
+				} else {
+					chrome.serial.getDevices(function(ports) {
+						console.log("getDevices returned ports: " + ports);
+						ports.forEach(tryPort);
+						if (dexcom.port === null) {
+							reject(new Error(
+								"Didn't find a Dexcom receiver plugged in"
+							));
+						}
 					});
-					if (dexcom.port === null) {
-						reject(new Error(
-							"Didn't find a Dexcom receiver plugged in"
-						));
-					}
-				});
+				}
 			});
 		},
 		serialOnReceiveListener: function(info) {

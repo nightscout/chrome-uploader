@@ -90,15 +90,15 @@ define(function () {
 					}
 				};
 				var tryPort = function(port) {
-						console.log("Trying port: " + port);
-						if (!foundActualDevice &&
-							 (port.path.substr(0,serialport.length).toLowerCase() != serialport.toLowerCase())) {
-							 return;
-						}
-						dexcom.port = port;
-						console.debug("[connecting] Found dexcom at port %o", port);
-						chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
-				}
+					console.log("Trying port: " + port);
+					if (!foundActualDevice &&
+						(port.path.substr(0,serialport.length).toLowerCase() != serialport.toLowerCase())) {
+						return;
+					}
+					dexcom.port = port;
+					console.debug("[connecting] Found dexcom at port %o", port);
+					chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
+				};
 				if (foundActualDevice) {
 					tryPort(serialport);
 				} else {

@@ -28,18 +28,7 @@ define(function() {
 			"SingleUp": 2,
 			"DoubleUp": 3
 		};
-
-
-		if (current_direction && current_direction != now_trend) {
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "Chromadex",
-				message: "Trend direction changed to " + now_trend + ". You're #cgmnow " + convertBg(now_bg),
-				iconUrl: "/public/assets/icon.png",
-				priority: 1,
-			}, function(notification_id) {
-			});
-		}
+		
 		// falling too fast no other considerations
 		if (now_trend == "DoubleDown" && now_bg < 150) {
 			chrome.notifications.create("", {
@@ -148,6 +137,17 @@ define(function() {
 				message: "You're trending forty five up. #cgmnow " + convertBg(now_bg),
 				iconUrl: "/public/assets/icon.png",
 				priority: 2,
+			}, function(notification_id) {
+			});
+		}
+
+		if (current_direction && current_direction != now_trend) {
+			chrome.notifications.create("", {
+				type: "basic",
+				title: "Chromadex",
+				message: "Trend direction changed to " + now_trend + ". You're #cgmnow " + convertBg(now_bg),
+				iconUrl: "/public/assets/icon.png",
+				priority: 1,
 			}, function(notification_id) {
 			});
 		}

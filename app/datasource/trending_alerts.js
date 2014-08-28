@@ -64,7 +64,7 @@ define(function() {
 		}
 
 		// falling but slowing
-		if (now_trend == "FortyFiveDown" && (["SingleDown", "DoubleDown"].contains(now_trend))) {
+		if (now_trend == "FortyFiveDown" && (["SingleDown", "DoubleDown"].indexOf(now_trend) > -1)) {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
@@ -120,7 +120,7 @@ define(function() {
 		}
 
 		// rising but slowing
-		if (now_trend == "FortyFiveUp" && (["SingleUp", "DoubleUp"].contains(now_trend))) {
+		if (now_trend == "FortyFiveUp" && (["SingleUp", "DoubleUp"].indexOf(now_trend) > -1)) {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",

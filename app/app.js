@@ -1,4 +1,5 @@
-require(["dexcom", "./datasource/mongolab", "./datasource/trending_alerts"], function(dexcom, mongolab, alerts) {
+/*global require*/
+require(["dexcom", "oauth", "./datasource/mongolab", "./datasource/trending_alerts"], function(dexcom, oauth, mongolab, alerts) {
 var isWindows = !!~window.navigator.appVersion.indexOf("Win");
 var attempts = 0;
 
@@ -318,15 +319,17 @@ $(function() {
 	});
 	$("#authorizeglukit").click(function() {
 		debugger;
-		chrome.identity.launchWebAuthFlow({
-			'url': 'https://glukit.appspot.com/authorize?client_id=chromadex1.mygluk.it&response_type=code&redirect_uri=' + encodeURIComponent('https://' + chrome.runtime.id + '.chromiumapp.org/provider_cb'),
-			'interactive': true
-		},
-		function(redirect_url) {
-			debugger;
-			console.log(redirect_url);
-			/* Extract token from redirect_url */
-		});
+		oauth.interactiveSignIn();
+		// console.log('https://glukit.appspot.com/authorize?client_id=chromadex.dev1.mygluk.it&redirect_uri=' + encodeURIComponent('https://' + chrome.runtime.id + '.chromiumapp.org/provider_cb') + "&response_type=code");
+		// chrome.identity.launchWebAuthFlow({
+		// 	'url': 'https://glukit.appspot.com/authorize?client_id=chromadex.dev1.mygluk.it&redirect_uri=' + encodeURIComponent('https://' + chrome.runtime.id + '.chromiumapp.org/provider_cb') + "&response_type=code",
+		// 	'interactive': true
+		// },
+		// function(redirect_url) {
+		// 	debugger;
+		// 	console.log(redirect_url);
+		// 	/* Extract token from redirect_url */
+		// });
 	});
 	$("#openoptions").click(function(){
 		new Promise(function(done) {

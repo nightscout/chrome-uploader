@@ -42,7 +42,7 @@ define(function() {
 		}
 
 		// falling fast but slowing
-		if (now_trend == "SingleDown" && now_trend == "DoubleDown") {
+		else if (now_trend == "SingleDown" && now_trend == "DoubleDown") {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
@@ -64,7 +64,7 @@ define(function() {
 		}
 
 		// falling but slowing
-		if (now_trend == "FortyFiveDown" && (["SingleDown", "DoubleDown"].indexOf(now_trend) > -1)) {
+		else if (now_trend == "FortyFiveDown" && (["SingleDown", "DoubleDown"].indexOf(now_trend) > -1)) {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
@@ -86,7 +86,7 @@ define(function() {
 		}
 
 		// raising too fast
-		if (now_trend == "DoubleUp" && now_bg > 110 && ( last_bg? last_bg <= 110: true)) {
+		else if (now_trend == "DoubleUp" && now_bg > 110 && ( last_bg? last_bg <= 110: true)) {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
@@ -98,7 +98,7 @@ define(function() {
 		}
 
 		// rising fast but slowing
-		if (now_trend == "SingleUp" && now_trend == "DoubleUp") {
+		else if (now_trend == "SingleUp" && now_trend == "DoubleUp") {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
@@ -120,7 +120,7 @@ define(function() {
 		}
 
 		// rising but slowing
-		if (now_trend == "FortyFiveUp" && (["SingleUp", "DoubleUp"].indexOf(now_trend) > -1)) {
+		else if (now_trend == "FortyFiveUp" && (["SingleUp", "DoubleUp"].indexOf(now_trend) > -1)) {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
@@ -141,7 +141,7 @@ define(function() {
 			});
 		}
 
-		if (current_direction && current_direction != now_trend) {
+		else if (current_direction && current_direction != now_trend) {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",

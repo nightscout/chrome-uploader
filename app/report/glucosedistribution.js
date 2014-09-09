@@ -76,9 +76,15 @@ new Promise(function(ready) {
 		$("<td>" + range + "</td>").appendTo(tr);
 		$("<td>" + Math.floor(100 * rangeRecords.length / data.length) + "%</td>").appendTo(tr);
 		$("<td>" + rangeRecords.length + "</td>").appendTo(tr);
-		$("<td>" + Math.floor(10*Statician.mean(localBgs))/10 + "</td>").appendTo(tr);
-		$("<td>" + rangeRecords[midpoint].localBg + "</td>").appendTo(tr);
-		$("<td>" + Math.floor(Statician.standard_deviation(localBgs)*10)/10 + "</td>").appendTo(tr);
+		if (rangeRecords.length > 0) {
+			$("<td>" + Math.floor(10*Statician.mean(localBgs))/10 + "</td>").appendTo(tr);
+			$("<td>" + rangeRecords[midpoint].localBg + "</td>").appendTo(tr);
+			$("<td>" + Math.floor(Statician.standard_deviation(localBgs)*10)/10 + "</td>").appendTo(tr);
+		} else {
+			$("<td>N/A</td>").appendTo(tr);
+			$("<td>N/A</td>").appendTo(tr);
+			$("<td>N/A</td>").appendTo(tr);
+		}
 
 		table.append(tr);
 	});

@@ -67,4 +67,5 @@ function monitorForConnection () {
 	});
 }
 
-setInterval(monitorForConnection, 1000);
+// This works too porly if you have multiple chrome profiles
+// setInterval(monitorForConnection, 1000);

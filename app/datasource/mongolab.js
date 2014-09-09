@@ -1,32 +1,44 @@
-// var executionQueue = function() {
-// 	var args = Array.prototype.slice.apply(arguments, 0);
-// 	while (args.length) {
-// 		this.push(args.shift());
-// 	}
-// 	var currFn = queue.shift();
-// 	var queue = this;
-// 	var promiseImpl = function(promise_ok, promise_fail) {
-// 		currFn(function ok() {
-// 			currFn = queue.shift();
-// 			if (typeof currFn == "function") {
-// 				new Promise(promiseImpl);
-// 			} else {
-// 				promise_ok.apply(queue, arguments);
-// 			}
-// 		}, function fail() {
-// 			promise_fail.apply(queue, arguments);
-// 		});
-// 	};
-// 	var myPromise = new Promise(promiseImpl);
-// };
+define(["../waiting"], function(waiting) {
+	// http://stackoverflow.com/a/8462701
+	function formatFloat(num,casasDec,sepDecimal,sepMilhar) {
+		if (num < 0)
+		{
+			num = -num;
+			sinal = -1;
+		} else
+			sinal = 1;
+		var resposta = "";
+		var part = "";
+		if (num != Math.floor(num)) // decimal values present
+		{
+			part = Math.round((num-Math.floor(num))*Math.pow(10,casasDec)).toString(); // transforms decimal part into integer (rounded)
+			while (part.length < casasDec)
+				part = '0'+part;
+			if (casasDec > 0)
+			{
+				resposta = sepDecimal+part;
+				num = Math.floor(num);
+			} else
+				num = Math.round(num);
+		} // end of decimal part
+		while (num > 0) // integer part
+		{
+			part = (num - Math.floor(num/1000)*1000).toString(); // part = three less significant digits
+			num = Math.floor(num/1000);
+			if (num > 0)
+				while (part.length < 3) // 123.023.123  if sepMilhar = '.'
+					part = '0'+part; // 023
+			resposta = part+resposta;
+			if (num > 0)
+				resposta = sepMilhar+resposta;
+		}
+		if (sinal < 0)
+			resposta = '-'+resposta;
+		return resposta;
+	}
 
-// executionQueue.prototype = [];
-
-
-
-define(function() {
 	var formatDate = function(d) {
-		return (1900 + d.getFullYear()) + "/" + (d.getMonth() + 1) + "/" + d.getDate() + " " + d.getHours() + ":" + d.getMinutes();
+		return (d.getFullYear()) + "/" + (d.getMonth() + 1) + "/" + d.getDate() + " " + d.getHours() + ":" + d.getMinutes();
 	};
 
 	var structureData = function(plot) {
@@ -34,7 +46,7 @@ define(function() {
 			device: "dexcom",
 			date: plot.displayTime,
 			dateString: formatDate(new Date(plot.displayTime)),
-			sgv: plot.bgValue,
+			sgv: formatFloat(plot.bgValue, 2, "."),
 			direction: plot.trend
 		};
 	};
@@ -72,6 +84,7 @@ define(function() {
 	};
 
 	mongolab.populateLocalStorage = function() {
+		waiting.show("Downloading from Mongolab");
 		return new Promise(function(complete) {
 			(new Promise(function(done) {
 				chrome.storage.local.get("config", function(local) {
@@ -97,7 +110,6 @@ define(function() {
 					Promise.all(requests.map(function(url) {
 						return $.getJSON(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey);
 					})).then(function() {
-						debugger;
 						var data = [];
 						var args = Array.prototype.slice.call(arguments, 0);
 						while (args.length) data = Array.prototype.concat.apply(data, args.shift());
@@ -120,6 +132,7 @@ define(function() {
 
 							chrome.storage.local.set({ egvrecords: records }, console.debug.bind(console, "[mongolab] grabbed all records from interwebs"));
 							complete(records, data);
+							waiting.hide();
 						});
 					});
 				});
@@ -128,6 +141,7 @@ define(function() {
 	};
 
 	mongolab.publish = function(records) {
+		waiting.show("Sending entire history to MongoLab");
 		return new Promise(function(complete) {
 			(new Promise(function(done) {
 				chrome.storage.local.get("config", function(local) {
@@ -155,7 +169,10 @@ define(function() {
 						type: "POST",
 						contentType: "application/json"
 					});
-				})).then(complete);
+				})).then(function() {
+					waiting.hide();
+					complete();
+				});
 			});
 		});
 	};

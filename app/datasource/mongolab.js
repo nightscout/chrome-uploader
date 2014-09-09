@@ -104,11 +104,11 @@ define(["../waiting"], function(waiting) {
 				$.getJSON(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?c=true&apiKey=" + config.mongolab.apikey).then(function(total) {
 					var requests = [];
 					do {
-						requests.push(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey + "&l=1000&skip=" + 1000 * requests.length);
+						requests.push(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey + "&l=1000&sk=" + 1000 * requests.length);
 						total -= 1000;
 					} while (total > 0);
 					Promise.all(requests.map(function(url) {
-						return $.getJSON(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey);
+						return $.getJSON(url);
 					})).then(function() {
 						var data = [];
 						var args = Array.prototype.slice.call(arguments, 0);
@@ -117,7 +117,7 @@ define(["../waiting"], function(waiting) {
 						chrome.storage.local.get("egvrecords", function(local) {
 							var records = (local.egvrecords || []).concat(data.map(function(record) {
 								return {
-									displayTime: record.date,
+									displayTime: Date.parse(record.dateString),
 									bgValue: record.sgv,
 									trend: record.direction
 								};
@@ -131,7 +131,7 @@ define(["../waiting"], function(waiting) {
 							});
 
 							chrome.storage.local.set({ egvrecords: records }, console.debug.bind(console, "[mongolab] grabbed all records from interwebs"));
-							complete(records, data);
+							complete({ new_records: records, raw_data: data });
 							waiting.hide();
 						});
 					});

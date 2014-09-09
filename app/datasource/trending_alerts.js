@@ -28,13 +28,20 @@ define(function() {
 			"SingleUp": 2,
 			"DoubleUp": 3
 		};
+
+		var at = (function(d) {return function() {
+			var h = d.getHours() % 12, m = d.getMinutes();
+			if (h == 0) h = "12";
+			var ampm = d.getHours() >= 12? "pm": "am";
+			return " at " + h + ":" + m + ampm;
+		}; })(new Date());
 		
 		// falling too fast no other considerations
 		if (now_trend == "DoubleDown" && now_bg < 150) {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "You're trending double down. #cgmnow " + convertBg(now_bg),
+				message: "You're trending double down. #cgmnow " + convertBg(now_bg) + at(),
 				iconUrl: "/public/assets/icon.png",
 				priority: 2,
 			}, function(notification_id) {
@@ -46,7 +53,7 @@ define(function() {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "Your fall has slowed. You were double down but are now single down. #cgmnow " + convertBg(now_bg),
+				message: "Your fall has slowed. You were double down but are now single down. #cgmnow " + convertBg(now_bg) + at(),
 				iconUrl: "/public/assets/icon.png",
 				priority: 1,
 			}, function(notification_id) {
@@ -56,7 +63,7 @@ define(function() {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "You're trending single down. #cgmnow " + convertBg(now_bg),
+				message: "You're trending single down. #cgmnow " + convertBg(now_bg) + at(),
 				iconUrl: "/public/assets/icon.png",
 				priority: 2,
 			}, function(notification_id) {
@@ -68,7 +75,7 @@ define(function() {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "Your fall has slowed. You were " + now_trend + " but are now forty five down down. #cgmnow " + convertBg(now_bg),
+				message: "Your fall has slowed. You were " + now_trend + " but are now forty five down down. #cgmnow " + convertBg(now_bg) + at(),
 				iconUrl: "/public/assets/icon.png",
 				priority: 1,
 			}, function(notification_id) {
@@ -78,7 +85,7 @@ define(function() {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "You're trending forty five down. #cgmnow " + convertBg(now_bg),
+				message: "You're trending forty five down. #cgmnow " + convertBg(now_bg) + at(),
 				iconUrl: "/public/assets/icon.png",
 				priority: 2,
 			}, function(notification_id) {
@@ -90,7 +97,7 @@ define(function() {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "You're trending double up. #cgmnow " + convertBg(now_bg),
+				message: "You're trending double up. #cgmnow " + convertBg(now_bg) + at(),
 				iconUrl: "/public/assets/icon.png",
 				priority: 2,
 			}, function(notification_id) {
@@ -102,7 +109,7 @@ define(function() {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "Your rise has slowed. You were double up but are now single up. #cgmnow " + convertBg(now_bg),
+				message: "Your rise has slowed. You were double up but are now single up. #cgmnow " + convertBg(now_bg) + at(),
 				iconUrl: "/public/assets/icon.png",
 				priority: 1,
 			}, function(notification_id) {
@@ -112,7 +119,7 @@ define(function() {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "You're trending single up. #cgmnow " + convertBg(now_bg),
+				message: "You're trending single up. #cgmnow " + convertBg(now_bg) + at(),
 				iconUrl: "/public/assets/icon.png",
 				priority: 2,
 			}, function(notification_id) {
@@ -124,7 +131,7 @@ define(function() {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "Your rise has slowed. You were " + now_trend + " but are now forty five up up. #cgmnow " + convertBg(now_bg),
+				message: "Your rise has slowed. You were " + now_trend + " but are now forty five up up. #cgmnow " + convertBg(now_bg) + at(),
 				iconUrl: "/public/assets/icon.png",
 				priority: 1,
 			}, function(notification_id) {
@@ -134,7 +141,7 @@ define(function() {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "You're trending forty five up. #cgmnow " + convertBg(now_bg),
+				message: "You're trending forty five up. #cgmnow " + convertBg(now_bg) + at(),
 				iconUrl: "/public/assets/icon.png",
 				priority: 2,
 			}, function(notification_id) {

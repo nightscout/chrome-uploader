@@ -454,11 +454,11 @@ $(function() {
 						iconUrl: "/public/assets/icon.png",
 						title: "Collection not found",
 						message: "",
-						buttons: error.avlb.map(function(choice) {
-							return { title: "Use " + choice };
-						}).concat([{
+						buttons: [{
 							title: "Keep " + error.selected + " (creates new collection)"
-						}]).slice(0,2),
+						}].concat(error.avlb.map(function(choice) {
+							return { title: "Use " + choice };
+						})).slice(0,2),
 						items: error.avlb.map(function(option) {
 							return {
 								title: option,
@@ -467,8 +467,8 @@ $(function() {
 						})
 					}, function(chrome_notification_id) {
 						worker = function(notification_id, button) {
-							if (notification_id == chrome_notification_id) {
-								var selection = error.avlb[button] || error.selected;
+							if (notification_id == chrome_notification_id && button > 0) {
+								var selection = error.avlb[button - 1] || error.selected;
 								var fields = {
 									database: "#options-database-name",
 									collection: "#options-database-collection",

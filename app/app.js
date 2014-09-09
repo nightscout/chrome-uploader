@@ -366,7 +366,7 @@ $(function() {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "Pulled " + ml.length + " records from MongoLab. You might have already had some, and any duplicates were discarded.",
+				message: "Pulled " + r.raw_data.length + " records from MongoLab. You might have already had some, and any duplicates were discarded.",
 				iconUrl: "/public/assets/icon.png"
 			}, function(chrome_notification_id) { });
 		});

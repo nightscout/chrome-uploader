@@ -152,7 +152,7 @@ define(function() {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "Chromadex",
-				message: "Trend direction changed to " + now_trend + ". You're #cgmnow " + convertBg(now_bg),
+				message: "Trend direction changed to " + now_trend + ". You're #cgmnow " + convertBg(now_bg) + at(),
 				iconUrl: "/public/assets/icon.png",
 				priority: 1,
 			}, function(notification_id) {

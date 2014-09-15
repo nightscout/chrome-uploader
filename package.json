@@ -1,5 +1,5 @@
 {
-  "name": "chromadex",
+  "name": "NightScout.info CGM Utility",
   "version": "0.0.0",
   "main": "index.js",
   "description": "Download Dexcom data on almost any platform Chrome runs on.",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/altintx/chromadex.git"
+    "url": "https://github.com/nightscout/chrome-uploader.git"
   },
   "engines": {
     "node": ">= 0.10.0"
@@ -20,7 +20,7 @@
   "author": "Brian Bosh <bbosh@alternateinterior.com>",
   "license": "Unknown",
   "bugs": {
-    "url": "https://github.com/altintx/chromadex"
+    "url": "https://github.com/nightscout/chrome-uploader/issues"
   },
   "dependencies": {
     "broccoli": "0.12.1",

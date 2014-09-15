@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
 
-  "name": "Chromadex",
-  "description": "Report #cgmnow, run reports, and upload data to #diyps or NightScout.",
+  "name": "NightScout.info CGM Utility",
+  "description": "Report #cgmnow, run reports, and upload data to NightScout.",
   "version": "0.1.2.0",
   "app": {
     "background": {

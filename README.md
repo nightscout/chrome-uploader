@@ -1,7 +1,7 @@
-##chromadex
+##NightScout.info CGM Utility
 Download Dexcom data on almost any platform Chrome runs on. (Developed and tested on Mac OSX). A good deal of this data is corrupt. It should work on Windows if [Dexcom Studio](http://dexcom.com/dexcom-studio) is installed, but other platforms should work more magically. 
 
-##Don't use it for treatment. Seriously. A lot of this data is wrong. Not a little wrong. OMG WTF out of left field wrong.
+##Don't use this for treatment. Don't. Seriously, don't. This is reverse engineered. Dexcom Studio can be aware of lots of gotchas that this simply isn't. Data might stop updating. Just like how a CGM is just an alert to check your sugar, this is just an alert to check your Dexcom. 
 
 ###Install
 1. Get code in folder
@@ -15,8 +15,7 @@ Download Dexcom data on almost any platform Chrome runs on. (Developed and teste
 
 ###Use
 1. Plug in your Dexcom
-2. Magic happens
-2. If magic did not happen, open chrome://extensions
-3. Click launch
+2. open chrome://extensions
+3. Click **NightScout.info CGM Utility** icon to launch
 
 Lots of steps and right now. Some times you get no data back, usually preceded by completely inaccurate graphs- if that happens, press the Reset button. This'll wipe out all the data it's accumulated. Doesn't seem like you really need to unplug/replug anymore.

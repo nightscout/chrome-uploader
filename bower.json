@@ -1,5 +1,5 @@
 {
-  "name": "chromadex",
+  "name": "NightScout.info CGM Utility",
   "dependencies": {
     "jquery": "^1.11.1",
     "qunit": "~1.12.0",

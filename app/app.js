@@ -43,7 +43,7 @@ var connect = function() {
 				} else {
 					chrome.notifications.create("", {
 						type: "basic",
-						title: "Chromadex",
+						title: "NightScout.info CGM Utility",
 						message: "Could not connect to Dexcom receiver. Unplug it and plug it back in. Be gentle, Dexcom's USB port is fragile. I like to unplug from the computer's side.",
 						iconUrl: "/public/assets/error.png",
 						buttons: [{
@@ -153,7 +153,7 @@ $(function() {
 			mongolab.publish(local.egvrecords).then(function() {
 				chrome.notifications.create("", {
 					type: "basic",
-					title: "Chromadex",
+					title: "NightScout.info CGM Utility",
 					message: "Published " + local.egvrecords.length + " records to MongoLab",
 					iconUrl: "/public/assets/icon.png",
 				}, function(notification_id) {
@@ -272,7 +272,7 @@ $(function() {
 	};
 	$(".downloadallfromdexcom").click(downloadTheWorld);
 	var downloadAllConfirmation = $('#import').confirmation({
-		title: "You usually only need to download once. Chromadex automatically gets the last 18h data, but this will download everything else (So if you plugged in yesterday, no need to do this. If you plugged in last week, or this is your first time using Chromadex, go ahead)",
+		title: "You usually only need to download once. NightScout.info CGM Utility automatically gets the last 18h data, but this will download everything else (So if you plugged in yesterday, no need to do this. If you plugged in last week, or this is your first time using NightScout.info CGM Utility, go ahead)",
 		btnOkLabel: "Download",
 		btnOkClass: "btn btn-sm btn-primary",
 		onConfirm: downloadTheWorld
@@ -317,7 +317,7 @@ $(function() {
 	$("#authorizeglukit").click(function() {
 		debugger;
 		chrome.identity.launchWebAuthFlow({
-			'url': 'https://glukit.appspot.com/authorize?client_id=chromadex1.mygluk.it&response_type=code&redirect_uri=' + encodeURIComponent('https://' + chrome.runtime.id + '.chromiumapp.org/provider_cb'),
+			'url': 'https://glukit.appspot.com/authorize?client_id=NightScout.info CGM Utility1.mygluk.it&response_type=code&redirect_uri=' + encodeURIComponent('https://' + chrome.runtime.id + '.chromiumapp.org/provider_cb'),
 			'interactive': true
 		},
 		function(redirect_url) {
@@ -354,7 +354,7 @@ $(function() {
 	});
 	chrome.serial.getDevices(function(ports) {
 		var isWindows = !!~window.navigator.appVersion.indexOf("Win");
-		document.getElementById("serialportlist").innerHTML += (isWindows? "<li>Default is <code>COM3</code>. Other's available when Chromadex started include</li>": "<li>Default is <code>/dev/tty.usbmodem</code>. Others available when Chromadex started include</li>") + ports.map(function(sp) {
+		document.getElementById("serialportlist").innerHTML += (isWindows? "<li>Default is <code>COM3</code>. Other's available when NightScout.info CGM Utility started include</li>": "<li>Default is <code>/dev/tty.usbmodem</code>. Others available when NightScout.info CGM Utility started include</li>") + ports.map(function(sp) {
 			if (!isWindows || sp.path != "COM3") return "<li><code>" + sp.path + "</code></li>"; else return "";
 		}).join("");
 		$("#serialportlist code").click(function(event) {
@@ -365,7 +365,7 @@ $(function() {
 		mongolab.populateLocalStorage().then(function(r, ml) {
 			chrome.notifications.create("", {
 				type: "basic",
-				title: "Chromadex",
+				title: "NightScout.info CGM Utility",
 				message: "Pulled " + r.raw_data.length + " records from MongoLab. You might have already had some, and any duplicates were discarded.",
 				iconUrl: "/public/assets/icon.png"
 			}, function(chrome_notification_id) { });
@@ -411,7 +411,7 @@ $(function() {
 			console.log("[mongolab] connection check ok");
 			chrome.notifications.create("", {
 				type: "basic",
-				title: "Chromadex",
+				title: "NightScout.info CGM Utility",
 				message: "This mongolab configuration checks out ok",
 				iconUrl: "/public/assets/icon.png"
 			}, function(chrome_notification_id) { });

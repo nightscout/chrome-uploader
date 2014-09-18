@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+	<title>Help</title>
+	<link rel="stylesheet" href="/vendor/bootstrap/dist/css/bootstrap.min.css">
+	<script src="/vendor/bootstrap/dist/js/bootstrap.min.js"></script>
+	<meta name = "viewport" content = "initial-scale = 1, user-scalable = no">
+	<style>
+	html {
+		overflow-y: scroll;
+	}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Welcome to Nightscout CGM Utility</h1>
+<p>Have a seat. Get comfortable. Enjoy having your CGM data on your Mac, your PC, or in the cloud.</p>
+<h2>How do I get started?</h2>
+<p>There are a few reasons you're using Nightscout CGM Utility. Which one of these matches why you're using this?</p>
+<p>There's a <a href="https://www.youtube.com/watch?v=fzXsLk7mdI4" target="_blank">Youtube video</a> showing how to use this, if you'd rather not read.</p>
+<ul>
+<li><a href="#usefornightscoutremotecgm">I want to use Nightscout Remote CGM</a></li>
+<li><a href="#switchingfromandroid">I already use Nightscout with the Android uploader.</a></li>
+<li><a href="#iwanttorunreports">I want to run reports</a></li>
+<li><a href="#programmer">I want a way to play with Dexcom as a programmer.</a></li>
+</ul>
+<a name="usefornightscoutremotecgm"></a>
+<h2>I want to use Nightscout Remote CGM</h2>
+<p>Nightscout setups usually have you buy a phone, plug Dexcom into it, and the phone uploads your CGM data to the cloud. Instead of buying a phone, you can plug Dexcom into your existing computer and get data to Nightscout without spending anything. </p>
+<p>Start by <a href="http://www.nightscout.info/wiki/welcome" target="_blank">reading Nightscout's Getting Started Guide.</a> Skip the step about the Android App. Open Options in Nightscout CGM Utility, choose the Mongolab tab, and enter the <em>Database</em> and <em>Collection</em> you picked while preforming "Configuring the data Backend." You'll also need to enter an <em>API Key</em> which is different from the normal directions. Press the Test Connection button, and it'll tell you the Mongolab configuration checks out OK or come back with something that needs changed. Once it's OK, press Save Settings.</p><p>Now plug in your Dexcom. Press the "Download All" button. It takes about a minute, perhaps two, for all your data to download. Your most recent CGM reading will upload to Mongolab, and Nightscout will magically start coming to life.</p><p>Nightscout CGM Utility checks for updated readings every minute. You don't need to press Download All again, unless you're disconnected from computer for more than 18 hours.</p>
+<a name="switchingfromandroid"></a>
+<h2>I already use Nightscout with the Android uploader.</h2>
+<p>This meanas your data is already out in Mongolab. Fantastic! Open Nightscout CGM Utility, click Options, choose the Mongolab tab, and enter the Database, Collection and API key from your existing Nightscout setup. You probably have a username/password pair already, but you'll need an API key for this tool to work. Click the "Documentation" link under the API Key textbox to track it down. Press the Test Connection button and it will hopefully tell you the connection is OK or come up with a suggestion about what to fix.</p>
+<p>Once it's OK, press Save Settings. Click the down arror to the right of Download All, and choose From Mongolab. It'll take about 1 second to download every 3 days of data you've collected. It'll tell you when it's done, and now you can run reports on your data.</p>
+<a name="iwanttorunreports"></a>
+<h2>I want to run reports</h2>
+<p>Your primary use is probably to treat this like it's Dexcom Studio, like our Windows-using friends can do. Be aware that Studio has more reports, and is generally better. But this has the advantage that it actually works on computers that don't rhyme with Cindows.</p>
+<ol>
+<li>Plug in your Dexcom.</li>
+<li>Start Nightscout CGM Utility</li>
+<li>Press Download All</li>
+<li>When it's done, press the Reports menu and choose what you'd like to see.</li>
+</ol>
+<p>Nightscout CGM Utility only accesses roughly 45 days of readings from your receiver. Try to plug in once a month so you don't miss any data.</p>
+<a name="programmer"></a>
+<h2>I want to play with Dexcom as a programmer</h2>
+<p>Check out the source code for this <a href="https://github.com/nightscout/chrome-uploader" target="_blank">on Github.</a> Most of the magic is in app/dexcom.js.</p>
+</div>
+</body>
+</html>

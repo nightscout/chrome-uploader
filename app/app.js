@@ -170,6 +170,16 @@ $(function() {
 	$("#acknowledge-disagree").click(function() {
 		window.close();
 	});
+	$("#openhelp").click(function(e) {
+		chrome.app.window.create('app/help.html', {
+			id: "help",
+			bounds: {
+				width: 800,
+				height: 600
+			}
+		});	
+		e.preventDefault();
+	});
 
 	$("#backfilldatabase").click(function() {
 		chrome.storage.local.get("egvrecords", function(local) {

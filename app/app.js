@@ -431,12 +431,12 @@ $(function() {
 			type: "POST",
 			contentType: "application/json"
 		}).then(function(r) {
-			$("#errorrreporting").hide();
+			$("#errorrreporting").modal('hide');
 			window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent("@bosh I have a problem with Nightscout CGM Uploader") + "&url=" + encodeURIComponent(r.html_url))
 		});
 	})
 	$("#errorreporting-disagree").click(function() {
-		$("#errorrreporting").hide();
+		$("#errorrreporting").modal('hide');
 	});
 	$("#testconnection").click(function() {
 		var config = $("#optionsdatabase input").toArray().reduce(function(out, field) {

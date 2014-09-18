@@ -31,6 +31,8 @@ define(function() {
 
 		var at = (function(d) {return function() {
 			var h = d.getHours() % 12, m = d.getMinutes();
+			if (m < 10) m = "0" + m.toString();
+			
 			if (h == 0) h = "12";
 			var ampm = d.getHours() >= 12? "pm": "am";
 			return " at " + h + ":" + m + ampm;

@@ -22,7 +22,13 @@
 				return "";
 			}
 		}
-		return d.map(toString).join(" ");
+		var result = d.map(toString);
+		var template = d.shift();
+		template = template.replace(/%\w/g, function(match) {
+			return d.shift();
+		});
+		return template + " " + d.join(" ");
+
 	};
 
 	console.log = function() {

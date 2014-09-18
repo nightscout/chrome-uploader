@@ -314,18 +314,6 @@ $(function() {
 			}
 		});
 	});
-	$("#authorizeglukit").click(function() {
-		debugger;
-		chrome.identity.launchWebAuthFlow({
-			'url': 'https://glukit.appspot.com/authorize?client_id=NightScout.info CGM Utility1.mygluk.it&response_type=code&redirect_uri=' + encodeURIComponent('https://' + chrome.runtime.id + '.chromiumapp.org/provider_cb'),
-			'interactive': true
-		},
-		function(redirect_url) {
-			debugger;
-			console.log(redirect_url);
-			/* Extract token from redirect_url */
-		});
-	});
 	$("#openoptions").click(function(){
 		new Promise(function(done) {
 			chrome.storage.local.get("config", function(config) {

@@ -6,6 +6,7 @@
 		<script src="../vendor/jquery/dist/jquery.min.js"></script>
 		<script src="../vendor/flot/jquery.flot.js"></script>
 		<script src="../vendor/flot/jquery.flot.time.js"></script>
+		<script src="console.js"></script>
 		<script src="time.js"></script>
 		<script src="receiver.js"></script>
 		<script src="app.js"></script>
@@ -246,6 +247,24 @@
 			</div>
 		</div>
 
+		<div id="errorrreporting" class="modal fade" role="dialog">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title" id="myModalLabel">What's wrong?</h4>
+					</div>
+					<div class="modal-body">
+						<textarea id="whatswrong" rows="10" cols="60" placeholder="Type a brief description of the problem"></textarea>
+					</div>
+					<div class="modal-footer">
+						The actual data from your CGM will be suppressed, but other information including but not limited to times, ports, platform will be sent to <a href="https://gist.github.com" target="_blank">gist.github.com.</a>
+						<button id="errorreporting-agree" class="btn">I agree</button>
+						<button id="errorreporting-disagree" class="btn">I disagree</button>
+					</div>
+				</div>
+			</div>
+		</div>
 
 		<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
 			<div class="container">
@@ -256,7 +275,7 @@
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
 					</button>
-					<a class="navbar-brand" href="#">NightScout.info CGM Utility</a>
+					<a class="navbar-brand" href="#">NightScout CGM</a>
 				</div>
 				<div class="navbar-collapse collapse" role="navigation">
 					<ul class="nav navbar-nav">
@@ -289,6 +308,7 @@
 								</ul>
 							</div>
 							<button type="submit" class="btn btn-danger" id="reset" data-placement="bottom" data-tooltip="Are you sure you want to reset? This cannot be undone.">Reset</button>
+							<button type="button" id="fixit" class="btn btn-info">Something broke?</button>
 						</div>
 					</form>
 				</div><!--/.navbar-collapse -->

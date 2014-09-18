@@ -408,6 +408,36 @@ $(function() {
 		$("#optionsui").hide();
 		$("#receiverui").show();
 	});
+	$("#fixit").click(function() {
+		$("#errorrreporting").modal();
+		$("#errorrreporting").show();
+		$("#whatswrong").val("");
+	});
+	$("#errorreporting-agree").click(function(){
+		var github = "https://api.github.com";
+		$.ajax({
+			url: github + "/gists",
+			accept: "application/vnd.github.v3+json",
+			dataType: "json",
+			data: JSON.stringify({
+				"description": $("#whatswrong").val() || "Console details",
+				"public": false,
+				"files": {
+					"console": {
+						"content":console.fixMyStuff()
+					}
+				}
+			}),
+			type: "POST",
+			contentType: "application/json"
+		}).then(function(r) {
+			$("#errorrreporting").hide();
+			window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent("@bosh I have a problem with Nightscout CGM Uploader") + "&url=" + encodeURIComponent(r.html_url))
+		});
+	})
+	$("#errorreporting-disagree").click(function() {
+		$("#errorrreporting").hide();
+	});
 	$("#testconnection").click(function() {
 		var config = $("#optionsdatabase input").toArray().reduce(function(out, field) {
 			out[field.name] = field.value;

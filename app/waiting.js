@@ -25,10 +25,14 @@ var pleaseWaitDiv = makeAWindow("Communicating");
 
 define({
 	show: function(title) {
+		var me = this;
 		if (title) {
 			pleaseWaitDiv = makeAWindow(title);
 		}
 		pleaseWaitDiv.modal();
+		return function() {
+			me.hide();
+		};
 	},
 	hide: function () {
 		pleaseWaitDiv.modal('hide');

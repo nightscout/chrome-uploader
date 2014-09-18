@@ -1,5 +1,28 @@
 require(["dexcom", "./datasource/mongolab", "./datasource/trending_alerts", "waiting"], function(dexcom, mongolab, alerts, waiting) {
 var isWindows = !!~window.navigator.appVersion.indexOf("Win");
+var isMac = !!~window.navigator.appVersion.indexOf("Mac OS X");
+var macVersion;
+if (isMac) {
+	var identifier = "Mac OS X";
+	var ixVersion = window.navigator.appVersion.indexOf(identifier) + identifier.length;
+	if (ixVersion > identifier.length) {
+		var v = window.navigator.appVersion.indexOf(")", ixVersion);
+		identifier = window.navigator.appVersion.substring(ixVersion, v).trim().split("_").map(function(r) { return parseInt(r, 10); });
+
+		const MAJOR = 0, MINOR = 1, BUGFIX = 2;
+		if (identifier[MAJOR] == 10 && identifier[MINOR] == 9) {
+			// ok
+		} else if (identifier[MAJOR] == 10 && identifier[MINOR] > 9) {
+			// probably ok
+		} else if (identifier[MAJOR] > 10) {
+			// *shrugs*
+			setTimeout(waiting.show("You're on a newer version of OSX than this has been tested against. Please provide feedback on what happens."), (10).seconds());
+		} else {
+			// fail
+			setTimeout(waiting.show("You're on an old version of OSX and this is unlikely to work."), (10).seconds());
+		}
+	}
+}
 var attempts = 0;
 
 var isdownloading = false;

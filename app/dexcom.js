@@ -90,7 +90,7 @@ define(function () {
 					}
 				};
 				var tryPort = function(port) {
-					console.log("Trying port: " + port);
+					console.debug("[connecting] Trying port: %o", port);
 					if (!foundActualDevice &&
 						(port.path.substr(0,serialport.length).toLowerCase() != serialport.toLowerCase())) {
 						return;
@@ -103,7 +103,7 @@ define(function () {
 					tryPort(serialport);
 				} else {
 					chrome.serial.getDevices(function(ports) {
-						console.log("getDevices returned ports: " + ports);
+						console.log("getDevices returned ports: %o", ports);
 						ports.forEach(tryPort);
 						if (dexcom.port === null) {
 							reject(new Error(

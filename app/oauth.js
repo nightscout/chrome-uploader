@@ -12,7 +12,7 @@ define(function() {
 
   var tokenFetcher = (function() {
     var clientId = 'chromadex.dev1.mygluk.it';
-    var clientSecret = "3B+iCy8dw7Xpbko66UdDJVBJozLPcLcz";
+    var clientSecret = "";
     var redirectUri = 'https://' + chrome.runtime.id +
                       '.chromiumapp.org/provider_cb';
     var redirectRe = new RegExp(redirectUri + '[#\?](.*)');

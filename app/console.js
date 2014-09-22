@@ -1,7 +1,10 @@
-(function(console, log, warn, info, error, debug) {
-	var myLog = [];
+(function(console) {
+	var myLog = [], consoleFunctions = {};
 	var flattenSimple = function(d) {
+		var recursions = 0;
 		var toString = function(val) {
+			if (++recursions > 5) return "/* MAX DESCENTS REACHED */";
+
 			if (typeof val == "string") { // string
 				return val;
 			} else if (typeof val == "number") { // number
@@ -9,13 +12,12 @@
 			} else if (typeof val == "object" && val.length) { // array
 				return "[" + Array.prototype.map.call(val, toString).join(",") + "]";
 			} else if (typeof val == "object") { // object
-				if (val.toString == Object.toString) {
+				if (val.toString == Object.toString) // JS Object
 					return val.toString();
-				} else {
+				else // Native Object
 					return "{" + Object.keys(val).map(function(k) {
 						return k + ": " + val[k];
 					}).join(",") + "}";
-				}
 			} else if (typeof val == "boolean") { // boolean
 				return val.toString();
 			} else { // null or undefined
@@ -23,40 +25,31 @@
 			}
 		}
 		var result = d.map(toString);
-		var template = d.shift();
-		template = template.replace(/%\w/g, function(match) {
-			return d.shift();
-		});
-		return template + " " + d.join(" ");
+		if (typeof d[0] == "string") {
+			var template = d.shift();
+			template = template.replace(/%\w/g, function(match) {
+				return d.shift();
+			});
+			return template + " " + d.join(" ");
+		} else {
+			return result.join(" ");
+		}
+	};
+	["log", "warn", "info", "error", "debug"].forEach(function(fn) { consoleFunctions[fn] = console[fn]; });
+	["log", "warn", "error", "debug"].forEach(function(fn) {
+		console[fn] = function() {
+			var args = Array.prototype.slice.call(arguments);
+			myLog.push(fn.toUpperCase() + ": " + flattenSimple(args));
+			consoleFunctions[fn].apply(console, arguments);
+		}
+	});
 
-	};
-
-	console.log = function() {
-		var args = Array.prototype.slice.call(arguments);
-		myLog.push("LOG: " + flattenSimple(args));
-		log.apply(console, arguments);
-	};
-	console.warn = function() {
-		var args = Array.prototype.slice.call(arguments);
-		myLog.push("WARN: " + flattenSimple(args));
-		warn.apply(console, arguments);
-	};
 	console.info = function() {
 		var args = Array.prototype.slice.call(arguments);
-		myLog.push("INFO: PERSONAL INFORMATION REMOVED");
+		myLog.push("INFO: REDACTED");
 		info.apply(console, arguments);
-	};
-	console.error = function() {
-		var args = Array.prototype.slice.call(arguments);
-		myLog.push("ERROR: " + flattenSimple(args));
-		error.apply(console, arguments);	
-	};
-	console.debug = function() {
-		var args = Array.prototype.slice.call(arguments);
-		myLog.push("DEBUG: " + flattenSimple(args));
-		debug.apply(console, arguments);	
 	};
 	console.fixMyStuff = function() {
 		return myLog.join("\n");
 	};
-})(console, console.log, console.warn, console.info, console.error, console.debug);
+})(console);

@@ -212,7 +212,15 @@ define(["../waiting"], function(waiting) {
 	// updated database
 	chrome.storage.onChanged.addListener(function(changes, namespace) {
 		if ("egvrecords" in changes)  {
-			mongolab.insert(changes.egvrecords.newValue[changes.egvrecords.newValue.length - 1]);
+			chrome.storage.local.get("config", function(local) {
+				var datasource = "dexcom";
+				if ("datasource" in local.config) datasource = local.config.datasource || "dexcom";
+				if (datasource != "remotecgm") {
+					mongolab.insert(changes.egvrecords.newValue[changes.egvrecords.newValue.length - 1]);
+				} else {
+					console.log("Not publishing to Mongolab because I pulled from remote");
+				}
+			});
 		}
 	});
 

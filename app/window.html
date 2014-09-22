@@ -16,62 +16,60 @@
 		<script src="/lib/bootstrap-confirmation.js"></script>
 		<meta name = "viewport" content = "initial-scale = 1, user-scalable = no">
 		<style>
-			canvas{
-			}
-			body {
-				background-color: #222;
-				padding-top: 60px;
-			}
-			html {
-				overflow-y: scroll;
-			}
+canvas{
+}
+body {
+	background-color: #222;
+	padding-top: 60px;
+}
+html {
+	overflow-y: scroll;
+}
 
-			#dexcomtrend {
-				width: 100%;
-				height: 100%;
-			}
-			#cgmnow {
-				width: 30%;
-				float: left;
-				font-size: 18pt;
-				text-align: right;
-				color: #fff;
-			}
-			#cgmdirection {
-				font-size: 18pt;
-				color: #888;
-				width: 15%;
-			}
-			#cgmtime {
-				width: 35%;
-				color: #888;
-			}
-			#openreports {
-				width: 20%;
-			}
-			#optionsui {
-				display: none;
-			}
-			.tab-content form {
-				background-color: #eee;
-			}
-			#receiverui {
-				display: none;
-			}
+#dexcomtrend {
+	width: 100%;
+	height: 100%;
+}
+#cgmnow {
+	width: 30%;
+	float: left;
+	font-size: 18pt;
+	text-align: right;
+	color: #fff;
+}
+#cgmdirection {
+	font-size: 18pt;
+	color: #888;
+	width: 15%;
+}
+#cgmtime {
+	width: 35%;
+	color: #888;
+}
+#openreports {
+	width: 20%;
+}
+#optionsui {
+	display: none;
+}
+.tab-content form {
+	background-color: #eee;
+}
+#receiverui {
+	display: none;
+}
 
-			/* http://stackoverflow.com/questions/18432394/how-to-make-twitter-bootstrap-modal-full-screen */
-			.modal-dialog {
-				width: 100%;
-				height: 100%;
-				padding: 0;
-			}
+/* http://stackoverflow.com/questions/18432394/how-to-make-twitter-bootstrap-modal-full-screen */
+.modal-dialog {
+	width: 100%;
+	height: 100%;
+	padding: 0;
+}
 
-			.modal-content {
-				height: 100%;
-				border-radius: 0;
-			}
-
-
+.modal-content {
+	height: 100%;
+	border-radius: 0;
+}
 
 .progress {
     overflow: hidden;
@@ -316,6 +314,7 @@
 			</div>
 		</div>
 
+<!--
 		<div class="jumbotron" id="adduniqueindexpointer">
 			<p>If you haven't already: Please <a id="openmongolablink" href="https://www.mongolab.com" target="_blank">open MongoLab, and add a "unique index"</a> on your collection.</p>
 			<ul><li>Press Add Index</li><li>Change <code>fieldName</code> to <code>date</code></li><li>Check the <code>Unique</code> option.</li><li>Press Create in background</li></ul>
@@ -323,6 +322,7 @@
 			<ul><li>Press the dropdown next to Download All.</li><li>Choose From MongoLab.</li><li>From MongoLab via the link above, choose the Documents tab</li><li>Press Delete all.</li><li>Make the unique index.</li><li>Back in NightScout.info CGM Utility, press the button beside Download All, and choose Backfill MongoLab.</li></ul></p>
 			<button id="dismissunique" class="btn">OK</button>
 		</div> 
+-->
 		<div class="container" id="receiverui">
 			<div class="row">
 				<div class="container col-xs-10" style="background-color:#222; height:350px;">
@@ -340,13 +340,25 @@
 				<button class="btn btn-primary pull-right" id="savesettings">Save Settings</button>
 				<button class="btn btn-primary pull-right" id="resetchanged">Undo Changes</button>
 				<ul class="nav nav-tabs">
-					<li class="nav active"><a href="#optionsdatabase" data-toggle="tab">Mongolab</a></li>
+					<li class="nav active"><a href="#optionsdatasource" data-toggle="tab">Datasource</a></li>
+					<li class="nav"><a href="#optionsdatabase" data-toggle="tab">Mongolab</a></li>
 					<li class="nav"><a href="#optionsserial" data-toggle="tab">Serial Port</a></li>
 					<li class="nav"><a href="#optionsunits" data-toggle="tab">Units</a></li>
 					<li class="nav"><a href="#optionstarget" data-toggle="tab">Range</a></li>
 				</ul>
 				<div class="tab-content">
-					<form class="tab-pane active form-horizontal" id="optionsdatabase">
+					<form class="tab-pane active form-horizontal" id="optionsdatasource">
+						<div class="well well-sm">Where would you like to pull data from?</div>
+						<div class="form-group">
+							<label for="options-datasource" class="col-sm-3 control-label">Datasource</label>
+							<div class="col-sm-8"><select class="form-control" type="text" name="datasource" id="options-datasource">
+								<option value="dexcom">Dexcom G4</option>
+								<option value="remotecgm">Remote CGM</option>
+							</select></div>
+						</div>
+						<p class="well">If you use Android Uploader, pick Remote CGM and this will refresh from Mongolab. Pick Dexcom G4 if you'd rather plug in to this computer. Maybe one day Enlight will be here too.</p>
+					</form>
+					<form class="tab-pane form-horizontal" id="optionsdatabase">
 						<div class="well well-sm"><p class="bg-info">If you use Nightscout, you'll want data stored in Mongolab.</p></div>
 						<div class="form-group">
 							<label for="options-database-name" class="col-sm-3 control-label">Database Name</label>

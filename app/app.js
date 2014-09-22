@@ -1,4 +1,24 @@
-require(["dexcom", "./datasource/mongolab", "./datasource/trending_alerts", "waiting"], function(dexcom, mongolab, alerts, waiting) {
+require(["./datasource/dexcom", "./datasource/remotecgm", "./datasource/mongolab", "./datasource/trending_alerts", "waiting"], function(dexcom, remotecgm, mongolab, alerts, waiting) {
+
+var cgm = dexcom;
+
+var switchToCorrectDatasource = function() {
+	chrome.storage.local.get("config", function(local) {
+		if (!("datasource" in local.config)) {
+			cgm = dexcom;
+		};
+		if (local.config.datasource == "remotecgm") {
+			cgm = remotecgm;
+		} else {
+			cgm = dexcom;
+		}
+	});
+}
+switchToCorrectDatasource();
+
+// OS Flags
+// Windows needs a different COM port than everything else because Windows.
+// I don't have an older version of OSX to troubleshoot this against
 var isWindows = !!~window.navigator.appVersion.indexOf("Win");
 var isMac = !!~window.navigator.appVersion.indexOf("Mac OS X");
 var macVersion;
@@ -23,10 +43,15 @@ if (isMac) {
 		}
 	}
 }
-var attempts = 0;
 
+
+
+// Keep errors from happening during large downloads
+var attempts = 0;
 var isdownloading = false;
 
+// TODO: refactor this to CGM.js
+// emit events that UI can react to
 var connect = function() {
 	var chrome_notification_id = 0;
 	var connectionErrorCB = function(notification_id, button) {
@@ -35,35 +60,39 @@ var connect = function() {
 
 		if (button === 0) {
 			attempts = 0;
-			connect().then(onConnected,onConnectError);
+			connect().then(onConnected,onConnectError); // chain to start everything
 		}
 	};
 	return new Promise(function(resolve, reject) {
+		if (isdownloading) reject();
+		isdownloading = true;
 		chrome.storage.local.get("config", function(local) {
-			console.debug("[dexcom] loading");
+			console.debug("[cgm] loading");
 			var serialport = local.config.serialport || (isWindows? "COM3": "/dev/tty.usbmodem");
-			dexcom.connect(serialport).then(function() {
-				console.debug("[dexcom] loaded");
+			cgm.connect(serialport).then(function() {
+				console.debug("[cgm] loaded");
 				chrome.notifications.onButtonClicked.removeListener(connectionErrorCB);
 				try {
-					return dexcom.readFromReceiver(1).then(function(d) {
+					return cgm.readFromReceiver(1).then(function(d) {
 						console.debug("[dexcom] read; disconnecting");
-						dexcom.disconnect();
+						cgm.disconnect();
+						isdownloading = false;
 						resolve(d);
 					});
 				} catch (e) {
-					console.log("[dexcom] %o", e);
+					console.debug("[cgm] %o", e);
 					reject(e);
 				}
 			}, function(e) {
-				console.log("[dexcom] rejected");
+				console.debug("[cgm] rejected");
 				if (attempts++ < 3) {
 					try {
+						// try again
 						connect().then(onConnect, onConnectError);
 					} catch (e) {
 						// it didn't work
 					}
-				} else {
+				} else if (!isdownloading) {
 					chrome.notifications.create("", {
 						type: "basic",
 						title: "NightScout.info CGM Utility",
@@ -77,7 +106,7 @@ var connect = function() {
 					}, function(notification_id) {
 						console.log(arguments);
 						chrome_notification_id = notification_id;
-						attempts = 0;
+						attempts = 0; // reset
 						chrome.notifications.onButtonClicked.addListener(connectionErrorCB);
 					});
 					console.log(e);
@@ -87,11 +116,11 @@ var connect = function() {
 		});
 	});
 },
-onConnected = function(data) {
+onConnected = function(data) { // to download from dexcom
 	var lastNewRecord = Date.now();
 
 	// update my db
-	var updateLocalDb = function(data) {
+	(function(data) {
 		return new Promise(function(resolve) {
 			chrome.storage.local.get(["egvrecords", "config"], function(storage) {
 				var existing = storage.egvrecords || [];
@@ -126,11 +155,7 @@ onConnected = function(data) {
 				resolve();
 			});
 		});
-
-	};
-
-	// do it
-	updateLocalDb(data);
+	})(data);
 
 	var nextRun = function() {
 		console.log("Attempting to refresh data");
@@ -147,7 +172,7 @@ onConnected = function(data) {
 onConnectError = function(){
 	console.log(arguments);
 };
-connect().then(onConnected, onConnectError);
+connect().then(onConnected, onConnectError); // chain to start everything
 
 $(function() {
 	// event handlers
@@ -155,10 +180,10 @@ $(function() {
 		if ("mongolab" in local.config) {
 			$("#openmongolablink").attr("href", "https://www.mongolab.com/databases/" + local.config.mongolab.database + "/collections/" + local.config.mongolab.collection + '#indexes');
 		}
-		if (local.acknowledgements.seenUniqueIndex) {
-			$("#adduniqueindexpointer").hide();
-			$("#receiverui").show();
-		}
+		// if (local.acknowledgements.seenUniqueIndex) {
+			// $("#adduniqueindexpointer").hide();
+			// $("#receiverui").show();
+		// }
 	});
 
 	$("#disclaimer").modal();
@@ -196,16 +221,16 @@ $(function() {
 		});
 	});
 
-	$("#dismissunique").click(function() {
-		chrome.storage.local.get("acknowledgements", function(local) {
-			local.acknowledgements = local.acknowledgements || {};
-			local.acknowledgements.seenUniqueIndex = true;
-			chrome.storage.local.set(local, function() {
-				$("#adduniqueindexpointer").hide();
-				$("#receiverui").show();
-			});
-		});
-	});
+	// $("#dismissunique").click(function() {
+	// 	chrome.storage.local.get("acknowledgements", function(local) {
+	// 		local.acknowledgements = local.acknowledgements || {};
+	// 		local.acknowledgements.seenUniqueIndex = true;
+	// 		chrome.storage.local.set(local, function() {
+	// 			$("#adduniqueindexpointer").hide();
+	// 			$("#receiverui").show();
+	// 		});
+	// 	});
+	// });
 
 	$('#reset').confirmation({
 		title: "Are you sure? This will delete all your data and cannot be undone.",
@@ -218,6 +243,9 @@ $(function() {
 			});
 		}
 	});
+
+	// TODO: this needs to be refactored out of here
+	// TODO: populateLocalStorage() in dexcom?
 	var downloadTheWorld = function(b){
 		waiting.show('Downloading entire history from Dexcom receiver');
 		isdownloading = true;
@@ -227,7 +255,7 @@ $(function() {
 		var compile = function(i) {
 			return new Promise(function(resolve,reject) {
 				try {
-					dexcom.readFromReceiver(i).then(function(d) {
+					cgm.readFromReceiver(i).then(function(d) {
 						data.push(d);
 
 						if (d.length) {
@@ -250,7 +278,7 @@ $(function() {
 				waiting.setProgress(85);
 				setTimeout(function() {
 					chrome.storage.local.get("egvrecords", function(values) {
-						dexcom.disconnect();
+						cgm.disconnect();
 						var existing = values.egvrecords;
 						var existing_ts = existing.map(function(row) {
 							return row.displayTime;
@@ -274,7 +302,7 @@ $(function() {
 							return a.displayTime - b.displayTime;
 						});
 						chrome.storage.local.set({ egvrecords: to_save },
-							console.debug.bind(console, "[updateLocalDb] Saved results")
+							console.debug.bind(console, "[downloadTheWorld] Saved results")
 						);
 						waiting.hide();
 						isdownloading = false;
@@ -290,7 +318,7 @@ $(function() {
 		};
 		chrome.storage.local.get("config", function(local) {
 			try {
-				dexcom.connect(local.config.serialport).then(reader, function() {
+				cgm.connect(local.config.serialport).then(reader, function() {
 					chrome.notifications.update(notification_id, {
 						message: "Could not find a connected Dexcom from which to download.",
 						iconUrl: "/public/assets/error.png"
@@ -412,6 +440,7 @@ $(function() {
 			console.log("saved settings");
 			$("#optionsui").hide();
 			$("#receiverui").show();
+			switchToCorrectDatasource();
 		});
 	});
 	$("#resetchanged").click(function() {

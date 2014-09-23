@@ -36,7 +36,7 @@
 		}
 	};
 	["log", "warn", "info", "error", "debug"].forEach(function(fn) { consoleFunctions[fn] = console[fn]; });
-	["log", "warn", "error", "debug"].forEach(function(fn) {
+	["log", "warn", "info", "error", "debug"].forEach(function(fn) {
 		console[fn] = function() {
 			var args = Array.prototype.slice.call(arguments);
 			myLog.push(fn.toUpperCase() + ": " + flattenSimple(args));
@@ -44,10 +44,10 @@
 		}
 	});
 
-	console.info = function() {
+	console.info = function(info) {
 		var args = Array.prototype.slice.call(arguments);
 		myLog.push("INFO: REDACTED");
-		info.apply(console, arguments);
+		consoleFunctions["info"].apply(console, arguments);
 	};
 	console.fixMyStuff = function() {
 		return myLog.join("\n");

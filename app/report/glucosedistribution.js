@@ -1,6 +1,5 @@
 var convertBg;
 var low, high;
-debugger;
 Promise.all([
 new Promise(function(ready) {
 	chrome.storage.local.get(["egvrecords", "config"], function(values) {
@@ -57,7 +56,7 @@ new Promise(function(ready) {
 	["Low", "Normal", "High"].forEach(function(range) {
 		var tr = $("<tr>");
 		var rangeRecords = data.filter(function(r) {
-			r.localBg = parseFloat(record.localBg);
+			r.localBg = parseFloat(r.localBg);
 			if (range == "Low") {
 				return r.localBg > 0 && r.localBg < config.low;
 			} else if (range == "Normal") {

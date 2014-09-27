@@ -1,5 +1,6 @@
 var convertBg;
 var low, high;
+debugger;
 Promise.all([
 new Promise(function(ready) {
 	chrome.storage.local.get(["egvrecords", "config"], function(values) {
@@ -9,7 +10,7 @@ new Promise(function(ready) {
 			};
 		} else {
 			convertBg = function(n) {
-				return n;
+				return parseInt(n,10);
 			}
 		}
 
@@ -109,6 +110,7 @@ new Promise(function(ready) {
 		minForDay = daysRecords[0].localBg;
 		maxForDay = daysRecords[0].localBg;
 		var stats = daysRecords.reduce(function(out, record) {
+			record.localBg = parseFloat(record.localBg);
 			if (record.localBg < config.low) {
 				out.lows++;
 			} else if (record.localBg < config.high) {

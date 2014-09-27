@@ -1,5 +1,6 @@
 var convertBg;
 var low, high;
+debugger;
 Promise.all([
 new Promise(function(ready) {
 	chrome.storage.local.get(["egvrecords", "config"], function(values) {
@@ -9,7 +10,7 @@ new Promise(function(ready) {
 			};
 		} else {
 			convertBg = function(n) {
-				return n;
+				return parseInt(n,10);
 			}
 		}
 
@@ -41,6 +42,7 @@ new Promise(function(ready) {
 	var pivotedByHour = {};
 
 	data = data.filter(function(record) {
+		data.localBg = parseFloat(data.localBg);
 		return record.displayTime > threemonthsago;
 	});
 	for (var i = 0; i < 24; i++) {

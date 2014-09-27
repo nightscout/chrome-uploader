@@ -118,7 +118,7 @@ define(["../waiting"], function(waiting) {
 							var records = (local.egvrecords || []).concat(data.map(function(record) {
 								return {
 									displayTime: Date.parse(record.dateString),
-									bgValue: record.sgv,
+									bgValue: parseInt(record.sgv),
 									trend: record.direction
 								};
 							}));

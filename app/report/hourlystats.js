@@ -1,6 +1,5 @@
 var convertBg;
 var low, high;
-debugger;
 Promise.all([
 new Promise(function(ready) {
 	chrome.storage.local.get(["egvrecords", "config"], function(values) {

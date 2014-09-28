@@ -127,6 +127,7 @@ define(["../waiting"], function(waiting) {
 							});
 							records = records.filter(function(rec, ix, all) {
 								if (ix === 0) return true;
+								if (rec.bgValue <= 30) return false;
 								return all[ix - 1].displayTime != rec.displayTime;
 							});
 

@@ -30,9 +30,8 @@ define(function() {
           'interactive': interactive,
           // url:'https://graph.facebook.com/oauth/access_token?client_id=' + clientId +
           url: 'https://glukit.appspot.com/authorize?client_id=' + clientId +
-              '&reponse_type=code' +
               // '&access_type=online' +
-              '&redirect_uri=' + encodeURIComponent(redirectUri)
+              '&redirectUri=' + encodeURIComponent(redirectUri) + '&response_type=code'
         }
         chrome.identity.launchWebAuthFlow(options, function(redirectUri) {
           if (chrome.runtime.lastError) {

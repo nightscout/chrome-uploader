@@ -1,19 +1,5 @@
-define(function() {
+define(["../bloodsugar"], function(convertBg) {
 	var current_direction;
-
-	var convertBg = function(v) { return v; };
-
-	chrome.storage.local.get(["config"], function(values) {
-		if ("config" in values && values.config.unit == "mmol") {
-			convertBg = function(n) {
-				return Math.ceil(n * 0.5555) / 10;
-			};
-		} else {
-			convertBg = function(n) {
-				return n;
-			}
-		}
-	});
 
 	var newReading = function(cur_record, last_record) {
 		var now_trend = cur_record.trend;

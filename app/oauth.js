@@ -75,7 +75,7 @@ define(function() {
         function exchangeCodeForToken(code) {
           debugger;
           var xhr = new XMLHttpRequest();
-          xhr.open('GET',
+          xhr.open('POST',
                    // 'https://www.facebook.com/dialog/oauth?'+
                    'https://glukit.appspot.com/token?' +
                    'client_id=' + clientId +

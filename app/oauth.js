@@ -75,14 +75,15 @@ define(function() {
         function exchangeCodeForToken(code) {
           debugger;
           var xhr = new XMLHttpRequest();
+	  var params = 'clientId=' + clientId + 
+		       '&client_secret=' + clientSecret +
+	               '&redirectUri=' + redirectUri +
+		       '&grant_type=authorization_code&code=' + code;
           xhr.open('POST',
                    // 'https://www.facebook.com/dialog/oauth?'+
-                   'https://glukit.appspot.com/token?' +
-                   'client_id=' + clientId +
-                   '&client_secret=' + clientSecret +
-                   '&redirect_uri=' + redirectUri +
-                   '&code=' + code);
+                   'https://glukit.appspot.com/token');
           xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+	  xhr.setRequestHeader('Content-length', param.length);
           xhr.setRequestHeader('Accept', 'application/json');
           xhr.onload = function () {
             if (this.status === 200) {
@@ -92,7 +93,7 @@ define(function() {
               access_token = response;
             }
           };
-          xhr.send();
+          xhr.send(params);
         }
 
         function setAccessToken(token) {

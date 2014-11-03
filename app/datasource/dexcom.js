@@ -266,9 +266,12 @@ define(function () {
 				h: Math.floor(delta/100),
 				m: delta % 100
 			};
-			if ((new Date()).dst()) {
-				delta.h++;
-			}
+
+			// God, I hope this doesn't bite me when DST starts again
+			// delta.h++ was running already but... Ugh.
+			// if ((new Date()).dst()) {
+			delta.h++;
+			// }
 			delta.ms = (delta.h < 0? -1: 1) * (Math.abs(delta.h).hours() + delta.m.minutes());
 
 			console.debug("[parseDatabasePages] parsing raw results to eGV records");

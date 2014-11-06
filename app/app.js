@@ -477,6 +477,43 @@ $(function() {
 	$("#errorreporting-disagree").click(function() {
 		$("#errorrreporting").modal('hide');
 	});
+	$("#export").click(function() {
+		chrome.fileSystem.chooseEntry({
+			type: 'saveFile'
+		},
+		function(writableFileEntry) {
+			writableFileEntry.createWriter(function(writer) {
+				writer.onerror = function() {
+					console.warn("couldn't write because reasons");
+					console.warn(arguments);
+				}
+				writer.onwriteend = function(e) {
+					console.log('write complete');
+				};
+				require(["./bloodsugar"], function(convertBg) {
+					chrome.storage.local.get(["egvrecords"], function(storage) {
+						try {
+							writer.write(new Blob(
+								storage.egvrecords.map(function(record) {
+									return [
+										(new Date(record.displayTime)).format("M j Y H:i"),
+										convertBg(record.bgValue),
+										record.trend
+									].join(",") + "\n";
+								}), {
+									type: 'text/plain'
+								}
+							));
+						} catch (e) {
+							console.warn(e);
+						}
+					});
+				});
+			}, function() {
+				console.warn("Couldn't write");
+			});
+		});
+	});
 	$("#testconnection").click(function() {
 		var config = $("#optionsdatabase input").toArray().reduce(function(out, field) {
 			out[field.name] = field.value;

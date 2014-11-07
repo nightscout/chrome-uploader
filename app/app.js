@@ -478,41 +478,37 @@ $(function() {
 		$("#errorrreporting").modal('hide');
 	});
 	$("#export").click(function() {
-		chrome.fileSystem.chooseEntry({
-			type: 'saveFile'
-		},
-		function(writableFileEntry) {
-			writableFileEntry.createWriter(function(writer) {
-				writer.onerror = function() {
-					console.warn("couldn't write because reasons");
-					console.warn(arguments);
-				}
-				writer.onwriteend = function(e) {
-					console.log('write complete');
-				};
-				require(["./bloodsugar"], function(convertBg) {
-					chrome.storage.local.get(["egvrecords"], function(storage) {
-						try {
-							writer.write(new Blob(
-								storage.egvrecords.map(function(record) {
-									return [
-										(new Date(record.displayTime)).format("M j Y H:i"),
-										convertBg(record.bgValue),
-										record.trend
-									].join(",") + "\n";
-								}), {
-									type: 'text/plain'
-								}
-							));
-						} catch (e) {
-							console.warn(e);
-						}
-					});
+		Promise.all([
+			new Promise(function(done) {
+				chrome.fileSystem.chooseEntry({
+					type: 'saveFile',
+					suggestedName: "blood sugars.csv"
+				}, function(writableFileEntry) {
+					writableFileEntry.createWriter(done);
 				});
-			}, function() {
-				console.warn("Couldn't write");
-			});
-		});
+			}),
+			new Promise(function(done) {
+				require(["./bloodsugar"], done);
+			}),
+			new Promise(function(done) {
+				chrome.storage.local.get(["egvrecords"], done);
+			})
+		]).then(function(params) {
+			var writer = params[0],
+				convertBg = params[1],
+				storage = params[2];
+			writer.write(new Blob(
+				storage.egvrecords.map(function(record) {
+					return [
+						(new Date(record.displayTime)).format("M j Y H:i"),
+						convertBg(record.bgValue),
+						record.trend
+					].join(",") + "\n";
+				}), {
+					type: 'text/plain'
+				}
+			));
+		})
 	});
 	$("#testconnection").click(function() {
 		var config = $("#optionsdatabase input").toArray().reduce(function(out, field) {

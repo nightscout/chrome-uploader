@@ -29,7 +29,7 @@ require(["./bloodsugar"], function(convertBg) {
 				xaxis: {
 					mode: "time",
 					timezone: "browser",
-					timeformat: "%I:%m",
+					timeformat: "%I:%M",
 					twelveHourClock: true,
 					minTickSize: [45, "minute"]
 				}

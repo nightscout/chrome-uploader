@@ -307,6 +307,7 @@ html {
 								</ul>
 							</div>
 							<button type="submit" class="btn btn-danger" id="reset" data-placement="bottom" data-tooltip="Are you sure you want to reset? This cannot be undone.">Reset</button>
+							<button type="submit" class="btn btn-primary" id="export">Export</button>
 							<button type="button" id="fixit" class="btn btn-info">Something broke?</button>
 						</div>
 					</form>
@@ -332,7 +333,26 @@ html {
 					<div id="cgmnow"></div>
 					<div id="cgmdirection"></div>
 					<div id="cgmtime"></div>
-					<button type="submit" class="btn btn-primary" id="export" style="margin-top:1em;">Export</button>
+					
+					<div class="btn-group">	
+ 						<a class="btn dropdown-toggle btn-primary" data-toggle="dropdown" href="#">
+							Timeframe (ZOOM)
+							<span class="caret"></span>
+						</a>	
+						<ul class="dropdown-menu" role="menu">
+							<li><a href="#" id="setTime1">1 hour</a></li>
+							<li><a href="#" id="setTime3">3 hours</a></li>
+							<li><a href="#" id="setTime6">6 hours</a></li>
+							<li><a href="#" id="setTime12">12 hours</a></li>
+							<li><a href="#" id="setTime24">24 hours</a></li>
+							<li><a href="#" id="setTime48">48 hours</a></li>
+							<li><a href="#" id="setTime72">72 hours</a></li>
+							<li><a href="#" id="setTime168">7 days</a></li>
+						</ul>
+					</div>
+
+
+
 				</div>
 			</div>
 		</div>

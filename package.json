@@ -1,5 +1,5 @@
 {
-  "name": "NightScout.info CGM Utility",
+  "name": "NightScoutCGM",
   "version": "0.0.0",
   "main": "index.js",
   "description": "Download Dexcom data on almost any platform Chrome runs on.",

@@ -177,6 +177,10 @@ connect().then(onConnected, onConnectError); // chain to start everything
 
 
 $(function() {
+
+	//load optionsui
+	$("#optionsui").load("options.html")
+
 	// event handlers
 	chrome.storage.local.get(["config", "acknowledgements"], function(local) {
 		if ("mongolab" in local.config) {
@@ -422,7 +426,7 @@ $(function() {
 			}, function(chrome_notification_id) { });
 		});
 	});
-	$("#savesettings").click(function() {
+	$("#optionsui").on("click", "#savesettings", function(){
 		chrome.storage.local.set({
 			config: $("#optionsui input, #optionsui select").toArray().reduce(function(out, field) {
 				var parts = field.name.split(".");
@@ -445,7 +449,7 @@ $(function() {
 			switchToCorrectDatasource();
 		});
 	});
-	$("#resetchanged").click(function() {
+	$("#optionsui").on("click", "#resetchanged", function(){
 		$("#optionsui").hide();
 		$("#receiverui").show();
 	});
@@ -512,7 +516,7 @@ $(function() {
 			));
 		})
 	});
-	$("#testconnection").click(function() {
+	$(document).on("click", "#testconnection", function(){
 		var config = $("#optionsdatabase input").toArray().reduce(function(out, field) {
 			out[field.name] = field.value;
 			return out;

@@ -149,7 +149,7 @@ require(["./bloodsugar"], function(convertBg) {
 			{
        			data: trendLow,
         		color: "#FFFF00",
-        		points: { show: true },
+        		points: { show: true, fill: true, fillColor: "#FFDD00" },
         		lines: { show: false }
 			}],
 			{
@@ -167,8 +167,8 @@ require(["./bloodsugar"], function(convertBg) {
 				},
 				grid: {
     					markings: [
-      					{ color: '#00FF00', lineWidth: 1, yaxis: { from: low, to: low } },
-					{ color: '#00FF00', lineWidth: 1, yaxis: { from: high, to: high } },
+      					{ color: '#00FF00', lineWidth: 2, yaxis: { from: low, to: low } },
+					{ color: '#00FF00', lineWidth: 2, yaxis: { from: high, to: high } },
    					 ],
 					hoverable: true
   				}

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
 
-  "name": "NightScout.info CGM Utility - Adrians Fork",
+  "name": "NightScoutCGM",
   "description": "Report #cgmnow, run reports, and upload data to NightScout.",
   "version": "0.1.4.2",
   "app": {

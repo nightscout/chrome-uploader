@@ -59,6 +59,14 @@ html {
 	display: none;
 }
 
+a.navbar-brand {
+	background-image: url("../resource/nightscout-owl.png");
+	background-size: contain;
+	background-repeat: no-repeat;
+	color: transparent;
+	margin-top: 4px;
+}
+
 /* http://stackoverflow.com/questions/18432394/how-to-make-twitter-bootstrap-modal-full-screen */
 .modal-dialog {
 	width: 100%;
@@ -273,7 +281,7 @@ html {
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
 					</button>
-					<a class="navbar-brand" href="#">NightScout CGM</a>
+					<a class="navbar-brand" href="#"></a>
 				</div>
 				<div class="navbar-collapse collapse" role="navigation">
 					<ul class="nav navbar-nav">
@@ -292,38 +300,32 @@ html {
 						<li><a id="openhelp" href="#" target="_blank">Help</a></li>
 					</ul>
 					<form class="navbar-form navbar-right" role="form" action="javascript:void">
-						<div class="btn-group">
+						<div class="btn-toolbar">
 							<div class="btn-group">
-								<button type="button" class="btn btn-primary" id="import" data-placement="bottom" data-tooltip="You usually only need to download once. NightScout.info CGM Utility automatically gets the last 18h data, but this will download everything else (So if you plugged in yesterday, no need to do this. If you plugged in last week, go ahead)">Download all</button>
-								<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-									<span class="caret"></span>
-									<span class="sr-only">Toggle Dropdown</span>
-								</button>
-								<ul class="dropdown-menu" role="menu">
-									<li><a href="#" class="downloadallfromdexcom">From Dexcom</a></li>
-									<li><a href="#" id="pulldatabase">From Mongolab</a></li>
-									<li class="divider"></li>
-									<li><a href="#" id="backfilldatabase">Backfill Mongolab</a></li>
-								</ul>
+								<div class="btn-group">
+									<button type="button" class="btn btn-primary" id="import" data-placement="bottom" data-tooltip="You usually only need to download once. NightScout.info CGM Utility automatically gets the last 18h data, but this will download everything else (So if you plugged in yesterday, no need to do this. If you plugged in last week, go ahead)">Download all</button>
+									<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+										<span class="caret"></span>
+										<span class="sr-only">Toggle Dropdown</span>
+									</button>
+									<ul class="dropdown-menu" role="menu">
+										<li><a href="#" class="downloadallfromdexcom">From Dexcom</a></li>
+										<li><a href="#" id="pulldatabase">From Mongolab</a></li>
+										<li class="divider"></li>
+										<li><a href="#" id="backfilldatabase">Backfill Mongolab</a></li>
+									</ul>
+								</div>
+								<button type="submit" class="btn btn-primary" id="export">Export</button>
 							</div>
-							<button type="submit" class="btn btn-danger" id="reset" data-placement="bottom" data-tooltip="Are you sure you want to reset? This cannot be undone.">Reset</button>
-							<button type="submit" class="btn btn-primary" id="export">Export</button>
-							<button type="button" id="fixit" class="btn btn-info">Something broke?</button>
+							<div class="btn-group">
+								<button type="submit" class="btn btn-danger" id="reset" data-placement="bottom" data-tooltip="Are you sure you want to reset? This cannot be undone.">Reset</button>
+								<button type="button" id="fixit" class="btn btn-info">Something broke?</button>
+							</div>
 						</div>
 					</form>
 				</div><!--/.navbar-collapse -->
 			</div>
 		</div>
-
-<!--
-		<div class="jumbotron" id="adduniqueindexpointer">
-			<p>If you haven't already: Please <a id="openmongolablink" href="https://www.mongolab.com" target="_blank">open MongoLab, and add a "unique index"</a> on your collection.</p>
-			<ul><li>Press Add Index</li><li>Change <code>fieldName</code> to <code>date</code></li><li>Check the <code>Unique</code> option.</li><li>Press Create in background</li></ul>
-			<p>It won't let you? </p>
-			<ul><li>Press the dropdown next to Download All.</li><li>Choose From MongoLab.</li><li>From MongoLab via the link above, choose the Documents tab</li><li>Press Delete all.</li><li>Make the unique index.</li><li>Back in NightScout.info CGM Utility, press the button beside Download All, and choose Backfill MongoLab.</li></ul></p>
-			<button id="dismissunique" class="btn">OK</button>
-		</div> 
--->
 		<div class="container" id="receiverui">
 			<div class="row">
 				<div class="container col-xs-10" style="background-color:#222; height:350px;">
@@ -334,9 +336,9 @@ html {
 					<div id="cgmdirection"></div>
 					<div id="cgmtime"></div>
 					
-					<div class="btn-group">	
+					<div class="btn-group" style="margin-top:1em;">	
  						<a class="btn dropdown-toggle btn-primary" data-toggle="dropdown" href="#">
-							Timeframe (ZOOM)
+							Timeframe
 							<span class="caret"></span>
 						</a>	
 						<ul class="dropdown-menu" role="menu">

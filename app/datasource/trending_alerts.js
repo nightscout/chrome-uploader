@@ -1,25 +1,28 @@
 define(["../bloodsugar"], function(convertBg) {
 	var current_direction;
+	var current_bg = 0;
 
-	var newReading = function(cur_record, last_record) {
-	console.log("New Reading");
+	var newReading = function(cur_r, last_r) {
+
+	var cur_record = cur_r;
+	var last_record = last_r;
 
 	Promise.all([
 	new Promise(function(ready) {
 	chrome.storage.local.get(["config"], function(values) {
 		if ("config" in values && "notifications" in values.config) {
-			console.log("setting read");
 			ready(values.config.notifications || "important");
 		} else {
-			console.log("No Setting for notifications available");
 			ready("important");
 		}
 		});
 	})
 	]).then(function(setting){
+
 		var now_trend = cur_record.trend;
 		var last_bg = last_record? last_record.bgValue: false;
 		var now_bg = cur_record.bgValue;
+
 
 		var intPriorities = {
 			"Flat": 0,
@@ -41,11 +44,8 @@ define(["../bloodsugar"], function(convertBg) {
 		}; })(new Date());
 
 
-
-
-		if (settings == "none") {
+		if (setting == "none"|| (now_bg==current_bg && current_direction == now_trend)) {
 			//do nothing
-			console.log(this + " No notification!");
 		}
 		
 		// falling too fast no other considerations
@@ -169,10 +169,12 @@ define(["../bloodsugar"], function(convertBg) {
 				priority: 1,
 			}, function(notification_id) {
 			});
-		} else if (settings == "all" && last_bg != now_bG){
+
+
+		} else if (setting == "all" && (!last_bg || current_bg != now_bg)){
 			chrome.notifications.create("", {
 				type: "basic",
-				title: convertBg(now_bg) + "NightScout.info CGM Utility",
+				title: "NightScout.info CGM Utility",
 				message: "You're #cgmnow " + convertBg(now_bg) + at() + ". The trend is " + now_trend +".",
 				iconUrl: "/public/assets/icon.png",
 				priority: 1,
@@ -183,9 +185,10 @@ define(["../bloodsugar"], function(convertBg) {
 				});
 			},5000);
 			});
+		} else {
 		}
-
 		current_direction = now_trend;
+		current_bg = now_bg;
 		});
 
 

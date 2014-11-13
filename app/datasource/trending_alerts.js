@@ -186,6 +186,7 @@ define(["../bloodsugar"], function(convertBg) {
 			},5000);
 			});
 		} else {
+			console.log("No notification fit.");
 		}
 		current_direction = now_trend;
 		current_bg = now_bg;

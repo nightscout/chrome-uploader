@@ -19,6 +19,8 @@
 
       <li class="nav"><a href="#optionstarget" data-toggle=
       "tab">Range</a></li>
+      <li class="nav"><a href="#optionsnotification" data-toggle=
+      "tab">Notifications</a></li>
     </ul>
 
     <div class="tab-content">
@@ -163,6 +165,32 @@
             <input class="form-control" type="number" name=
             "targetrange.high" id="options-range-high" placeholder=
             "What do you consider high?">
+          </div>
+        </div>
+      </form>
+
+
+      <form class="tab-pane form-horizontal" id="optionsnotification">
+        <div class="form-group">
+          <label class="col-sm-3 control-label" for=
+          "options-unit">Show Notifications</label>
+
+          <div class="col-sm-8">
+            <select class="form-control" type="text" name="notifications"
+            id="options-notification">
+              <option value="none" selected>
+                None
+              </option>
+
+              <option value="important">
+                Just important ones and direction changes
+              </option>
+
+              <option value="all">
+                All new readings
+              </option>
+
+            </select>
           </div>
         </div>
       </form>

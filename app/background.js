@@ -12,6 +12,8 @@ chrome.storage.local.get(null, function(local) {
 			low: 70,
 			high: 180
 		},
+		notifications: "important",
+
 	};
 	local.egvrecords = local.egvrecords || [];
 	local.acknowledgements = local.acknowledgements || [];

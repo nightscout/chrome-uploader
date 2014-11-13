@@ -2,8 +2,24 @@ define(["../bloodsugar"], function(convertBg) {
 	var current_direction;
 
 	var newReading = function(cur_record, last_record) {
+	console.log("New Reading");
+
+	Promise.all([
+	new Promise(function(ready) {
+	chrome.storage.local.get(["config"], function(values) {
+		if ("config" in values && "notifications" in values.config) {
+			console.log("setting read");
+			ready(values.config.notifications || "important");
+		} else {
+			console.log("No Setting for notifications available");
+			ready("important");
+		}
+		});
+	})
+	]).then(function(setting){
 		var now_trend = cur_record.trend;
-		var now_bg = cur_record.bgValue, last_bg = last_record? now_bg: false;
+		var last_bg = last_record? last_record.bgValue: false;
+		var now_bg = cur_record.bgValue;
 
 		var intPriorities = {
 			"Flat": 0,
@@ -23,9 +39,17 @@ define(["../bloodsugar"], function(convertBg) {
 			var ampm = d.getHours() >= 12? "pm": "am";
 			return " at " + h + ":" + m + ampm;
 		}; })(new Date());
+
+
+
+
+		if (settings == "none") {
+			//do nothing
+			console.log(this + " No notification!");
+		}
 		
 		// falling too fast no other considerations
-		if (now_trend == "DoubleDown" && now_bg < 150) {
+		else if (now_trend == "DoubleDown" && now_bg < 150) {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "NightScout.info CGM Utility",
@@ -145,9 +169,27 @@ define(["../bloodsugar"], function(convertBg) {
 				priority: 1,
 			}, function(notification_id) {
 			});
+		} else if (settings == "all" && last_bg != now_bG){
+			chrome.notifications.create("", {
+				type: "basic",
+				title: convertBg(now_bg) + "NightScout.info CGM Utility",
+				message: "You're #cgmnow " + convertBg(now_bg) + at() + ". The trend is " + now_trend +".",
+				iconUrl: "/public/assets/icon.png",
+				priority: 1,
+			}, function(notification_id) {
+			setTimeout(function(){
+				chrome.notifications.clear(notification_id, function(notification_id) {
+					//nothing
+				});
+			},5000);
+			});
 		}
 
 		current_direction = now_trend;
+		});
+
+
+
 	};
 					
 	chrome.storage.onChanged.addListener(function(changes, namespace) {

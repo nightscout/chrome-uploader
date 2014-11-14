@@ -110,6 +110,9 @@ require(["./bloodsugar"], function(convertBg) {
 			return plot[0] + t.hours() > now;
 		});
 
+		high = convertBg(high);
+		low = convertBg(low);
+
 		var trendIn = trend.filter(function(plot){
 			return plot[1]<=high && plot[1]>=low;
 		});
@@ -162,7 +165,7 @@ require(["./bloodsugar"], function(convertBg) {
 				}, 
 				yaxis: {
 					min: 0,
-					max: 350,
+					max: convertBg(350),
 					tickColor: "#555",
 				},
 				grid: {

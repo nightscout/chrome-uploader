@@ -89,11 +89,14 @@ require(["./bloodsugar"], function(convertBg) {
 			var trend = data.map(function(plot) {
 				return [
 					+plot.displayTime,
-					convertBg(plot.bgValue)
+					parseFloat(convertBg(plot.bgValue))
 				];
 			}).filter(function(plot) {
 				return plot[0] + t.hours() > now;
 			});
+
+			high = parseFloat(convertBg(high));
+			low = parseFloat(convertBg(low));
 
 			var trendIn = trend.filter(function(plot){
 				return plot[1]<=high && plot[1]>=low;
@@ -171,16 +174,16 @@ require(["./bloodsugar"], function(convertBg) {
 		  						color: '#FF0000',
 		  						lineWidth: 2,
 		  						yaxis: {
-		  							from: convertBg(low),
-		  							to: convertBg(low)
+		  							from: low,
+		  							to: low
 		  						}
 		  					},
 							{
 								color: '#FFFF00',
 								lineWidth: 2,
 								yaxis: {
-									from: convertBg(high),
-									to: convertBg(high)
+									from: high,
+									to: high
 								}
 							}
 						],

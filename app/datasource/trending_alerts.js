@@ -1,9 +1,28 @@
 define(["../bloodsugar"], function(convertBg) {
 	var current_direction;
+	var current_bg = 0;
 
-	var newReading = function(cur_record, last_record) {
+	var newReading = function(cur_r, last_r) {
+
+	var cur_record = cur_r;
+	var last_record = last_r;
+
+	Promise.all([
+	new Promise(function(ready) {
+	chrome.storage.local.get(["config"], function(values) {
+		if ("config" in values && "notifications" in values.config) {
+			ready(values.config.notifications || "important");
+		} else {
+			ready("important");
+		}
+		});
+	})
+	]).then(function(setting){
+
 		var now_trend = cur_record.trend;
-		var now_bg = cur_record.bgValue, last_bg = last_record? now_bg: false;
+		var last_bg = last_record? last_record.bgValue: false;
+		var now_bg = cur_record.bgValue;
+
 
 		var intPriorities = {
 			"Flat": 0,
@@ -23,9 +42,14 @@ define(["../bloodsugar"], function(convertBg) {
 			var ampm = d.getHours() >= 12? "pm": "am";
 			return " at " + h + ":" + m + ampm;
 		}; })(new Date());
+
+
+		if (setting == "none"|| (now_bg==current_bg && current_direction == now_trend)) {
+			//do nothing
+		}
 		
 		// falling too fast no other considerations
-		if (now_trend == "DoubleDown" && now_bg < 150) {
+		else if (now_trend == "DoubleDown" && now_bg < 150) {
 			chrome.notifications.create("", {
 				type: "basic",
 				title: "NightScout.info CGM Utility",
@@ -145,9 +169,31 @@ define(["../bloodsugar"], function(convertBg) {
 				priority: 1,
 			}, function(notification_id) {
 			});
-		}
 
+
+		} else if (setting == "all" && (!last_bg || current_bg != now_bg)){
+			chrome.notifications.create("", {
+				type: "basic",
+				title: "NightScout.info CGM Utility",
+				message: "You're #cgmnow " + convertBg(now_bg) + at() + ". The trend is " + now_trend +".",
+				iconUrl: "/public/assets/icon.png",
+				priority: 1,
+			}, function(notification_id) {
+			setTimeout(function(){
+				chrome.notifications.clear(notification_id, function(notification_id) {
+					//nothing
+				});
+			},5000);
+			});
+		} else {
+			console.log("No notification fit.");
+		}
 		current_direction = now_trend;
+		current_bg = now_bg;
+		});
+
+
+
 	};
 					
 	chrome.storage.onChanged.addListener(function(changes, namespace) {

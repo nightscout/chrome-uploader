@@ -101,27 +101,40 @@ require(["./bloodsugar"], function(convertBg) {
 		]).then(function(o){
 		var t = time; //parseInt($("#timewindow").val(),10); //Adrian: was: var t = 12;
 		var now = (new Date()).getTime();
-		var trend = data.map(function(plot) {
-			return [
-				+plot.displayTime,
-				convertBg(plot.bgValue)
-			];
-		}).filter(function(plot) {
-			return plot[0] + t.hours() > now;
+		data = data.filter(function(plot){
+			return +plot.displayTime + t.hours() > now;
+		});
+
+		var dataIn = data.filter(function(plot){
+			return plot.bgValue<=high && plot.bgValue>=low;
+		});
+		var dataHigh = data.filter(function(plot){
+			return plot.bgValue>high;
+		});
+		var dataLow = data.filter(function(plot){
+			return plot.bgValue<low;
+		
 		});
 
 		high = convertBg(high);
 		low = convertBg(low);
-
-		var trendIn = trend.filter(function(plot){
-			return plot[1]<=high && plot[1]>=low;
+		var trendIn = dataIn.map(function(plot) {
+			return [
+				+plot.displayTime,
+				convertBg(plot.bgValue)
+			];
 		});
-		var trendHigh = trend.filter(function(plot){
-			return plot[1]>high;
+		var trendHigh = dataHigh.map(function(plot) {
+			return [
+				+plot.displayTime,
+				convertBg(plot.bgValue)
+			];
 		});
-		var trendLow = trend.filter(function(plot){
-			return plot[1]<low;
-		
+		var trendLow = dataLow.map(function(plot) {
+			return [
+				+plot.displayTime,
+				convertBg(plot.bgValue)
+			];
 		});
 
 		var ticksz = [1, "hour"];

@@ -84,7 +84,6 @@ require(["./bloodsugar"], function(convertBg) {
 				});
 			})
 		]).then(function(o){
-<<<<<<< HEAD
 			var t = time; //parseInt($("#timewindow").val(),10); //Adrian: was: var t = 12;
 			var now = (new Date()).getTime();
 			var trend = data.map(function(plot) {
@@ -98,45 +97,6 @@ require(["./bloodsugar"], function(convertBg) {
 
 			high = parseFloat(convertBg(high));
 			low = parseFloat(convertBg(low));
-=======
-		var t = time; //parseInt($("#timewindow").val(),10); //Adrian: was: var t = 12;
-		var now = (new Date()).getTime();
-		data = data.filter(function(plot){
-			return +plot.displayTime + t.hours() > now;
-		});
-
-		var dataIn = data.filter(function(plot){
-			return plot.bgValue<=high && plot.bgValue>=low;
-		});
-		var dataHigh = data.filter(function(plot){
-			return plot.bgValue>high;
-		});
-		var dataLow = data.filter(function(plot){
-			return plot.bgValue<low;
-		
-		});
-
-		high = convertBg(high);
-		low = convertBg(low);
-		var trendIn = dataIn.map(function(plot) {
-			return [
-				+plot.displayTime,
-				convertBg(plot.bgValue)
-			];
-		});
-		var trendHigh = dataHigh.map(function(plot) {
-			return [
-				+plot.displayTime,
-				convertBg(plot.bgValue)
-			];
-		});
-		var trendLow = dataLow.map(function(plot) {
-			return [
-				+plot.displayTime,
-				convertBg(plot.bgValue)
-			];
-		});
->>>>>>> fix for comparing values numerically before converting them to mmol string representations.
 
 			var trendIn = trend.filter(function(plot){
 				return plot[1]<=high && plot[1]>=low;

@@ -30,7 +30,7 @@ var general_generate_report = function() {
                         high = 130;
                     }
                     ready(values.egvrecords.map(function(r) {
-                        r.localBg = convertBg(r.bgValue);
+                        r.localBg = parseFloat(convertBg(r.bgValue));
                         return r;
                     }));
                 });

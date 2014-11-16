@@ -1,0 +1,34 @@
+<html>
+<head>
+<script src="/vendor/requirejs/require.js"></script>
+<script src="/vendor/jquery/dist/jquery.min.js"></script>
+<script src="/vendor/flot/jquery.flot.js"></script>
+<script src="/vendor/flot/jquery.flot.time.js"></script>
+<script src="/vendor/flot/jquery.flot.fillbetween.js"></script>
+<script src="../time.js"></script>
+<script src="/vendor/simple-statistics/src/simple_statistics.js"></script>
+<script src="percentile.js"></script>
+<script src="stats_controls.js"></script>
+<link rel="stylesheet" href="/vendor/jquery-ui/jquery-ui.min.css"/>
+<style>
+#percentilechart {
+	width: 100%;
+	height: 100%;
+}
+
+@media print {
+	.print {
+		display:none;
+	}
+}
+</style>
+</head>
+<body>
+<h1>Percentile Chart</h1>
+<div id="stats_controls"/>
+<div style="height:500px;">
+	<div class="chart" id="percentilechart"></div>
+</div>
+</div>
+</body>
+</html>

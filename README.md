@@ -19,3 +19,19 @@ Download Dexcom data on almost any platform Chrome runs on. (Developed and teste
 3. Click **NightScout.info CGM Utility** icon to launch
 
 Lots of steps and right now. Some times you get no data back, usually preceded by completely inaccurate graphs- if that happens, press the Reset button. This'll wipe out all the data it's accumulated. Doesn't seem like you really need to unplug/replug anymore.
+
+
+###Linux
+On linux systems the programme doesn't have permission to access the dexcom device. In order to grant this permission, a udev rule has to be supplied.
+
+1. Create a file like /etc/udev/rules.d/99-dexcom.rules with admin rights.
+2. Add the following text to this file. Replace YOURGROUP with either a group you are member of or just your username.
+SUBSYSTEM=="usb",ATTR{idVendor}=="22a3",ATTR{idProduct}=="0047",MODE="0660",GROUP="YOURGROUP"
+3. trigger udev to load the new rules or simply restart.
+
+How to to this on Ubuntu (tested on 12.4):
+1. open a terminal
+2. run the following command, replacing YOURUSERNAME with your username:
+echo "SUBSYSTEM==\"usb\",ATTR{idVendor}==\"22a3\",ATTR{idProduct}==\"0047\",MODE=\"0660\",GROUP=\"YOURUSERNAME\"" | sudo tee /etc/udev/rules.d/99-dexcom.rules
+3. restart
+

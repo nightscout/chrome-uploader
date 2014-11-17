@@ -381,6 +381,17 @@ $(function() {
 			}
 		});
 	});
+
+	$("#menupercentilechart").click(function() {
+		chrome.app.window.create('app/report/percentile.html', {
+			id: "percentilechart",
+			bounds: {
+				width: 960,
+				height: 578
+			}
+		});
+	});
+
 	$("#openoptions").click(function(){
 		new Promise(function(done) {
 			chrome.storage.local.get("config", function(config) {

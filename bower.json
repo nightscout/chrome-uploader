@@ -9,6 +9,7 @@
     "bootstrap": "~3.1.1",
     "bootstrap-confirmation": "*",
     "requirejs": "~2.1.14",
-    "simple-statistics": "~0.8.1"
+    "simple-statistics": "~0.8.1",
+    "jquery-ui": "~1.11.2"
   }
 }

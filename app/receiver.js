@@ -211,6 +211,35 @@ require(["./bloodsugar"], function(convertBg) {
 		}
 	});
 
+	$(function() {
+		//Adrian: Timeframe(ZOOM)-handlers:
+		$("#setTime1").click(function() {
+			chrome.storage.local.set({'trenddisplaytime': 1});
+		});
+		$("#setTime3").click(function() {
+			chrome.storage.local.set({'trenddisplaytime': 3});
+		});
+		$("#setTime6").click(function() {
+			chrome.storage.local.set({'trenddisplaytime': 6});
+		});
+		$("#setTime12").click(function() {
+			chrome.storage.local.set({'trenddisplaytime': 12});
+		});
+		$("#setTime24").click(function() {
+			chrome.storage.local.set({'trenddisplaytime': 24});
+		});
+		$("#setTime48").click(function() {
+			chrome.storage.local.set({'trenddisplaytime': 48});
+		});
+		$("#setTime72").click(function() {
+			chrome.storage.local.set({'trenddisplaytime': 72});
+		});
+		$("#setTime168").click(function() {
+			chrome.storage.local.set({'trenddisplaytime': 168});
+		});
+	});
+
+
 	// first load, before receiver's returned data
 	var firstLoad = function() {
 		chrome.storage.local.get(["egvrecords"], function(values) {

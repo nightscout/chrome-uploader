@@ -30,13 +30,13 @@ if (isMac) {
 		identifier = window.navigator.appVersion.substring(ixVersion, v).trim().split("_").map(function(r) { return parseInt(r, 10); });
 
 		const MAJOR = 0, MINOR = 1, BUGFIX = 2;
-		if (identifier[MAJOR] == 10 && identifier[MINOR] == 9) {
+		if (identifier[MAJOR] == 10 && identifier[MINOR] >= 7 && identifier[MINOR] <= 10) {
 			// ok
-		} else if (identifier[MAJOR] == 10 && identifier[MINOR] > 9) {
+		} else if (identifier[MAJOR] == 10 && identifier[MINOR] > 10) {
 			// probably ok
 		} else if (identifier[MAJOR] > 10) {
 			// *shrugs*
-			setTimeout(waiting.show("You're on a newer version of OSX than this has been tested against. Please provide feedback on what happens."), (10).seconds());
+			setTimeout(waiting.show("You're on a much newer version of OSX than this has been tested against. Please provide feedback on what happens."), (10).seconds());
 		} else {
 			// fail
 			setTimeout(waiting.show("You're on an old version of OSX and this is unlikely to work."), (10).seconds());

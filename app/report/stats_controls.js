@@ -44,6 +44,9 @@ var general_generate_report = function() {
             var one = 1;
             var startdate = Date.parse($("#fromdate").val());
             var enddate = Date.parse($("#todate").val()) + one.days();
+	    var datestring = $("#fromdate").val() + " - " + $("#todate").val();
+	    $("#dateoutput").empty();
+	    $("#dateoutput").append(datestring);
             data = data.filter(function(record) {
                 return (record.displayTime >= startdate) && (record.displayTime < enddate);
             });

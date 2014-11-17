@@ -14,7 +14,6 @@ var switchToCorrectDatasource = function() {
 		}
 	});
 	chrome.storage.onChanged.addListener(function(changes, namespace) {
-		debugger;
 		if ("config" in changes) {
 			if (changes.config.newValue.datasource == "remotecgm")	 {
 				console.debug("switching to MongoLab datasource");

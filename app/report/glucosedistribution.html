@@ -8,7 +8,7 @@
 <script src="/vendor/simple-statistics/src/simple_statistics.js"></script>
 <script src="glucosedistribution.js"></script>
 <script src="stats_controls.js"></script>
-<link rel="stylesheet" href="/vendor/jquery-ui/jquery-ui.min.css"/>
+<link rel="stylesheet" href="/vendor/jquery-ui/themes/smoothness/jquery-ui.min.css"/>
 <style>
 #overviewchart {
 	width: 3.0in;
@@ -18,13 +18,17 @@
 @media print {
 	.print {
 		display:none;
+	#stats_controls {
+		display: none;
+	}
 	}
 }
 </style>
 </head>
 <body>
 <h1>Glucose distribution</h1>
-<div id="stats_controls"/>
+<div id="stats_controls">
+</div>
 <div id="overviewchart"></div>
 <div id="report">
 </div>

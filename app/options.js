@@ -48,10 +48,6 @@ $("#optionsui").on("click", "#savesettings", function(){
 			return out;
 		}, {})
 	}, function() {
-		console.log("saved settings");
-		// $("#optionsui").hide();
-		// $("#receiverui").show();
-		// switchToCorrectDatasource();
 		window.close();
 	});
 });

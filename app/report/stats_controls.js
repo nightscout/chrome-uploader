@@ -87,6 +87,6 @@ $(function() {
             window.print();
         });
 
-    });
+    }).then(function(x){general_generate_report();});
 
 });

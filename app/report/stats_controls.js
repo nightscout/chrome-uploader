@@ -1,6 +1,6 @@
 /* Adrian:
 
-This script will add two DatePicker (from, to), a "Generate Report" button and a "Print" button to a <div> with id "stats_controls".
+This script will add two DatePicker (from, to), two arrow buttons to jump to the neighbouring timeframe and a "Print" button to a <div> with id "stats_controls".
 "Generate Report" will pre-filter the data according to the dates given by the DatePickers and then call a function "generate_report(data, high, low);" that has to be provided by the programmer.
 
 data - array of datapoints in the timerange.
@@ -15,6 +15,9 @@ To use this script in an html-file:
 4th: Import css for a more beautiful DatePicker: <link rel="stylesheet" href="/vendor/jquery-ui/jquery-ui.min.css"/>
 
 */
+
+var fromold = "";
+var toold = "";
 
 var general_generate_report = function() {
     require(["../bloodsugar"], function(convertBg) {
@@ -44,6 +47,16 @@ var general_generate_report = function() {
             var one = 1;
             var startdate = Date.parse($("#fromdate").val());
             var enddate = Date.parse($("#todate").val()) + one.days();
+
+	    $("#dateselectionerrormessage").empty();
+	    if(startdate>=enddate){
+		$("#fromdate").val(fromold);
+		$("#todate").val(toold);
+	    	$("#dateselectionerrormessage").append("reset to previous date (To was after From)!");
+		return;
+	    } 
+	    fromold = $("#fromdate").val();
+            toold = $("#todate").val();
 	    var datestring = $("#fromdate").val() + " - " + $("#todate").val();
 	    $("#dateoutput").empty();
 	    $("#dateoutput").append(datestring);
@@ -62,33 +75,63 @@ $(function() {
     Promise.all([
         new Promise(function(ready) {
 
-            var controlshtml = "<p>From Date: <input type='text' id='fromdate'>  To Date: <input type='text' id='todate'> <button class='generatrereport' id='generatrereport'>Generate Report</button><button class='print'>Print</button></p>";
+            var controlshtml = "<p>From Date: <input type='text' id='fromdate'>  To Date: <input type='text' id='todate'><button class='dateleft' id='dateleft'>&#x21E6;</button><button class='dateright' id='dateright'>&#x21E8;</button> <button class='print'>Print</button> <output id='dateselectionerrormessage'style='color:red;'></output></p>";
             ready($("#stats_controls").append($(controlshtml)));
         })
     ]).then(function(o) {
         //register datepicker
         require(["jquery", "/vendor/jquery-ui/jquery-ui.min.js"], function($) {
-            $("#fromdate").datepicker();
-            $("#todate").datepicker();
+            $("#fromdate").datepicker({onClose: general_generate_report});
+            $("#todate").datepicker({onClose: general_generate_report});
         });
 
         //add presets for dates
         var now = new Date();
         $("#todate").val((now.getMonth() + 1) + "/" + now.getDate() + "/" + now.getFullYear());
-
+	toold = $("#todate").val();
         var one = 1;
         var then = new Date(Date.now() - one.months());
         $("#fromdate").val((then.getMonth() + 1) + "/" + then.getDate() + "/" + then.getFullYear());
+	fromold = $("#fromdate").val();
 
         //add handler
-        $("#generatrereport").click(function() {
-            general_generate_report();
-        });
-
         $(".print").click(function(e) {
             e.preventDefault();
             window.print();
         });
+
+        $("#dateleft").click(function() {
+	    var from = Date.parse($("#fromdate").val());
+	    var to = Date.parse($("#todate").val());
+	    //daylight saving time may make diffs just very close to full days:
+	    var diff = Math.round((to - from)/(1000 * 60 * 60 * 24))*(1000 * 60 * 60 * 24);
+	    var one = 1;
+	    to = from - one.days();
+	    from = to - diff;
+	    to = new Date(to);
+	    from = new Date(from);
+            $("#todate").val("" + (to.getMonth()+1) + "/" + to.getDate() + "/" + to.getFullYear());
+            $("#fromdate").val("" + (from.getMonth()+1) + "/" + from.getDate() + "/" + from.getFullYear());
+            general_generate_report();
+        });
+
+        $("#dateright").click(function() {
+	    var from = Date.parse($("#fromdate").val());
+	    var to = Date.parse($("#todate").val());
+	    //daylight saving time may make diffs just very close to full days:
+	    var diff = Math.round((to - from)/(1000 * 60 * 60 * 24))*(1000 * 60 * 60 * 24);
+	    var one = 1;
+	    from = to + one.days();
+	    to = from + diff;
+	    to = new Date(to);
+	    from = new Date(from);
+            $("#todate").val("" + (to.getMonth()+1) + "/" + to.getDate() + "/" + to.getFullYear());
+            $("#fromdate").val("" + (from.getMonth()+1) + "/" + from.getDate() + "/" + from.getFullYear());
+            general_generate_report();
+        });
+
+
+
 
     }).then(function(x){general_generate_report();});
 

@@ -185,8 +185,6 @@ onConnectError = function(){
 };
 connect().then(onConnected, onConnectError); // chain to start everything
 
-
-
 $(function() {
 	// event handlers
 	$("#disclaimer").modal();

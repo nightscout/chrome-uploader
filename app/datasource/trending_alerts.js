@@ -101,20 +101,51 @@ define(["../bloodsugar"], function(convertBg) {
 
 
 	function doNotify(priority, message){
+
+Promise.all([
+	new Promise(function(ready) {
+	chrome.storage.local.get(["config"], function(values) {
+		if ("config" in values && "notifications_timeout" in values.config) {
+			ready(values.config.notifications_timeout || "no");
+		} else {
+			ready("no");
+		}
+		});
+	}),
+	new Promise(function(ready) {
+	chrome.storage.local.get(["config"], function(values) {
+		if ("config" in values && "notifications_bignumbers" in values.config) {
+			ready(values.config.notifications_bignumbers || "no");
+		} else {
+			ready("no");
+		}
+		});
+	})
+	]).then(function(settings){
+
+		console.log("################## then");
+		var timeout_funct = function(notification_id){};
+		console.log("################## before if");
+		if(settings[0] != "no"){
+		console.log("################## begin if");
+			timeout_funct = function(notification_id) {
+						setTimeout(function(){
+							chrome.notifications.clear(notification_id, function(notification_id) {
+													//nothing
+								});
+						},1000*parseInt(settings[0]));
+					};
+		}
+
+		console.log("################## before create");
 		chrome.notifications.create("", {
 			type: "basic",
 			title: "NightScout.info CGM Utility",
 			message: "" + message,
 			iconUrl: "/public/assets/icon.png",
 			priority: priority,
-		}, function(notification_id) {
-			if (priority >=3 ) setTimeout(function(){
-				chrome.notifications.clear(notification_id, function(notification_id) {
-					//nothing
-				});
-			},5000);
-		});
- 	}
+		}, timeout_funct);
+ 	});}
 					
 	chrome.storage.onChanged.addListener(function(changes, namespace) {
 		if ("egvrecords" in changes)  {

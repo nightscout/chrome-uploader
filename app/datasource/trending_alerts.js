@@ -39,21 +39,21 @@ define(["../bloodsugar"], function(convertBg) {
 		
 		// falling too fast no other considerations
 		} else if (now_trend == "DoubleDown" && now_bg < 150) {
-			doNotify(2, "You're trending double down. #cgmnow " + convertBg(now_bg) + at());
+			doNotify(now_bg, 2, "You're trending double down. #cgmnow " + convertBg(now_bg) + at());
 		
 
 		// falling fast but slowing
 		} else if (now_trend == "SingleDown" && now_trend == "DoubleDown") {
-			doNotify(1, "Your fall has slowed. You were double down but are now single down. #cgmnow " + convertBg(now_bg) + at());
+			doNotify(now_bg,1, "Your fall has slowed. You were double down but are now single down. #cgmnow " + convertBg(now_bg) + at());
 
 		// falling too fast considering current bg
 		} else if (now_trend == "SingleDown" && now_bg < 130 && (last_bg? last_bg >= 130: true)) {
-			doNotify(2, "You're trending single down. #cgmnow " + convertBg(now_bg) + at());
+			doNotify(now_bg,2, "You're trending single down. #cgmnow " + convertBg(now_bg) + at());
 
 
 		// falling but slowing
 		} else if (now_trend == "FortyFiveDown" && (["SingleDown", "DoubleDown"].indexOf(now_trend) > -1)) {
-			doNotify(1, "Your fall has slowed. You were " + now_trend + " but are now forty five down down. #cgmnow " + convertBg(now_bg) + at());
+			doNotify(now_bg,1, "Your fall has slowed. You were " + now_trend + " but are now forty five down down. #cgmnow " + convertBg(now_bg) + at());
 
 		// falling too fast considering current bg
 		} else if (now_trend == "FortyFiveDown" && now_bg < 110 && (last_bg? last_bg >= 110: true)) {
@@ -63,32 +63,32 @@ define(["../bloodsugar"], function(convertBg) {
 
 		// raising too fast
 		} else if (now_trend == "DoubleUp" && now_bg > 110 && ( last_bg? last_bg <= 110: true)) {
-			doNotify(2, "You're trending double up. #cgmnow " + convertBg(now_bg) + at());
+			doNotify(now_bg,2, "You're trending double up. #cgmnow " + convertBg(now_bg) + at());
 
 		// rising fast but slowing
 		} else if (now_trend == "SingleUp" && now_trend == "DoubleUp") {
-			doNotify(1, "Your rise has slowed. You were double up but are now single up. #cgmnow " + convertBg(now_bg) + at());
+			doNotify(now_bg,1, "Your rise has slowed. You were double up but are now single up. #cgmnow " + convertBg(now_bg) + at());
 
 		// rising too fast considering current bg
 		} else if (now_trend == "SingleUp" && now_bg > 130 && (last_bg? last_bg <= 130: true)) {
-			doNotify(2, "You're trending single up. #cgmnow " + convertBg(now_bg) + at());
+			doNotify(now_bg,2, "You're trending single up. #cgmnow " + convertBg(now_bg) + at());
 
 
 		// rising but slowing
 		} else if (now_trend == "FortyFiveUp" && (["SingleUp", "DoubleUp"].indexOf(now_trend) > -1)) {
-			doNotify(1, "Your rise has slowed. You were " + now_trend + " but are now forty five up up. #cgmnow " + convertBg(now_bg) + at());
+			doNotify(now_bg,1, "Your rise has slowed. You were " + now_trend + " but are now forty five up up. #cgmnow " + convertBg(now_bg) + at());
 
 		// falling too fast considering current bg
 		} else if (now_trend == "FortyFiveUp" && now_bg > 150 && (last_bg? last_bg <= 150: true)) {
-			doNotify(2, "You're trending forty five up. #cgmnow " + convertBg(now_bg) + at());
+			doNotify(now_bg,2, "You're trending forty five up. #cgmnow " + convertBg(now_bg) + at());
 
 		
 
 		} else if (current_direction && current_direction != now_trend) {
-			doNotify(1, "Trend direction changed to " + now_trend + ". You're #cgmnow " + convertBg(now_bg) + at());
+			doNotify(now_bg,1, "Trend direction changed to " + now_trend + ". You're #cgmnow " + convertBg(now_bg) + at());
 
 		} else if (setting == "all" && (!last_bg || current_bg != now_bg)){
-			doNotify(3, "You're #cgmnow " + convertBg(now_bg) + at() + ". The trend is " + now_trend +".");
+			doNotify(now_bg,3, "You're #cgmnow " + convertBg(now_bg) + at() + ". The trend is " + now_trend +".");
 
 		} else {
 			console.log("No notification fit.");
@@ -100,7 +100,7 @@ define(["../bloodsugar"], function(convertBg) {
 
 
 
-	function doNotify(priority, message){
+	function doNotify(bg_value,priority, message){
 
 Promise.all([
 	new Promise(function(ready) {
@@ -122,12 +122,8 @@ Promise.all([
 		});
 	})
 	]).then(function(settings){
-
-		console.log("################## then");
 		var timeout_funct = function(notification_id){};
-		console.log("################## before if");
 		if(settings[0] != "no"){
-		console.log("################## begin if");
 			timeout_funct = function(notification_id) {
 						setTimeout(function(){
 							chrome.notifications.clear(notification_id, function(notification_id) {
@@ -137,15 +133,40 @@ Promise.all([
 					};
 		}
 
-		console.log("################## before create");
-		chrome.notifications.create("", {
-			type: "basic",
-			title: "NightScout.info CGM Utility",
-			message: "" + message,
-			iconUrl: "/public/assets/icon.png",
-			priority: priority,
-		}, timeout_funct);
- 	});}
+		if(settings[1] == "no"){
+			chrome.notifications.create("", {
+				type: "basic",
+				title: "NightScout.info CGM Utility",
+				message: "" + message,
+				iconUrl: "/public/assets/icon.png",
+				priority: priority,
+			}, timeout_funct);
+
+		} else{
+		//create canvas
+       			var canvas = document.createElement('canvas');
+        		canvas.width = 80;
+        		canvas.height = 45;
+        		var ctx = canvas.getContext('2d');
+        		ctx.fillStyle = "";
+        		ctx.fillRect(0, 0, canvas.width,canvas.height);
+        		ctx.fillStyle = "rgb(200,0,0)";
+        		ctx.font="30px Verdana";
+ 			ctx.fillText(convertBg(bg_value),5,35);
+        		var dataURL = canvas.toDataURL('image/png');
+		//create notification
+			chrome.notifications.create("", {
+				type: "image",
+				title: "NightScout.info CGM Utility",
+				message: "" + message,
+				iconUrl: "/public/assets/icon.png",
+				imageUrl: dataURL,
+				priority: priority,
+			}, timeout_funct);
+
+		}
+ 		});
+	}
 					
 	chrome.storage.onChanged.addListener(function(changes, namespace) {
 		if ("egvrecords" in changes)  {

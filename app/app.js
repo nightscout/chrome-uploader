@@ -345,6 +345,15 @@ $(function() {
 			}
 		});
 	});
+	$("#menusuccess").click(function() {
+		chrome.app.window.create('app/report/success.html', {
+			id: "successreport",
+			bounds: {
+				width: 800,
+				height: 600
+			}
+		});
+	});
 	$("#menudailystats").click(function() {
 		chrome.app.window.create('app/report/dailystats.html', {
 			id: "dailystatsreport",

@@ -12,7 +12,6 @@ Promise.all([
 ]).then(function(o) {
 	var data = o[0],
 		convertBg = o[1];
-		debugger;
 	var low = 70,
 		high = 180;
 	var config = {
@@ -53,10 +52,11 @@ Promise.all([
 		};
 	}).map(function(quarter) {
 		var bgValues = quarter.records.map(function(record) {
-			return record.bgValue;
+			return parseInt(record.bgValue,10);
 		});
 		quarter.standardDeviation = ss.standard_deviation(bgValues);
 		quarter.average = bgValues.length > 0? (sum(bgValues) / bgValues.length): "N/A";
+		if (quarter.average == Infinity) debugger;
 		quarter.lowerQuartile = ss.quantile(bgValues, 0.25); 
 		quarter.upperQuartile = ss.quantile(bgValues, 0.75);
 		quarter.numberLow = bgValues.filter(function(bg) {
@@ -79,7 +79,7 @@ Promise.all([
 			quarter.numberLow,
 			quarter.numberInRange,
 			quarter.numberHigh,
-			Math.round(quarter.standardDeviation,5),
+			Math.round(quarter.standardDeviation),
 			convertBg(quarter.lowerQuartile),
 			convertBg(quarter.average),
 			convertBg(quarter.upperQuartile)

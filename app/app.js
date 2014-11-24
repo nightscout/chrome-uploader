@@ -77,19 +77,34 @@ var connect = function() {
 	return new Promise(function(resolve, reject) {
 		if (isdownloading) reject();
 		isdownloading = true;
-		chrome.storage.local.get("config", function(local) {
+		var timer = new Date();
+		chrome.storage.local.get(["egvrecords", "config"], function(local) {
+			var max_existing = local.egvrecords.length > 0?  local.egvrecords[local.egvrecords.length - 1].displayTime : 0;
+			
 			console.debug("[cgm] loading");
 			var serialport = local.config.serialport || (isWindows? "COM3": "/dev/tty.usbmodem");
 			cgm.connect(serialport).then(function() {
 				console.debug("[cgm] loaded");
 				chrome.notifications.onButtonClicked.removeListener(connectionErrorCB);
 				try {
-					return cgm.readFromReceiver(1).then(function(d) {
-						console.debug("[dexcom] read; disconnecting");
-						cgm.disconnect();
-						isdownloading = false;
-						resolve(d);
-					});
+					var page = 1;
+					var d = []; // data
+					var process = function(d_page) {
+						console.debug("[dexcom] read page %i", page);
+						d = d.concat(d_page);
+						if(d_page.filter(function(egv) {
+							return +egv.displayTime > max_existing;
+						}).length == 0) {
+							console.debug("[dexcom] stopped reading at page %i", page);
+							cgm.disconnect();
+							isdownloading = false;
+							console.debug("[dexcom] spent %i ms downloading", (new Date() - timer));
+							resolve(d);
+						} else {
+							cgm.readFromReceiver(++page).then(process);
+						}
+					}
+					return cgm.readFromReceiver(page).then(process);
 				} catch (e) {
 					console.debug("[cgm] %o", e);
 					reject(e);
@@ -241,100 +256,6 @@ $(function() {
 	});
 
 
-	// TODO: this needs to be refactored out of here
-	// TODO: populateLocalStorage() in dexcom?
-	var downloadTheWorld = function(b){
-		waiting.show('Downloading entire history from Dexcom receiver');
-		isdownloading = true;
-
-		var i = 1;
-		var data = [];
-		var compile = function(i) {
-			return new Promise(function(resolve,reject) {
-				try {
-					cgm.readFromReceiver(i).then(function(d) {
-						data.push(d);
-
-						if (d.length) {
-							resolve(d);
-						} else {
-							reject();
-						}
-					});
-				} catch (e) {
-					reject(e);
-				}
-			});
-		},
-		reader = function() {
-			compile(i).then(function() {
-				waiting.setProgress(i);
-				i++;
-				reader();
-			}, function() { // no more data
-				waiting.setProgress(85);
-				setTimeout(function() {
-					chrome.storage.local.get("egvrecords", function(values) {
-						cgm.disconnect();
-						var existing = values.egvrecords;
-						var existing_ts = existing.map(function(row) {
-							return row.displayTime;
-						});
-						var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
-						var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
-							return {
-								displayTime: +egv.displayTime,
-								bgValue: egv.bgValue,
-								trend: egv.trend
-							};
-						}).filter(function(row) {
-							return existing_ts.filter(function(ts) {
-								return ts == row.displayTime;
-							}).length === 0;
-						}).filter(function(row) {
-							return row.bgValue > 30;
-						});
-						var to_save = existing.concat(new_records);
-						to_save.sort(function(a,b) {
-							return a.displayTime - b.displayTime;
-						});
-						chrome.storage.local.set({ egvrecords: to_save },
-							console.debug.bind(console, "[downloadTheWorld] Saved results")
-						);
-						waiting.hide();
-						isdownloading = false;
-						chrome.notifications.create("", {
-							title: "Download complete",
-							type: "basic",
-							message: "Downloaded " + new_records.length + " new records (about " + Math.ceil(new_records.length / 216) + " day(s) worth."
-						}, function() { });
-						console.log("%i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
-					});
-				}, 300);
-			});
-		};
-		chrome.storage.local.get("config", function(local) {
-			try {
-				cgm.connect(local.config.serialport).then(reader, function() {
-					chrome.notifications.update(notification_id, {
-						message: "Could not find a connected Dexcom from which to download.",
-						iconUrl: "/public/assets/error.png"
-					}, function() { });
-				});
-			} catch (e) {
-				chrome.notifications.update(notification_id, {
-					message: "Could not find a connected Dexcom to download from"
-				}, function() { });
-			}
-		});
-	};
-	$(".downloadallfromdexcom").click(downloadTheWorld);
-	var downloadAllConfirmation = $('#import').confirmation({
-		title: "You usually only need to download once. NightScout.info CGM Utility automatically gets the last 18h data, but this will download everything else (So if you plugged in yesterday, no need to do this. If you plugged in last week, or this is your first time using NightScout.info CGM Utility, go ahead)",
-		btnOkLabel: "Download",
-		btnOkClass: "btn btn-sm btn-primary",
-		onConfirm: downloadTheWorld
-	});
 	$('.dropdown-toggle').dropdown();
 	$("#menuinsights").click(function() {
 		chrome.app.window.create('app/report/insights.html', {

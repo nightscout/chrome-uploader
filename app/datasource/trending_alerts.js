@@ -23,17 +23,6 @@ define(["../bloodsugar"], function(convertBg) {
 		var last_bg = last_record? last_record.bgValue: false;
 		var now_bg = cur_record.bgValue;
 
-
-		var intPriorities = {
-			"Flat": 0,
-			"FortyFiveDown": -1,
-			"SingleDown": -2,
-			"DoubleDown": -3,
-			"FortyFiveUp": 1,
-			"SingleUp": 2,
-			"DoubleUp": 3
-		};
-
 		var at = (function(d) {return function() {
 			var h = d.getHours() % 12, m = d.getMinutes();
 			if (m < 10) m = "0" + m.toString();
@@ -46,155 +35,138 @@ define(["../bloodsugar"], function(convertBg) {
 
 		if (setting == "none"|| (now_bg==current_bg && current_direction == now_trend)) {
 			//do nothing
-		}
+		
 		
 		// falling too fast no other considerations
-		else if (now_trend == "DoubleDown" && now_bg < 150) {
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "NightScout.info CGM Utility",
-				message: "You're trending double down. #cgmnow " + convertBg(now_bg) + at(),
-				iconUrl: "/public/assets/icon.png",
-				priority: 2,
-			}, function(notification_id) {
-			});
-		}
+		} else if (now_trend == "DoubleDown" && now_bg < 150) {
+			doNotify(now_bg, 2, "You're trending double down. #cgmnow " + convertBg(now_bg) + at());
+		
 
 		// falling fast but slowing
-		else if (now_trend == "SingleDown" && now_trend == "DoubleDown") {
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "NightScout.info CGM Utility",
-				message: "Your fall has slowed. You were double down but are now single down. #cgmnow " + convertBg(now_bg) + at(),
-				iconUrl: "/public/assets/icon.png",
-				priority: 1,
-			}, function(notification_id) {
-			});
+		} else if (now_trend == "SingleDown" && now_trend == "DoubleDown") {
+			doNotify(now_bg,1, "Your fall has slowed. You were double down but are now single down. #cgmnow " + convertBg(now_bg) + at());
+
 		// falling too fast considering current bg
 		} else if (now_trend == "SingleDown" && now_bg < 130 && (last_bg? last_bg >= 130: true)) {
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "NightScout.info CGM Utility",
-				message: "You're trending single down. #cgmnow " + convertBg(now_bg) + at(),
-				iconUrl: "/public/assets/icon.png",
-				priority: 2,
-			}, function(notification_id) {
-			});
-		}
+			doNotify(now_bg,2, "You're trending single down. #cgmnow " + convertBg(now_bg) + at());
+
 
 		// falling but slowing
-		else if (now_trend == "FortyFiveDown" && (["SingleDown", "DoubleDown"].indexOf(now_trend) > -1)) {
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "NightScout.info CGM Utility",
-				message: "Your fall has slowed. You were " + now_trend + " but are now forty five down down. #cgmnow " + convertBg(now_bg) + at(),
-				iconUrl: "/public/assets/icon.png",
-				priority: 1,
-			}, function(notification_id) {
-			});
+		} else if (now_trend == "FortyFiveDown" && (["SingleDown", "DoubleDown"].indexOf(now_trend) > -1)) {
+			doNotify(now_bg,1, "Your fall has slowed. You were " + now_trend + " but are now forty five down down. #cgmnow " + convertBg(now_bg) + at());
+
 		// falling too fast considering current bg
 		} else if (now_trend == "FortyFiveDown" && now_bg < 110 && (last_bg? last_bg >= 110: true)) {
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "NightScout.info CGM Utility",
-				message: "You're trending forty five down. #cgmnow " + convertBg(now_bg) + at(),
-				iconUrl: "/public/assets/icon.png",
-				priority: 2,
-			}, function(notification_id) {
-			});
-		}
+			doNotify(2, "You're trending forty five down. #cgmnow " + convertBg(now_bg) + at());
+
+		
 
 		// raising too fast
-		else if (now_trend == "DoubleUp" && now_bg > 110 && ( last_bg? last_bg <= 110: true)) {
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "NightScout.info CGM Utility",
-				message: "You're trending double up. #cgmnow " + convertBg(now_bg) + at(),
-				iconUrl: "/public/assets/icon.png",
-				priority: 2,
-			}, function(notification_id) {
-			});
-		}
+		} else if (now_trend == "DoubleUp" && now_bg > 110 && ( last_bg? last_bg <= 110: true)) {
+			doNotify(now_bg,2, "You're trending double up. #cgmnow " + convertBg(now_bg) + at());
 
 		// rising fast but slowing
-		else if (now_trend == "SingleUp" && now_trend == "DoubleUp") {
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "NightScout.info CGM Utility",
-				message: "Your rise has slowed. You were double up but are now single up. #cgmnow " + convertBg(now_bg) + at(),
-				iconUrl: "/public/assets/icon.png",
-				priority: 1,
-			}, function(notification_id) {
-			});
+		} else if (now_trend == "SingleUp" && now_trend == "DoubleUp") {
+			doNotify(now_bg,1, "Your rise has slowed. You were double up but are now single up. #cgmnow " + convertBg(now_bg) + at());
+
 		// rising too fast considering current bg
 		} else if (now_trend == "SingleUp" && now_bg > 130 && (last_bg? last_bg <= 130: true)) {
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "NightScout.info CGM Utility",
-				message: "You're trending single up. #cgmnow " + convertBg(now_bg) + at(),
-				iconUrl: "/public/assets/icon.png",
-				priority: 2,
-			}, function(notification_id) {
-			});
-		}
+			doNotify(now_bg,2, "You're trending single up. #cgmnow " + convertBg(now_bg) + at());
+
 
 		// rising but slowing
-		else if (now_trend == "FortyFiveUp" && (["SingleUp", "DoubleUp"].indexOf(now_trend) > -1)) {
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "NightScout.info CGM Utility",
-				message: "Your rise has slowed. You were " + now_trend + " but are now forty five up up. #cgmnow " + convertBg(now_bg) + at(),
-				iconUrl: "/public/assets/icon.png",
-				priority: 1,
-			}, function(notification_id) {
-			});
+		} else if (now_trend == "FortyFiveUp" && (["SingleUp", "DoubleUp"].indexOf(now_trend) > -1)) {
+			doNotify(now_bg,1, "Your rise has slowed. You were " + now_trend + " but are now forty five up up. #cgmnow " + convertBg(now_bg) + at());
+
 		// falling too fast considering current bg
 		} else if (now_trend == "FortyFiveUp" && now_bg > 150 && (last_bg? last_bg <= 150: true)) {
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "NightScout.info CGM Utility",
-				message: "You're trending forty five up. #cgmnow " + convertBg(now_bg) + at(),
-				iconUrl: "/public/assets/icon.png",
-				priority: 2,
-			}, function(notification_id) {
-			});
-		}
+			doNotify(now_bg,2, "You're trending forty five up. #cgmnow " + convertBg(now_bg) + at());
 
-		else if (current_direction && current_direction != now_trend) {
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "NightScout.info CGM Utility",
-				message: "Trend direction changed to " + now_trend + ". You're #cgmnow " + convertBg(now_bg) + at(),
-				iconUrl: "/public/assets/icon.png",
-				priority: 1,
-			}, function(notification_id) {
-			});
+		
 
+		} else if (current_direction && current_direction != now_trend) {
+			doNotify(now_bg,1, "Trend direction changed to " + now_trend + ". You're #cgmnow " + convertBg(now_bg) + at());
 
 		} else if (setting == "all" && (!last_bg || current_bg != now_bg)){
-			chrome.notifications.create("", {
-				type: "basic",
-				title: "NightScout.info CGM Utility",
-				message: "You're #cgmnow " + convertBg(now_bg) + at() + ". The trend is " + now_trend +".",
-				iconUrl: "/public/assets/icon.png",
-				priority: 1,
-			}, function(notification_id) {
-			setTimeout(function(){
-				chrome.notifications.clear(notification_id, function(notification_id) {
-					//nothing
-				});
-			},5000);
-			});
+			doNotify(now_bg,3, "You're #cgmnow " + convertBg(now_bg) + at() + ". The trend is " + now_trend +".");
+
 		} else {
 			console.log("No notification fit.");
 		}
 		current_direction = now_trend;
 		current_bg = now_bg;
 		});
-
-
-
 	};
+
+
+
+	function doNotify(bg_value,priority, message){
+
+Promise.all([
+	new Promise(function(ready) {
+	chrome.storage.local.get(["config"], function(values) {
+		if ("config" in values && "notifications_timeout" in values.config) {
+			ready(values.config.notifications_timeout || "no");
+		} else {
+			ready("no");
+		}
+		});
+	}),
+	new Promise(function(ready) {
+	chrome.storage.local.get(["config"], function(values) {
+		if ("config" in values && "notifications_bignumbers" in values.config) {
+			ready(values.config.notifications_bignumbers || "no");
+		} else {
+			ready("no");
+		}
+		});
+	})
+	]).then(function(settings){
+		var timeout_funct = function(notification_id){};
+		if(settings[0] != "no"){
+			timeout_funct = function(notification_id) {
+						setTimeout(function(){
+							chrome.notifications.clear(notification_id, function(notification_id) {
+													//nothing
+								});
+						},1000*parseInt(settings[0]));
+					};
+		}
+
+		if(settings[1] == "no"){
+			chrome.notifications.create("", {
+				type: "basic",
+				title: "NightScout.info CGM Utility",
+				message: "" + message,
+				iconUrl: "/public/assets/icon.png",
+				priority: priority,
+			}, timeout_funct);
+
+		} else{
+		//create canvas
+       			var canvas = document.createElement('canvas');
+        		canvas.width = 80;
+        		canvas.height = 45;
+        		var ctx = canvas.getContext('2d');
+        		ctx.fillStyle = "";
+        		ctx.fillRect(0, 0, canvas.width,canvas.height);
+        		ctx.fillStyle = "rgb(200,0,0)";
+        		ctx.font="30px Verdana";
+ 			ctx.fillText(convertBg(bg_value),5,35);
+        		var dataURL = canvas.toDataURL('image/png');
+		//create notification
+			chrome.notifications.create("", {
+				type: "image",
+				title: "NightScout.info CGM Utility",
+				message: "" + message,
+				iconUrl: "/public/assets/icon.png",
+				imageUrl: dataURL,
+				priority: priority,
+			}, timeout_funct);
+
+		}
+ 		});
+	}
 					
 	chrome.storage.onChanged.addListener(function(changes, namespace) {
 		if ("egvrecords" in changes)  {

@@ -1,7 +1,7 @@
 define(function() {
 	function makeItMgDl() {
 		convertBg = function displayAsMgDl(bg) {
-			return bg;
+			return Math.floor(bg);
 		};
 	}
 

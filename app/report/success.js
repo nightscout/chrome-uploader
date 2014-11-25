@@ -189,4 +189,8 @@ Promise.all([
 		}
 	}).join("") + "</tbody>");
 	table.appendTo(grid);
+	$(".print").click(function(e) {
+		e.preventDefault();
+		window.print();
+	});
 });

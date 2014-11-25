@@ -1,24 +1,5 @@
-require(["../bloodsugar"], function(convertBg) {
-	var low, high;
-	Promise.all([
-		new Promise(function(ready) {
-			chrome.storage.local.get(["egvrecords", "config"], function(values) {
-				if ("config" in values && "targetrange" in values.config) {
-					low = values.config.targetrange.low || 70;
-					high = values.config.targetrange.high || 180;
-				} else {
-					low = 70;
-					high = 180;
-				}
-
-				ready(values.egvrecords.map(function(r) {
-					r.localBg = convertBg(r.bgValue);
-					return r;
-				}));
-			});
-		})
-	]).then(function(o) {
-		var data = o[0];
+function generate_report(data, high, low) {
+	require(["../bloodsugar"], function(convertBg) {
 		var days = 3 * 30; // months
 		var config = { low: convertBg(low), high: convertBg(high) };
 		var threemonthsago = new Date(Date.now() - days.days());
@@ -96,6 +77,7 @@ require(["../bloodsugar"], function(convertBg) {
 			table.append(tr);
 		});
 
+		report[0].innerHTML = "";
 		report.append(table);
 
 
@@ -142,4 +124,4 @@ require(["../bloodsugar"], function(convertBg) {
 			window.print();
 		});
 	});
-});
+}

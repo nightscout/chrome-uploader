@@ -35,6 +35,7 @@ Promise.all([
 	var quarters = Math.floor((Date.now() - firstDataPoint) / period);
 
 	var grid = $("#grid");
+	var table = $("<table/>");
 
 	if (quarters == 0) {
 		// insufficent data
@@ -54,6 +55,15 @@ Promise.all([
 			return sum+v;
 		}, 0);
 	}
+	var averages = {
+		percentLow: 0,
+		percentInRange: 0,
+		percentHigh: 0,
+		standardDeviation: 0,
+		lowerQuartile: 0,
+		upperQuartile: 0,
+		average: 0
+	};
 	quarters = dim(quarters).map(function(blank, n) {
 		var starting = new Date(now - (n+1) * period),
 			ending = new Date(now - (n * period));
@@ -64,7 +74,7 @@ Promise.all([
 				return record.displayTime > starting && record.displayTime <= ending;
 			})
 		};
-	}).map(function(quarter) {
+	}).map(function(quarter, ix, all) {
 		var bgValues = quarter.records.map(function(record) {
 			return parseInt(record.bgValue,10);
 		});
@@ -79,25 +89,104 @@ Promise.all([
 			return bg >= config.high;
 		}).length;
 		quarter.numberInRange = bgValues.length - (quarter.numberHigh + quarter.numberLow);
+
+		quarter.percentLow = (quarter.numberLow / bgValues.length) * 100;
+		quarter.percentInRange = (quarter.numberInRange / bgValues.length) * 100;
+		quarter.percentHigh = (quarter.numberHigh / bgValues.length) * 100;
+
+		averages.percentLow += quarter.percentLow / all.length;
+		averages.percentInRange += quarter.percentInRange / all.length;
+		averages.percentHigh += quarter.percentHigh / all.length;
+		averages.lowerQuartile += quarter.lowerQuartile / all.length;
+		averages.upperQuartile += quarter.upperQuartile / all.length;
+		averages.average += quarter.average / all.length;
+		averages.standardDeviation += quarter.standardDeviation / all.length;
 		return quarter;
 	});
 
-	table.append("<thead><tr><th>Period</th><th>Lows</th><th>In Range</th><th>Highs</th><th>Standard Deviation</th><th>Low Quartile</th><th>Average</th><th>Upper Quartile</th></tr></thead>");
+	var lowComparison = function(quarter, averages, field, invert) {
+		if (quarter[field] < averages[field]) {
+			return (invert? "bad": "good");
+		} else if (quarter[field] > averages[field]) {
+			return (invert? "good": "bad");
+		} else {
+			return "";
+		}
+	}
+
+	var lowQuartileEvaluation = function(quarter, averages) {
+		if (quarter.lowerQuartile < range.low) {
+			return "bad";
+		} else {
+			return lowComparison(quarter, averages, "lowerQuartile");
+		}
+	}
+
+	var upperQuartileEvaluation = function(quarter, averages) {
+		if (quarter.upperQuartile > range.high) {
+			return "bad";
+		} else {
+			return lowComparison(quarter, averages, "upperQuartile");
+		}
+	}
+
+	var averageEvaluation = function(quarter, averages) {
+		if (quarter.average > range.high) {
+			return "bad";
+		} else if (quarter.average < range.low) {
+			return "bad";
+		} else {
+			return lowComparison(quarter, averages, "average", true);
+		}
+	}
+
+	table.append("<thead><tr><th>Period</th><th>Lows</th><th>In Range</th><th>Highs</th><th>Standard<br/>Deviation</th><th>Low<br/>Quartile</th><th>Average</th><th>Upper<br/>Quartile</th></tr></thead>");
 	table.append("<tbody>" + quarters.filter(function(quarter) {
 		return quarter.records.length > 0;
 	}).map(function(quarter) {
+		try {
+			var INVERT = true;
 		return "<tr>" + [
 			quarter.starting.format("M d Y") + " - " + quarter.ending.format("M d Y"),
-			quarter.numberLow,
-			quarter.numberInRange,
-			quarter.numberHigh,
-			Math.round(quarter.standardDeviation),
-			convertBg(quarter.lowerQuartile),
-			convertBg(quarter.average),
-			convertBg(quarter.upperQuartile)
+			{
+				klass: lowComparison(quarter, averages, "percentLow"),
+				text: Math.round(quarter.percentLow) + "%"
+			},
+			{
+				klass: lowComparison(quarter, averages, "percentInRange", INVERT),
+				text: Math.round(quarter.percentInRange) + "%"
+			},
+			{
+				klass: lowComparison(quarter, averages, "percentHigh"),
+				text: Math.round(quarter.percentHigh) + "%"
+			},
+			{
+				klass: lowComparison(quarter, averages, "standardDeviation"),
+				text: (quarter.standardDeviation > 10? Math.round(quarter.standardDeviation): quarter.standardDeviation.toFixed(1))
+			},
+			{
+				klass: lowQuartileEvaluation(quarter, averages),
+				text: convertBg(quarter.lowerQuartile)
+			},
+			{
+				klass: lowComparison(quarter, averages, "average"),
+				text: convertBg(quarter.average)
+			},
+			{
+				klass: upperQuartileEvaluation(quarter, averages),
+				text: convertBg(quarter.upperQuartile)
+			}
 		].map(function(v) {
-			return "<td>" + v + "</td>";
+			if (typeof v == "object") {
+				return "<td class=\"" + v.klass + "\">" + v.text + "</td>";
+			} else {
+				return "<td>" + v + "</td>";
+			}
 		}).join("") + "</tr>"
+		}
+		catch (e) {
+			console.log(e);
+		}
 	}).join("") + "</tbody>");
 	table.appendTo(grid);
 });

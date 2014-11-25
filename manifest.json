@@ -14,7 +14,11 @@
     "storage",
     "<all_urls>",
     "notifications",
-    {"fileSystem": ["write"]},
+    {
+      "fileSystem": [
+        "write"
+      ]
+    },
     "usb",
     {
       "usbDevices": [

@@ -35,7 +35,8 @@
 			return result.join(" ");
 		}
 	};
-	["log", "warn", "info", "error", "debug"].forEach(function(fn) { consoleFunctions[fn] = console[fn]; });
+	var console = "console" in window? window.console: {};
+	["log", "warn", "info", "error", "debug"].forEach(function(fn) { consoleFunctions[fn] = console[fn] || function() { }; });
 	["log", "warn", "info", "error", "debug"].forEach(function(fn) {
 		console[fn] = function() {
 			var args = Array.prototype.slice.call(arguments);

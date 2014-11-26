@@ -1,4 +1,7 @@
+function launchReceiverUI() {
+
 require(["./bloodsugar"], function(convertBg) {
+
 	var jqShow = $.fn.show;
 	$.fn.show = function(domid) {
 		var o = jqShow.apply(this, [domid]);
@@ -239,7 +242,6 @@ require(["./bloodsugar"], function(convertBg) {
 		});
 	});
 
-
 	// first load, before receiver's returned data
 	var firstLoad = function() {
 		chrome.storage.local.get(["egvrecords"], function(values) {
@@ -248,4 +250,8 @@ require(["./bloodsugar"], function(convertBg) {
 	}
 
 	firstLoad();
+
+	$(".dropdown-toggle").dropdown();
 });
+
+}

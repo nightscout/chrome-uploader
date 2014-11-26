@@ -26,7 +26,7 @@ chrome.app.runtime.onLaunched.addListener(function() {
 		id: "dexcomcharting",
 		bounds: {
 			width: 1000,
-			height: 475
+			height: 525
 		}
 	}, function(window) {
 		isOpen = true;

@@ -63,10 +63,11 @@ function generate_report(data, high, low) {
 		$("<td>" + data.length + "</td>").appendTo(tr);
 		if (data.length > 0) {
 			var localBgs = data.map(function(r) { return r.localBg; });
+			var mgDlBgs = data.map(function(r) { return r.bgValue; });
 			$("<td>" + Math.round(10*ss.mean(localBgs))/10 + "</td>").appendTo(tr);
 			$("<td>" + Math.round(10*ss.quantile(localBgs, 0.5))/10+ "</td>").appendTo(tr);
 			$("<td>" + Math.round(ss.standard_deviation(localBgs)*10)/10 + "</td>").appendTo(tr);
-			$("<td><center>" + Math.round(10*(ss.mean(localBgs)+46.7)/28.7)/10 + "%</center></td>").appendTo(tr);
+			$("<td><center>" + Math.round(10*(ss.mean(mgDlBgs)+46.7)/28.7)/10 + "%<sub>DCCT</sub> | " +Math.round(((ss.mean(mgDlBgs)+46.7)/28.7 - 2.15)*10.929) + "<sub>IFCC</sub></center></td>").appendTo(tr);
 		} else {
 			$("<td>N/A</td>").appendTo(tr);
 			$("<td>N/A</td>").appendTo(tr);

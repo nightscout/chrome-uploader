@@ -22,6 +22,10 @@ var switchToCorrectDatasource = function() {
 				console.debug("switching to hardware Dexcom");
 				cgm = dexcom;
 			}
+
+			if (changes.config.newValue.remotecgmuri != changes.config.oldValue.remotecgmuri) {
+				putTheChartOnThePage(changes.config.newValue.remotecgmuri);
+			}
 		}
 	});
 }
@@ -83,6 +87,11 @@ var connect = function() {
 			
 			console.debug("[cgm] loading");
 			var serialport = local.config.serialport || (isWindows? "COM3": "/dev/tty.usbmodem");
+			if (serialport.substr(0,3) != "COM" && isWindows) {
+				waiting.show("Go into Options and pick the right serial port. It'll be something like COM3, COM4, COM5, something like that. It's currently " + local.config.serialport + " which is invalid on Windows.");
+			} else if (serialport.substr(0,5) != "/dev/" && !isWindows) {
+				waiting.show("Go into Options and pick the right serial port. It'll be something like /dev/tty.usbmodem.");
+			}
 			cgm.connect(serialport).then(function() {
 				console.debug("[cgm] loaded");
 				chrome.notifications.onButtonClicked.removeListener(connectionErrorCB);
@@ -200,8 +209,25 @@ onConnectError = function(){
 };
 connect().then(onConnected, onConnectError); // chain to start everything
 
+function putTheChartOnThePage(remotecgmuri) {
+	$("#receiverui").html("");
+	if (typeof remotecgmuri == "string" && remotecgmuri.length > 0) {
+		// load remote
+		console.log("remote");
+		$("#receiverui").append($("<div class='row'/>").append($("<webview class='container col-xs-12'/>").attr({
+			src: remotecgmuri
+		})));
+	} else {
+		// load hosted
+		$("#receiverui").load('receiver.html', launchReceiverUI /* receiver.js */);
+	}
+}
+
 $(function() {
 	// event handlers
+	chrome.storage.local.get("config", function(local) {
+		putTheChartOnThePage(local.config.remotecgmuri || false);
+	});
 	$("#disclaimer").modal();
 	$("#disclaimer").show();
 	$("#acknowledge-agree").click(function() {

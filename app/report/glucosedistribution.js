@@ -12,7 +12,7 @@ function generate_report(data, high, low) {
 		$("<th>Range</th>").appendTo(thead);
 		$("<th>% of Readings</th>").appendTo(thead);
 		$("<th># of Readings</th>").appendTo(thead);
-		$("<th><>Mean</th>").appendTo(thead);
+		$("<th>Mean</th>").appendTo(thead);
 		$("<th>Median</th>").appendTo(thead);
 		$("<th>SD</th>").appendTo(thead);
 		$("<th>A1c estimation*</th>").appendTo(thead);

@@ -58,9 +58,9 @@ define(function () {
 				chrome.serial.getDevices(function(ports) {
 					for (var i=0; i<ports.length; i++) {
 						var port = ports[i];
-						console.log("Checking port for dexcom device ID: %s", port.path);
+						console.log("[dexcom] Checking port for dexcom device ID: %s", port.path);
 						if (port.vendorId == 8867 && port.productId == 71) {
-							console.debug("Found dexcom serial port at %s", port.path);
+							console.debug("[dexcom] Found dexcom serial port at %s", port.path);
 							dexcom.oldConnect(port, true).then(resolve, reject);
 							return;
 						}
@@ -103,7 +103,7 @@ define(function () {
 					tryPort(serialport);
 				} else {
 					chrome.serial.getDevices(function(ports) {
-						console.log("getDevices returned ports: %o", ports);
+						console.log("[dexcom] getDevices returned ports: %o", ports);
 						ports.forEach(tryPort);
 						if (dexcom.port === null) {
 							reject(new Error(

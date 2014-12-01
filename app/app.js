@@ -87,10 +87,22 @@ var connect = function() {
 			
 			console.debug("[cgm] loading");
 			var serialport = local.config.serialport || (isWindows? "COM3": "/dev/tty.usbmodem");
-			if (serialport.substr(0,3) != "COM" && isWindows) {
-				waiting.show("Go into Options and pick the right serial port. It'll be something like COM3, COM4, COM5, something like that. It's currently " + local.config.serialport + " which is invalid on Windows.");
-			} else if (serialport.substr(0,5) != "/dev/" && !isWindows) {
-				waiting.show("Go into Options and pick the right serial port. It'll be something like /dev/tty.usbmodem.");
+			
+			if ((serialport.substr(0,3) != "COM" && isWindows) || (serialport.substr(0,5) != "/dev/" && !isWindows)) {
+				if (serialport.substr(0,3) != "COM" && isWindows) {
+					message = "Can't load because you're not configured properly for Windows. Go into Options and pick the right serial port. It'll be something like COM3, COM4, COM5, something like that. It's currently " + local.config.serialport + " which is invalid on Windows. Using COM3 to keep things moving."
+				} else if (serialport.substr(0,5) != "/dev/" && !isWindows) {
+					message = "Can't load because you're not properly configured for Unix. Go into Options and pick the right serial port. It'll be something like /dev/tty.usbmodem.";
+				}
+				chrome.notifications.create("", {
+						type: "basic",
+						title: "NightScout.info CGM Utility",
+						message: "" + message,
+						iconUrl: "/public/assets/icon.png",
+						priority: 1,
+					}, function(notification_id) {
+
+					});
 			}
 			cgm.connect(serialport).then(function() {
 				console.debug("[cgm] loaded");
@@ -310,6 +322,7 @@ $(function() {
 				setTimeout(function() {
 					chrome.storage.local.get("egvrecords", function(values) {
 						cgm.disconnect();
+						debugger;
 						var existing = values.egvrecords;
 						var existing_ts = existing.map(function(row) {
 							return row.displayTime;
@@ -342,7 +355,7 @@ $(function() {
 							type: "basic",
 							message: "Downloaded " + new_records.length + " new records (about " + Math.ceil(new_records.length / 216) + " day(s) worth."
 						}, function() { });
-						console.log("%i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
+						console.log("[downloadTheWorld] %i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
 					});
 				}, 300);
 			});

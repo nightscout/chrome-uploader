@@ -197,7 +197,7 @@ onConnected = function(data) { // to download from dexcom
 				});
 				var last_record = to_save[to_save.length - 1];
 				chrome.storage.local.set({ egvrecords: to_save }, console.debug.bind(console, "[updateLocalDb] Saved results"));
-				console.log("%i new records", new_records.length);
+				console.log("[onConnected] %i new records", new_records.length);
 
 				resolve();
 			});

@@ -12,6 +12,7 @@
   "permissions": [
     "serial",
     "storage",
+    "unlimitedStorage",
     "<all_urls>",
     "notifications",
     {

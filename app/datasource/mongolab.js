@@ -117,7 +117,7 @@ define(["../waiting"], function(waiting) {
 						chrome.storage.local.get("egvrecords", function(local) {
 							var records = (local.egvrecords || []).concat(data.map(function(record) {
 								return {
-									displayTime: Date.parse(record.dateString),
+									displayTime: Date.parse(record.dateString) || record.date,
 									bgValue: parseInt(record.sgv),
 									trend: record.direction
 								};

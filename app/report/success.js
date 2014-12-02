@@ -6,7 +6,9 @@ Promise.all([
 	}),
 	new Promise(function(ready) {
 		require(["../bloodsugar"], function(convertBg) {
-			ready(convertBg)
+			setTimeout(function() {
+				ready(convertBg);
+			}, 1 /* give it a second to configure itself */);
 		});	
 	}),
 	new Promise(function(ready) {
@@ -75,7 +77,9 @@ Promise.all([
 			})
 		};
 	}).map(function(quarter, ix, all) {
-		var bgValues = quarter.records.map(function(record) {
+		var bgValues = quarter.records.filter(function(record) {
+			return /\d+/.test(record.bgValue.toString());
+		}).map(function(record) {
 			return parseInt(record.bgValue,10);
 		});
 		quarter.standardDeviation = ss.standard_deviation(bgValues);

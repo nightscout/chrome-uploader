@@ -20,8 +20,10 @@ function generate_report(data, high, low) {
 
 		["Low", "Normal", "High"].forEach(function(range) {
 			var tr = $("<tr>");
-			var rangeRecords = data.filter(function(r) {
-				r.localBg = parseFloat(r.localBg);
+			var rangeRecords = data.filter(function(record) {
+				return /\d+/.test(record.bgValue.toString());
+			}).filter(function(r) {
+					r.localBg = parseFloat(r.localBg);
 				if (range == "Low") {
 					return r.localBg > 0 && r.localBg < config.low;
 				} else if (range == "Normal") {

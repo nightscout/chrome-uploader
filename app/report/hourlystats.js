@@ -18,7 +18,9 @@ function generate_report(data, high, low) {
 		for (var i = 0; i < 24; i++) {
 			pivotedByHour[i] = [];
 		}
-		data.forEach(function(record) {
+		data.filter(function(record) {
+			return /\d+/.test(record.bgValue.toString());
+		}).forEach(function(record) {
 			var d = new Date(record.displayTime);
 			pivotedByHour[d.getHours()].push(record);
 		});

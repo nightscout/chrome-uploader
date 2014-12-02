@@ -19,8 +19,8 @@ define(["./mongolab"], function(mongolab) {
 					mongolabUrl + ml.database + "/collections/" + ml.collection + "?apiKey=" + ml.apikey + "&l=288&s={\"date\":-1}"
 				).then(function(docs) {
 					good(docs.filter(function(record) {
-						if (Object.keys(record).contains("type")) {
-							return record.type == "egv";
+						if (Object.keys(record).indexOf("type") > -1) {
+							return record.type == "sgv";
 						} else {
 							return true;
 						}

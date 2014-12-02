@@ -18,7 +18,13 @@ define(["./mongolab"], function(mongolab) {
 				$.getJSON(
 					mongolabUrl + ml.database + "/collections/" + ml.collection + "?apiKey=" + ml.apikey + "&l=288&s={\"date\":-1}"
 				).then(function(docs) {
-					good(docs);
+					good(docs.filter(function(record) {
+						if (Object.keys(record).contains("type")) {
+							return record.type == "egv";
+						} else {
+							return true;
+						}
+					}));
 				}, bad)
 			});
 		}

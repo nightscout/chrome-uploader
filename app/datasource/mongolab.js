@@ -47,7 +47,8 @@ define(["../waiting"], function(waiting) {
 			date: plot.displayTime,
 			dateString: formatDate(new Date(plot.displayTime)),
 			sgv: formatFloat(plot.bgValue, 2, "."),
-			direction: plot.trend
+			direction: plot.trend,
+			type: "egv"
 		};
 	};
 
@@ -115,7 +116,13 @@ define(["../waiting"], function(waiting) {
 						while (args.length) data = Array.prototype.concat.apply(data, args.shift());
 
 						chrome.storage.local.get("egvrecords", function(local) {
-							var records = (local.egvrecords || []).concat(data.map(function(record) {
+							var records = (local.egvrecords || []).concat(data.filter(record) {
+								if (Object.keys(record).contains("type")) {
+									return record.type == "egv";
+								} else {
+									return true;
+								}
+							}).map(function(record) {
 								return {
 									displayTime: Date.parse(record.dateString) || record.date,
 									bgValue: parseInt(record.sgv),

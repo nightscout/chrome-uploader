@@ -17,7 +17,6 @@ function generate_report(data, high, low) {
 		$("<th>SD</th>").appendTo(thead);
 		$("<th>A1c estimation*</th>").appendTo(thead);
 		thead.appendTo(table);
-		debugger;
 
 		["Low", "Normal", "High"].forEach(function(range) {
 			var tr = $("<tr>");

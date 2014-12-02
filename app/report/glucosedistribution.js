@@ -17,13 +17,14 @@ function generate_report(data, high, low) {
 		$("<th>SD</th>").appendTo(thead);
 		$("<th>A1c estimation*</th>").appendTo(thead);
 		thead.appendTo(table);
+		debugger;
 
 		["Low", "Normal", "High"].forEach(function(range) {
 			var tr = $("<tr>");
 			var rangeRecords = data.filter(function(record) {
 				return "bgValue" in record && /\d+/.test(record.bgValue.toString());
 			}).filter(function(r) {
-					r.localBg = parseFloat(r.localBg);
+				r.localBg = parseFloat(r.localBg);
 				if (range == "Low") {
 					return r.localBg > 0 && r.localBg < config.low;
 				} else if (range == "Normal") {
@@ -36,7 +37,7 @@ function generate_report(data, high, low) {
 			rangeRecords.sort(function(a,b) {
 				return a.localBg - b.localBg;
 			});
-			var localBgs = rangeRecords.map(function(r) { return r.localBg; });
+			var localBgs = rangeRecords.map(function(r) { return r.localBg; }).filter(function(bg) { return !!bg; });
 
 			var midpoint = Math.floor(rangeRecords.length / 2);
 			//var statistics = ss.(new Statician(rangeRecords.map(function(r) { return r.localBg; }))).stats;
@@ -64,8 +65,8 @@ function generate_report(data, high, low) {
 		$("<td> </td>").appendTo(tr);
 		$("<td>" + data.length + "</td>").appendTo(tr);
 		if (data.length > 0) {
-			var localBgs = data.map(function(r) { return r.localBg; });
-			var mgDlBgs = data.map(function(r) { return r.bgValue; });
+			var localBgs = data.map(function(r) { return r.localBg; }).filter(function(bg) { return !!bg; });
+			var mgDlBgs = data.map(function(r) { return r.bgValue; }).filter(function(bg) { return !!bg; });
 			$("<td>" + Math.round(10*ss.mean(localBgs))/10 + "</td>").appendTo(tr);
 			$("<td>" + Math.round(10*ss.quantile(localBgs, 0.5))/10+ "</td>").appendTo(tr);
 			$("<td>" + Math.round(ss.standard_deviation(localBgs)*10)/10 + "</td>").appendTo(tr);

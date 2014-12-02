@@ -34,6 +34,7 @@ Promise.all([
 	var firstDataPoint = Math.min.apply(Math, data.map(function(record) {
 		return record.displayTime;
 	}));
+	if (firstDataPoint < 1390000000000) firstDataPoint = 1390000000000;
 	var quarters = Math.floor((Date.now() - firstDataPoint) / period);
 
 	var grid = $("#grid");
@@ -66,20 +67,22 @@ Promise.all([
 		upperQuartile: 0,
 		average: 0
 	};
+	debugger;
 	quarters = dim(quarters).map(function(blank, n) {
 		var starting = new Date(now - (n+1) * period),
-			ending = new Date(now - (n * period));
+			ending = new Date(now - n * period);
 		return {
 			starting: starting,
 			ending: ending,
 			records: data.filter(function(record) {
-				return record.displayTime > starting && record.displayTime <= ending;
+				return record.displayTime > starting &&
+				record.displayTime <= ending &&
+				"bgValue" in record &&
+				 /\d+/.test(record.bgValue.toString());
 			})
 		};
 	}).map(function(quarter, ix, all) {
-		var bgValues = quarter.records.filter(function(record) {
-			return "bgValue" in record && /\d+/.test(record.bgValue.toString());
-		}).map(function(record) {
+		var bgValues = quarter.records.map(function(record) {
 			return parseInt(record.bgValue,10);
 		});
 		quarter.standardDeviation = ss.standard_deviation(bgValues);

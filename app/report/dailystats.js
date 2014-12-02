@@ -28,7 +28,7 @@ require(["../bloodsugar"], function(convertBg) {
 		var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
 
 		data = data.filter(function(record) {
-			return /\d+/.test(record.bgValue.toString());
+			return "bgValue" in record && /\d+/.test(record.bgValue.toString());
 		}).filter(function(record) {
 			return record.displayTime > sevendaysago;
 		});

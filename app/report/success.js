@@ -78,7 +78,7 @@ Promise.all([
 		};
 	}).map(function(quarter, ix, all) {
 		var bgValues = quarter.records.filter(function(record) {
-			return /\d+/.test(record.bgValue.toString());
+			return "bgValue" in record && /\d+/.test(record.bgValue.toString());
 		}).map(function(record) {
 			return parseInt(record.bgValue,10);
 		});

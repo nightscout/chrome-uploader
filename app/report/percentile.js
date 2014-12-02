@@ -13,7 +13,7 @@ function generate_report(data, high, low) {
 				date.setHours(hour);
 				date.setMinutes(minute);
 				var readings = data.filter(function(record) {
-					return /\d+/.test(record.bgValue.toString());
+					return "bgValue" in record && /\d+/.test(record.bgValue.toString());
 				}).filter(function(record) {
 					var recdate = new Date(record.displayTime);
 					return recdate.getHours() == hour && recdate.getMinutes() >= minute &&

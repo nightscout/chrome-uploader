@@ -19,7 +19,7 @@ function generate_report(data, high, low) {
 			pivotedByHour[i] = [];
 		}
 		data.filter(function(record) {
-			return /\d+/.test(record.bgValue.toString());
+			return "bgValue" in record && /\d+/.test(record.bgValue.toString());
 		}).forEach(function(record) {
 			var d = new Date(record.displayTime);
 			pivotedByHour[d.getHours()].push(record);

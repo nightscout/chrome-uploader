@@ -322,7 +322,6 @@ $(function() {
 				setTimeout(function() {
 					chrome.storage.local.get("egvrecords", function(values) {
 						cgm.disconnect();
-						debugger;
 						var existing = values.egvrecords;
 						var existing_ts = existing.map(function(row) {
 							return row.displayTime;

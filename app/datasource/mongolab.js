@@ -116,7 +116,7 @@ define(["../waiting"], function(waiting) {
 						while (args.length) data = Array.prototype.concat.apply(data, args.shift());
 
 						chrome.storage.local.get("egvrecords", function(local) {
-							var records = (local.egvrecords || []).concat(data.filter(record) {
+							var records = (local.egvrecords || []).concat(data.filter(function(record) {
 								if (Object.keys(record).contains("type")) {
 									return record.type == "egv";
 								} else {

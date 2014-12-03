@@ -1,4 +1,33 @@
 define(["../waiting"], function(waiting) {
+	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
+
+	var mongolab = { };
+	
+	Promise.all([
+		navigator.getBattery(),
+		new Promise(function(done) {
+			chrome.storage.local.get("config", done);
+		})
+	]).then(function(o) {
+		var battery=o[0], config = o[1].config;
+		
+		var update = function() {
+			console.debug("[Mongolab] Setting battery to %i in Mongolab", battery.level)
+			$.ajax({
+				url: mongolabUrl + config.mongolab.database + "/collections/devicestatus?apiKey=" + config.mongolab.apikey + "&u=true&q={\"id\":\"config\"}",
+				data: JSON.stringify({
+					"$set": {
+						uploaderBattery: battery.level * 100
+					}
+				}),
+				type: "PUT",
+				contentType: "application/json"
+			});
+		}
+		update();
+		battery.addEventListener('levelchange', update);
+	})
+
 	// http://stackoverflow.com/a/8462701
 	function formatFloat(num,casasDec,sepDecimal,sepMilhar) {
 		if (num < 0)
@@ -55,9 +84,6 @@ define(["../waiting"], function(waiting) {
 	var formatData = function(plot) {
 		return JSON.stringify(structureData(plot));
 	};
-	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
-
-	var mongolab = { };
 	mongolab.insert = function(plot) {
 		if (!plot) return;
 			

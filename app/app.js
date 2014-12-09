@@ -1,35 +1,4 @@
-require(["./datasource/dexcom", "./datasource/remotecgm", "./feature/mongolab", "./feature/trending_alerts", "waiting"], function(dexcom, remotecgm, mongolab, alerts, waiting) {
-
-var cgm = dexcom;
-
-var switchToCorrectDatasource = function() {
-	chrome.storage.local.get("config", function(local) {
-		if (!("datasource" in local.config)) {
-			cgm = dexcom;
-		};
-		if (local.config.datasource == "remotecgm") {
-			cgm = remotecgm;
-		} else {
-			cgm = dexcom;
-		}
-	});
-	chrome.storage.onChanged.addListener(function(changes, namespace) {
-		if ("config" in changes) {
-			if (changes.config.newValue.datasource == "remotecgm")	 {
-				console.debug("switching to MongoLab datasource");
-				cgm = remotecgm;
-			} else {
-				console.debug("switching to hardware Dexcom");
-				cgm = dexcom;
-			}
-
-			if (changes.config.newValue.remotecgmuri != changes.config.oldValue.remotecgmuri) {
-				putTheChartOnThePage(changes.config.newValue.remotecgmuri);
-			}
-		}
-	});
-}
-switchToCorrectDatasource();
+require(["./feature/cgm_download", "./feature/mongolab", "./feature/trending_alerts", "waiting", "egv_records"], function(cgm, mongolab, alerts, waiting, egvrecords) {
 
 // OS Flags
 // Windows needs a different COM port than everything else because Windows.
@@ -63,174 +32,21 @@ if (isMac) {
 
 // Keep errors from happening during large downloads
 var attempts = 0;
-var isdownloading = false;
-
-// TODO: refactor this to CGM.js
-// emit events that UI can react to
-var connect = function() {
-	var chrome_notification_id = 0;
-	var connectionErrorCB = function(notification_id, button) {
-		chrome.notifications.onButtonClicked.removeListener(connectionErrorCB);
-		if (notification_id != chrome_notification_id) return;
-
-		if (button === 0) {
-			attempts = 0;
-			connect().then(onConnected,onConnectError); // chain to start everything
-		}
-	};
-	return new Promise(function(resolve, reject) {
-		if (isdownloading) reject();
-		isdownloading = true;
-		var timer = new Date();
-		chrome.storage.local.get(["egvrecords", "config"], function(local) {
-			var max_existing = local.egvrecords.length > 0?  local.egvrecords[local.egvrecords.length - 1].displayTime : 0;
-			
-			console.debug("[cgm] loading");
-			var serialport = local.config.serialport || (isWindows? "COM3": "/dev/tty.usbmodem");
-			
-			if ((serialport.substr(0,3) != "COM" && isWindows) || (serialport.substr(0,5) != "/dev/" && !isWindows)) {
-				if (serialport.substr(0,3) != "COM" && isWindows) {
-					message = "Can't load because you're not configured properly for Windows. Go into Options and pick the right serial port. It'll be something like COM3, COM4, COM5, something like that. It's currently " + local.config.serialport + " which is invalid on Windows. Using COM3 to keep things moving."
-				} else if (serialport.substr(0,5) != "/dev/" && !isWindows) {
-					message = "Can't load because you're not properly configured for Unix. Go into Options and pick the right serial port. It'll be something like /dev/tty.usbmodem.";
-				}
-				chrome.notifications.create("", {
-						type: "basic",
-						title: "NightScout.info CGM Utility",
-						message: "" + message,
-						iconUrl: "/public/assets/icon.png",
-						priority: 1,
-					}, function(notification_id) {
-
-					});
-			}
-			cgm.connect(serialport).then(function() {
-				console.debug("[cgm] loaded");
-				chrome.notifications.onButtonClicked.removeListener(connectionErrorCB);
-				try {
-					var page = 1;
-					var d = []; // data
-					var process = function(d_page) {
-						console.debug("[dexcom] read page %i", page);
-						d = d.concat(d_page);
-						if(d_page.filter(function(egv) {
-							return +egv.displayTime > max_existing;
-						}).length == 0) {
-							console.debug("[dexcom] stopped reading at page %i", page);
-							cgm.disconnect();
-							isdownloading = false;
-							console.debug("[dexcom] spent %i ms downloading", (new Date() - timer));
-							resolve(d);
-						} else {
-							cgm.readFromReceiver(++page).then(process);
-						}
-					}
-					return cgm.readFromReceiver(page).then(process);
-				} catch (e) {
-					console.debug("[cgm] %o", e);
-					reject(e);
-				}
-			}, function(e) {
-				console.debug("[cgm] rejected");
-				if (attempts++ < 3) {
-					try {
-						// try again
-						connect().then(onConnect, onConnectError);
-					} catch (e) {
-						// it didn't work
-					}
-				} else if (!isdownloading) {
-					chrome.notifications.create("", {
-						type: "basic",
-						title: "NightScout.info CGM Utility",
-						message: "Could not connect to Dexcom receiver. Unplug it and plug it back in. Be gentle, Dexcom's USB port is fragile. I like to unplug from the computer's side.",
-						iconUrl: "/public/assets/error.png",
-						buttons: [{
-							title: "Try again"
-						}, {
-							title: "Cancel"
-						}]
-					}, function(notification_id) {
-						console.log(arguments);
-						chrome_notification_id = notification_id;
-						attempts = 0; // reset
-						chrome.notifications.onButtonClicked.addListener(connectionErrorCB);
-					});
-					console.log(e);
-				}
-				reject(e);
-			});
-		});
-	});
-},
-onConnected = function(data) { // to download from dexcom
-	var lastNewRecord = Date.now();
-
-	// update my db
-	(function(data) {
-		return new Promise(function(resolve) {
-			chrome.storage.local.get(["egvrecords", "config"], function(storage) {
-				var existing = storage.egvrecords || [];
-				var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
-				var new_records = data.filter(function(egv) {
-					return +egv.displayTime > max_existing;
-				}).map(function(egv) {
-					return {
-						displayTime: +egv.displayTime,
-						bgValue: egv.bgValue,
-						trend: egv.trend
-					};
-				});
-				if (new_records.length === 0) {
-					if (lastNewRecord + (5).minutes() < Date.now()) {
-						console.log("[updateLocalDb] Something's wrong. We should have new data by now.");
-					}
-				} else {
-					lastNewRecord = Date.now();
-				}
-				new_records = new_records.filter(function(row) {
-					return row.bgValue > 30;
-				});
-				var to_save = existing.concat(new_records);
-				to_save.sort(function(a,b) {
-					return a.displayTime - b.displayTime;
-				});
-				var last_record = to_save[to_save.length - 1];
-				chrome.storage.local.set({ egvrecords: to_save }, console.debug.bind(console, "[updateLocalDb] Saved results"));
-				console.log("[onConnected] %i new records", new_records.length);
-
-				resolve();
-			});
-		});
-	})(data);
-
-	var nextRun = function() {
-		console.log("Attempting to refresh data");
-		if (isdownloading) {
-			setTimeout(nextRun, (60).seconds());
-		} else {
-			connect().then(onConnected, onConnectError);
-		}
-	};
-
-	// again and again
-	setTimeout(nextRun, (60).seconds());
-},
-onConnectError = function(){
-	console.log(arguments);
-};
-connect().then(onConnected, onConnectError); // chain to start everything
 
 function putTheChartOnThePage(remotecgmuri) {
 	$("#receiverui").html("");
 	if (typeof remotecgmuri == "string" && remotecgmuri.length > 0) {
+		if (remotecgmuri.indexOf("://") == -1) {
+			remotecgmuri = "http://" + remotecgmuri;
+		}
 		// load remote
-		console.log("remote");
+		console.log("[app.js putTheChartOnThePage] Using remote CGM monitor");
 		$("#receiverui").append($("<div class='row'/>").append($("<webview class='container col-xs-12'/>").attr({
 			src: remotecgmuri
 		})));
 	} else {
 		// load hosted
+		console.log("[app.js putTheChartOnThePage] Using built-in chart");
 		$("#receiverui").load('receiver.html', launchReceiverUI /* receiver.js */);
 	}
 }
@@ -261,30 +77,21 @@ $(function() {
 	});
 
 	$("#backfilldatabase").click(function() {
-		chrome.storage.local.get("egvrecords", function(local) {
-			mongolab.publish(local.egvrecords).then(function() {
-				chrome.notifications.create("", {
-					type: "basic",
-					title: "NightScout.info CGM Utility",
-					message: "Published " + local.egvrecords.length + " records to MongoLab",
-					iconUrl: "/public/assets/icon.png",
-				}, function(notification_id) {
-				});
-				console.log("[publishtomongolab] publish complete, %i records", local.egvrecords.length);
+		mongolab.publish(egvrecords).then(function() {
+			chrome.notifications.create("", {
+				type: "basic",
+				title: "NightScout.info CGM Utility",
+				message: "Published " + local.egvrecords.length + " records to MongoLab",
+				iconUrl: "/public/assets/icon.png",
+			}, function(notification_id) {
 			});
+			console.log("[app.js publishtomongolab] publish complete, %i records", local.egvrecords.length);
 		});
 	});
 
 	$('#reset').confirmation({
-		title: "Are you sure? This will delete all your data and cannot be undone.",
-		onConfirm: function(e) {
-			chrome.storage.local.set({
-				egvrecords: []
-			}, function() {
-				console.log("removed records");
-				$('#reset').confirmation('hide');
-			});
-		}
+		title: "Are you sure? This will delete all your local data and cannot be undone.",
+		onConfirm: egvrecords.removeAll
 	});
 
 	// TODO: this needs to be refactored out of here

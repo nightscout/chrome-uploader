@@ -1,4 +1,4 @@
-define(["../waiting"], function(waiting) {
+define(["../waiting", "../egv_records"], function(waiting, egvrecords) {
 	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
 
 	var mongolab = { };
@@ -24,9 +24,11 @@ define(["../waiting"], function(waiting) {
 				contentType: "application/json"
 			});
 		}
-		update();
-		battery.addEventListener('levelchange', update);
-	})
+		if (config.mongolab && config.mongolab.apikey) {
+			update();
+			battery.addEventListener('levelchange', update);
+		}
+	});
 
 	// http://stackoverflow.com/a/8462701
 	function formatFloat(num,casasDec,sepDecimal,sepMilhar) {
@@ -87,20 +89,25 @@ define(["../waiting"], function(waiting) {
 	mongolab.insert = function(plot) {
 		if (!plot) return;
 			
-		(new Promise(function(done) {
+		(new Promise(function(done, reject) {
 			chrome.storage.local.get("config", function(local) {
-				done(local.config || {});
+				if ("mongolab" in local.config && local.config.mongolab.apikey) {
+					done(local.config || {});
+				} else {
+					reject();
+				}
 			});
 		})).then(function(config) {
 			// have a unique constraint on date to keep it from inserting too much data.
 			// mongolab returns a 400 when duplicate attempted
 
-			console.log("[mongolab] Writing most recent record to MongoLab");
 			if (!("mongolab" in config)) return;
 			if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
 			if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
 			if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
 
+			console.log("[mongolab.js insert] Writing record to MongoLab %o", plot);
+			
 			$.ajax({
 				url: mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey,
 				data: formatData(plot),
@@ -110,7 +117,7 @@ define(["../waiting"], function(waiting) {
 		});
 	};
 
-	mongolab.populateLocalStorage = function() {
+	mongolab.populateLocalStorage = function() { // (download from mongolab)
 		waiting.show("Downloading from Mongolab");
 		return new Promise(function(complete) {
 			(new Promise(function(done) {
@@ -174,7 +181,7 @@ define(["../waiting"], function(waiting) {
 		});
 	};
 
-	mongolab.publish = function(records) {
+	mongolab.publish = function(records) { // (backfill mongolab)
 		waiting.show("Sending entire history to MongoLab");
 		return new Promise(function(complete) {
 			(new Promise(function(done) {
@@ -244,18 +251,16 @@ define(["../waiting"], function(waiting) {
 	};
 
 	// updated database
-	chrome.storage.onChanged.addListener(function(changes, namespace) {
-		if ("egvrecords" in changes)  {
-			chrome.storage.local.get("config", function(local) {
-				var datasource = "dexcom";
-				if ("datasource" in local.config) datasource = local.config.datasource || "dexcom";
-				if (datasource != "remotecgm") {
-					mongolab.insert(changes.egvrecords.newValue[changes.egvrecords.newValue.length - 1]);
-				} else {
-					console.log("Not publishing to Mongolab because I pulled from remote");
-				}
-			});
-		}
+	egvrecords.onChange(function(new_r, all) {
+		chrome.storage.local.get("config", function(local) {
+			var datasource = "dexcom";
+			if ("datasource" in local.config) datasource = local.config.datasource || "dexcom";
+			if (datasource == "dexcom") {
+				new_r.forEach(function(egv) {
+					mongolab.insert(egv);
+				});
+			}
+		});
 	});
 
 	return mongolab;

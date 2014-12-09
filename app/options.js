@@ -1,4 +1,4 @@
-require(["./datasource/dexcom", "./datasource/remotecgm", "./datasource/mongolab", "waiting"], function(dexcom, remotecgm, mongolab, alerts, waiting) {
+require(["./datasource/dexcom", "./datasource/remotecgm", "./feature/mongolab", "waiting"], function(dexcom, remotecgm, mongolab, alerts, waiting) {
 
 new Promise(function(done) {
 	chrome.storage.local.get("config", function(config) {

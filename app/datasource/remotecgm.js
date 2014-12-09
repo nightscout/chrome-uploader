@@ -1,4 +1,4 @@
-define(["./mongolab"], function(mongolab) {
+define([], function() {
 	var ml;
 	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
 	return {

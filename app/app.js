@@ -1,4 +1,4 @@
-require(["./datasource/dexcom", "./datasource/remotecgm", "./datasource/mongolab", "./datasource/trending_alerts", "waiting"], function(dexcom, remotecgm, mongolab, alerts, waiting) {
+require(["./datasource/dexcom", "./datasource/remotecgm", "./feature/mongolab", "./feature/trending_alerts", "waiting"], function(dexcom, remotecgm, mongolab, alerts, waiting) {
 
 var cgm = dexcom;
 

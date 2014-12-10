@@ -12,7 +12,7 @@ define(function() {
 		chrome.storage.local.set({
 			egvrecords: table.slice()
 		}, function(local) {
-			console.debug("[egv_records.js write] Wrote %i new records to local storage %o", new_r.length, all)
+			console.debug("[egv_records.js write] Wrote %i new records to local storage.", new_r.length)
 		})
 	};
 

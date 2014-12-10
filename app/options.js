@@ -1,13 +1,4 @@
-require(["./datasource/dexcom", "./datasource/remotecgm", "./feature/mongolab", "waiting"], function(dexcom, remotecgm, mongolab, alerts, waiting) {
-
-new Promise(function(done) {
-	chrome.storage.local.get("config", function(config) {
-		config.config.serialport = config.config.serialport || "/dev/tty.usbmodem";
-		config.config.unit = config.config.unit || "mgdl";
-		done(config.config);
-	});
-}).then(function(config) {
-	console.log(config);
+require(["./datasource/dexcom", "./datasource/remotecgm", "./feature/mongolab", "waiting", "config"], function(dexcom, remotecgm, mongolab, alerts, waiting, config) {
 	function getValue(param, options) {
 		var parts = param.split(".");
 		var key = parts.shift();
@@ -22,38 +13,33 @@ new Promise(function(done) {
 	});
 });
 chrome.serial.getDevices(function(ports) {
+	// build list of "available" serialports
 	var isWindows = !!~window.navigator.appVersion.indexOf("Win");
-	document.getElementById("serialportlist").innerHTML += (isWindows? "<li>Default is <code>COM3</code>. Other's available when NightScout.info CGM Utility started include</li>": "<li>Default is <code>/dev/tty.usbmodem</code>. Others available when NightScout.info CGM Utility started include</li>") + ports.map(function(sp) {
-		if (!isWindows || sp.path != "COM3") return "<li><code>" + sp.path + "</code></li>"; else return "";
-	}).join("");
+	document.getElementById("serialportlist").innerHTML +=
+		(isWindows?
+			"<li>Default is <code>COM3</code>. Other's available when NightScout.info CGM Utility started include</li>":
+			"<li>Default is <code>/dev/tty.usbmodem</code>. Others available when NightScout.info CGM Utility started include</li>"
+		) + ports.map(function(sp) {
+			if (!isWindows || sp.path != "COM3")
+				return "<li><code>" + sp.path + "</code></li>";
+			else
+				return "";
+		}).join("");
+
 	$("#serialportlist code").click(function(event) {
 		$("input[name=serialport]").val(this.textContent);
 	});
 });
 
 $("#optionsui").on("click", "#savesettings", function(){
-	chrome.storage.local.set({
-		config: $("#optionsui input, #optionsui select").toArray().reduce(function(out, field) {
-			var parts = field.name.split(".");
-			var key = parts.shift();
-			var working = out;
-			while (parts.length > 0) {
-				if (!(key in working)) {
-					working[key] = {};
-				}
-				working = working[key];
-				key = parts.shift();
-			}
-			working[key] = field.value;
-			return out;
-		}, {})
-	}, function() {
-		window.close();
-	});
+	$("#optionsui input, #optionsui select").toArray().forEach(function(field) {
+		var parts = field.name.split(".");
+		var key = parts.shift();
+		config.set(key, field.value);
+	}, {})
+	window.close();
 });
 $("#optionsui").on("click", "#resetchanged", function(){
-	// $("#optionsui").hide();
-	// $("#receiverui").show();
 	window.close();
 });
 
@@ -141,7 +127,7 @@ $(document).on("click", "#testconnection", function(){
 					chrome.notifications.onButtonClicked.addListener(applyChoice);
 				});
 			} else {
-				console.log("collection name not found but it will be automatically made");
+				console.log("[options.js testConnection] collection name not found but it will be automatically made");
 			}
 		} else {
 			chrome.notifications.create("", {

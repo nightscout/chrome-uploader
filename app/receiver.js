@@ -1,6 +1,6 @@
 function launchReceiverUI() {
 
-require(["./bloodsugar"], function(convertBg) {
+require(["./bloodsugar", "config", "egv_records"], function(convertBg, config, egvrecords) {
 
 	var jqShow = $.fn.show;
 	$.fn.show = function(domid) {
@@ -18,7 +18,7 @@ require(["./bloodsugar"], function(convertBg) {
 				currData = item.datapoint;
 				$("#hover").remove();
 				var date = new Date(item.datapoint[0]);
-				hover(item.pageX, item.pageY, '' + date.format("D n/j H:i") + ':  ' + item.datapoint[1]);
+				hover(item.pageX, item.pageY, '' + date.format("D n/j H:i") + ':	' + item.datapoint[1]);
 			}
 		} else {
 			$("#hover").remove();
@@ -65,188 +65,160 @@ require(["./bloodsugar"], function(convertBg) {
 	}
 
 	function drawReceiverChart(data) {
-		var low, high, time;
-		Promise.all([
-			new Promise(function(ready) {
-				chrome.storage.local.get(["egvrecords", "config", "trenddisplaytime"], function(values) {
-					if ("config" in values && "targetrange" in values.config) {
-						low = values.config.targetrange.low || 70;
-						high = values.config.targetrange.high || 130;
-					} else {
-						low = 70;
-						high = 130;
-					}
+		var low = config.targetrange.low, high = config.targetrange.high, time = config.trenddisplaytime;
+		var t = time;
+		var now = (new Date()).getTime();
+		var trend = data.map(function(plot) {
+			return [
+				+plot.displayTime,
+				parseFloat(convertBg(plot.bgValue))
+			];
+		}).filter(function(plot) {
+			return plot[0] + t.hours() > now;
+		});
 
-					if ("trenddisplaytime" in values) {
-						time = values.trenddisplaytime || 12;
-					} else {
-						time = 12;
-					}
+		high = parseFloat(convertBg(high));
+		low = parseFloat(convertBg(low));
 
-					ready();
-				});
-			})
-		]).then(function(o){
-			var t = time; //parseInt($("#timewindow").val(),10); //Adrian: was: var t = 12;
-			var now = (new Date()).getTime();
-			var trend = data.map(function(plot) {
-				return [
-					+plot.displayTime,
-					parseFloat(convertBg(plot.bgValue))
-				];
-			}).filter(function(plot) {
-				return plot[0] + t.hours() > now;
-			});
+		var trendIn = trend.filter(function(plot){
+			return plot[1]<=high && plot[1]>=low;
+		});
+		var trendHigh = trend.filter(function(plot){
+			return plot[1]>high;
+		});
+		var trendLow = trend.filter(function(plot){
+			return plot[1]<low;
+		
+		});
 
-			high = parseFloat(convertBg(high));
-			low = parseFloat(convertBg(low));
+		var ticksz = [1, "hour"];
+		var timeformat = "%H:%M"
+		if (t<3){
+			ticksz = [15, "minute"];
+		}
+		if (t>24){
+			ticksz = [1, "day"];
+			timeformat = "%m/%d"
+		}
 
-			var trendIn = trend.filter(function(plot){
-				return plot[1]<=high && plot[1]>=low;
-			});
-			var trendHigh = trend.filter(function(plot){
-				return plot[1]>high;
-			});
-			var trendLow = trend.filter(function(plot){
-				return plot[1]<low;
-			
-			});
-
-			var ticksz = [1, "hour"];
-			var timeformat = "%H:%M"
-			if (t<3){
-				ticksz = [15, "minute"];
-			}
-			if (t>24){
-				ticksz = [1, "day"];
-				timeformat = "%m/%d"
-			}
-
-			$.plot(
-				"#dexcomtrend",
-				[
-					{
-						data: trendIn,
-						color: "#00FF00",
-						points: {
-							show: true
-						},
-						lines: {
-							show: false
-						}
-					},
-					{
-						data: trendHigh,
-						color: "#FFFF00",
-						points: {
-							show: true,
-							fill: true,
-							fillColor: "#FFDD00"
-						},
-						lines: {
-							show: false
-						}
-					},
-					{
-						data: trendLow,
-						color: "#FF0000",
-						points: {
-							show: true
-						},
-						lines: {
-							show: false
-						}
-					}
-				],
+		$.plot(
+			"#dexcomtrend",
+			[
 				{
-					xaxis: {
-						mode: "time",
-						timezone: "browser",
-						timeformat: timeformat,
-						minTickSize: ticksz,
-						tickColor: "#555",
-					}, 
-					yaxis: {
-						min: 0,
-						max: convertBg(400),
-						tickColor: "#555",
+					data: trendIn,
+					color: "#00FF00",
+					points: {
+						show: true
 					},
-					grid: {
-						markings: [
-		  					{
-		  						color: '#FF0000',
-		  						lineWidth: 2,
-		  						yaxis: {
-		  							from: low,
-		  							to: low
-		  						}
-		  					},
-							{
-								color: '#FFFF00',
-								lineWidth: 2,
-								yaxis: {
-									from: high,
-									to: high
-								}
-							}
-						],
-						hoverable: true
+					lines: {
+						show: false
+					}
+				},
+				{
+					data: trendHigh,
+					color: "#FFFF00",
+					points: {
+						show: true,
+						fill: true,
+						fillColor: "#FFDD00"
+					},
+					lines: {
+						show: false
+					}
+				},
+				{
+					data: trendLow,
+					color: "#FF0000",
+					points: {
+						show: true
+					},
+					lines: {
+						show: false
 					}
 				}
-			);
-			if (data.length) {
-				$("#cgmnow").text(convertBg(data[data.length - 1].bgValue));
-				$("#cgmdirection").text(data[data.length - 1].trend);
-				$("#cgmtime").text((new Date(data[data.length - 1].displayTime)).format("h:ia"));
+			],
+			{
+				xaxis: {
+					mode: "time",
+					timezone: "browser",
+					timeformat: timeformat,
+					minTickSize: ticksz,
+					tickColor: "#555",
+				}, 
+				yaxis: {
+					min: 0,
+					max: convertBg(400),
+					tickColor: "#555",
+				},
+				grid: {
+					markings: [
+							{
+								color: '#FF0000',
+								lineWidth: 2,
+								yaxis: {
+									from: low,
+									to: low
+								}
+							},
+						{
+							color: '#FFFF00',
+							lineWidth: 2,
+							yaxis: {
+								from: high,
+								to: high
+							}
+						}
+					],
+					hoverable: true
+				}
 			}
-		});
+		);
+		if (data.length) {
+			$("#cgmnow").text(convertBg(data[data.length - 1].bgValue));
+			$("#cgmdirection").text(data[data.length - 1].trend);
+			$("#cgmtime").text((new Date(data[data.length - 1].displayTime)).format("h:ia"));
+		}
 	}
 
 	// updated database
-	chrome.storage.onChanged.addListener(function(changes, namespace) {
-		if ("egvrecords" in changes)  {
-			drawReceiverChart(changes.egvrecords.newValue);
-		}
-		if ("config" in changes || "trenddisplaytime" in changes) {
-			chrome.storage.local.get("egvrecords", function(values) {
-				drawReceiverChart(values.egvrecords);
-			});
-		}
+	egvrecords.onChange(function(new_r, all) {
+		drawReceiverChart(all);
+	});
+	config.on("trenddisplaytime", function() {
+		drawReceiverChart(egvrecords);
 	});
 
 	$(function() {
 		//Adrian: Timeframe(ZOOM)-handlers:
 		$("#setTime1").click(function() {
-			chrome.storage.local.set({'trenddisplaytime': 1});
+			config.set("trenddisplaytime", 1);
 		});
 		$("#setTime3").click(function() {
-			chrome.storage.local.set({'trenddisplaytime': 3});
+			config.set("trenddisplaytime", 3);
 		});
 		$("#setTime6").click(function() {
-			chrome.storage.local.set({'trenddisplaytime': 6});
+			config.set("trenddisplaytime", 6);
 		});
 		$("#setTime12").click(function() {
-			chrome.storage.local.set({'trenddisplaytime': 12});
+			config.set("trenddisplaytime", 12);
 		});
 		$("#setTime24").click(function() {
-			chrome.storage.local.set({'trenddisplaytime': 24});
+			config.set("trenddisplaytime", 24);
 		});
 		$("#setTime48").click(function() {
-			chrome.storage.local.set({'trenddisplaytime': 48});
+			config.set("trenddisplaytime", 47);;
 		});
 		$("#setTime72").click(function() {
-			chrome.storage.local.set({'trenddisplaytime': 72});
+			config.set("trenddisplaytime", 72);
 		});
 		$("#setTime168").click(function() {
-			chrome.storage.local.set({'trenddisplaytime': 168});
+			config.set("trenddisplaytime", 168);
 		});
 	});
 
 	// first load, before receiver's returned data
 	var firstLoad = function() {
-		chrome.storage.local.get(["egvrecords"], function(values) {
-			drawReceiverChart(values.egvrecords);
-		});
+		drawReceiverChart(egvrecords);
 	}
 
 	firstLoad();

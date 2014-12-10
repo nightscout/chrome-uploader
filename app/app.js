@@ -1,4 +1,4 @@
-require(["./feature/cgm_download", "./feature/mongolab", "./feature/trending_alerts", "waiting", "egv_records"], function(cgm, mongolab, alerts, waiting, egvrecords) {
+require(["./feature/cgm_download", "./feature/mongolab", "./feature/trending_alerts", "waiting", "egv_records", "config"], function(cgm, mongolab, alerts, waiting, egvrecords, config) {
 
 // OS Flags
 // Windows needs a different COM port than everything else because Windows.
@@ -51,11 +51,11 @@ function putTheChartOnThePage(remotecgmuri) {
 	}
 }
 
+putTheChartOnThePage(config.remotecgmuri);
+config.on("remotecgmuri", putTheChartOnThePage);
+
 $(function() {
 	// event handlers
-	chrome.storage.local.get("config", function(local) {
-		putTheChartOnThePage(local.config.remotecgmuri || false);
-	});
 	$("#disclaimer").modal();
 	$("#disclaimer").show();
 	$("#acknowledge-agree").click(function() {
@@ -127,59 +127,49 @@ $(function() {
 			}, function() { // no more data
 				waiting.setProgress(85);
 				setTimeout(function() {
-					chrome.storage.local.get("egvrecords", function(values) {
-						cgm.disconnect();
-						var existing = values.egvrecords;
-						var existing_ts = existing.map(function(row) {
-							return row.displayTime;
-						});
-						var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
-						var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
-							return {
-								displayTime: +egv.displayTime,
-								bgValue: egv.bgValue,
-								trend: egv.trend
-							};
-						}).filter(function(row) {
-							return existing_ts.filter(function(ts) {
-								return ts == row.displayTime;
-							}).length === 0;
-						}).filter(function(row) {
-							return row.bgValue > 30;
-						});
-						var to_save = existing.concat(new_records);
-						to_save.sort(function(a,b) {
-							return a.displayTime - b.displayTime;
-						});
-						chrome.storage.local.set({ egvrecords: to_save },
-							console.debug.bind(console, "[downloadTheWorld] Saved results")
-						);
-						waiting.hide();
-						isdownloading = false;
-						chrome.notifications.create("", {
-							title: "Download complete",
-							type: "basic",
-							message: "Downloaded " + new_records.length + " new records (about " + Math.ceil(new_records.length / 216) + " day(s) worth."
-						}, function() { });
-						console.log("[downloadTheWorld] %i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
+					cgm.disconnect();
+					var existing = egvrecords;
+					var existing_ts = existing.map(function(row) {
+						return row.displayTime;
 					});
+					var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
+					var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
+						return {
+							displayTime: +egv.displayTime,
+							bgValue: egv.bgValue,
+							trend: egv.trend
+						};
+					}).filter(function(row) {
+						return existing_ts.filter(function(ts) {
+							return ts == row.displayTime;
+						}).length === 0;
+					}).filter(function(row) {
+						return row.bgValue > 30;
+					});
+					egvrecords.addAll(new_records);
+					waiting.hide();
+					isdownloading = false;
+					chrome.notifications.create("", {
+						title: "Download complete",
+						type: "basic",
+						message: "Downloaded " + new_records.length + " new records (about " + Math.ceil(new_records.length / 216) + " day(s) worth."
+					}, function() { });
+					console.log("[app.js downloadTheWorld] %i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
 				}, 300);
 			});
 		};
-		chrome.storage.local.get("config", function(local) {
-			try {
-				cgm.connect(local.config.serialport).then(reader, function() {
-					chrome.notifications.update(notification_id, {
-						message: "Could not find a connected Dexcom from which to download.",
-						iconUrl: "/public/assets/error.png"
-					}, function() { });
-				});
-			} catch (e) {
+		try {
+			cgm.connect(config.serialport).then(reader, function() {
 				chrome.notifications.update(notification_id, {
-					message: "Could not find a connected Dexcom to download from"
+					message: "Could not find a connected Dexcom from which to download.",
+					iconUrl: "/public/assets/error.png"
 				}, function() { });
-			}
-		});
+			});
+		} catch (e) {
+			chrome.notifications.update(notification_id, {
+				message: "Could not find a connected Dexcom to download from"
+			}, function() { });
+		}
 	};
 	$(".downloadallfromdexcom").click(downloadTheWorld);
 
@@ -305,16 +295,12 @@ $(function() {
 			}),
 			new Promise(function(done) {
 				require(["./bloodsugar"], done);
-			}),
-			new Promise(function(done) {
-				chrome.storage.local.get(["egvrecords"], done);
 			})
 		]).then(function(params) {
 			var writer = params[0],
-				convertBg = params[1],
-				storage = params[2];
+				convertBg = params[1];
 			writer.write(new Blob(
-				storage.egvrecords.map(function(record) {
+				egvrecords.map(function(record) {
 					return [
 						(new Date(record.displayTime)).format("M j Y H:i"),
 						convertBg(record.bgValue),

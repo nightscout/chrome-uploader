@@ -1,13 +1,12 @@
-define([], function() {
+define(["../config"], function(config) {
 	var ml;
 	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
 	return {
 		connect: function() {
 			return new Promise(function(good, bad) {
-				chrome.storage.local.get("config", function(local) {
-					ml = local.config.mongolab;
+				ml = config.mongolab;
+				if (ml.apikey && ml.database && ml.collection) // don't attempt to test without a config
 					mongolab.testConnection(ml.apikey, ml.database, ml.collection).then(good, bad);
-				})
 			});
 		},
 		disconnect: function() {

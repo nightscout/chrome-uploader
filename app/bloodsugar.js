@@ -1,4 +1,5 @@
-define(function() {
+define(["config"], function(config) {
+	var convertBg;
 	function makeItMgDl() {
 		convertBg = function displayAsMgDl(bg) {
 			return Math.floor(bg);
@@ -11,23 +12,17 @@ define(function() {
 			return (Math.round((bg / 18) * 10) / 10).toFixed(1);
 		};
 	}
-	var convertBg;
-	makeItMgDl();
-
-	chrome.storage.onChanged.addListener(function(changes, namespace) {
-		if ("config" in changes) {
-			if (changes.config.newValue.unit == "mmol") {
-				makeItMmol();
-			} else {
-				makeItMgDl();
-			}
+	var changeUnit = function(unit) {
+		if (unit == "mmol") {
+			makeItMmol();
+		} else {
+			makeItMgDl();
 		}
-	});
-	chrome.storage.local.get("config", function(local) {
-		if (local.config.unit == "mmol") makeItMmol();
-		else makeItMgDl();
-	});
+	};
 
+	config.on("unit", changeUnit);
+	changeUnit(config.unit);
+	
 	return function(mgdl) {
 		return convertBg(mgdl);
 	};

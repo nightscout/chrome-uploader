@@ -18,7 +18,7 @@ require(["./bloodsugar", "config", "egv_records"], function(convertBg, config, e
 				currData = item.datapoint;
 				$("#hover").remove();
 				var date = new Date(item.datapoint[0]);
-				hover(item.pageX, item.pageY, '' + date.format("D n/j H:i") + ':	' + item.datapoint[1]);
+				hover(item.pageX, item.pageY, '' + date.format("D n/j H:i") + '- ' + item.datapoint[1]);
 			}
 		} else {
 			$("#hover").remove();

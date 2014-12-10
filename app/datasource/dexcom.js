@@ -70,7 +70,7 @@ define(function () {
 			});
 		},
 		oldConnect: function(serialport, foundActualDevice) {
-			console.log("getDevices in oldConnect with device: %o", serialport);
+			console.log("[dexcom.js oldConnect] getDevices with device: %o", serialport);
 			return new Promise(function(resolve, reject) {
 				if (dexcom.connected) {
 					return reject(new Error("Wait for existing process to finish"));
@@ -214,10 +214,10 @@ define(function () {
 			readEGVDataPageRange[5] = 0x8b;
 			readEGVDataPageRange[6] = 0xb8;
 			dexcom.writeSerial(buf, function() {
-				console.debug("[getEGVDataPageRange] returned");
-				dexcom.readSerial(256, 2000, callback);
+				console.debug("[dexcom.js getEGVDataPageRange] returned");
+				dexcom.readSerial(256, 200, callback);
 			});
-			console.debug("[getEGVDataPageRange]");
+			console.debug("[dexcom.js getEGVDataPageRange]");
 		},
 		getLastFourPages: function(dexcomPageRangeJS, pageOffset,callback) {
 			if (dexcomPageRangeJS.length === 0) {
@@ -250,9 +250,9 @@ define(function () {
 
 			dexcom.writeSerial(buf, function() {
 				dexcom.readSerial(2118, 10000, callback); // was 2122
-				console.debug("[getLastFourPages] returned");
+				console.debug("[dexcom.js getLastFourPages] returned");
 			});
-			console.debug("[getLastFourPages] called");
+			console.debug("[dexcom.js getLastFourPages] called");
 		},
 		parseDatabasePages: function(databasePages) {
 			var fourPages = [];
@@ -274,7 +274,7 @@ define(function () {
 			// }
 			delta.ms = (delta.h < 0? -1: 1) * (Math.abs(delta.h).hours() + delta.m.minutes());
 
-			console.debug("[parseDatabasePages] parsing raw results to eGV records");
+			console.debug("[dexcom.js parseDatabasePages] parsing raw results to eGV records");
 
 			//we parse 4 pages at a time, calculate total record count while we do this
 			for (i = 0; i < 4; i++) {
@@ -352,7 +352,7 @@ define(function () {
 					});
 				}
 			}
-			console.debug("[parseDatabasePages] done");
+			console.debug("[dexcom.js parseDatabasePages] done");
 			return recordsToReturn;
 		}
 	};

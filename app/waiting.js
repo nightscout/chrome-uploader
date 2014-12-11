@@ -23,7 +23,7 @@ var makeAWindow = function(title) {
 
 var pleaseWaitDiv = makeAWindow("Communicating");
 
-define({
+define("waiting", {
 	show: function(title) {
 		var me = this;
 		if (title) {

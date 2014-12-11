@@ -1,4 +1,4 @@
-define(["config"], function(config) {
+define(["/app/config.js!"], function(config) {
 	var convertBg;
 	function makeItMgDl() {
 		convertBg = function displayAsMgDl(bg) {
@@ -22,7 +22,7 @@ define(["config"], function(config) {
 
 	config.on("unit", changeUnit);
 	changeUnit(config.unit);
-	
+
 	return function(mgdl) {
 		return convertBg(mgdl);
 	};

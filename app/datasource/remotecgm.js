@@ -1,14 +1,25 @@
-define(["../config"], function(config) {
+define(["/app/config.js!", "../feature/mongolab"], function(config, mongolab) {
 	var ml;
 	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
 	return {
 		connect: function() {
 			return new Promise(function(good, bad) {
 				ml = config.mongolab;
-				if (ml.apikey && ml.database && ml.collection) // don't attempt to test without a config
-					mongolab.testConnection(ml.apikey, ml.database, ml.collection).then(good, bad);
+				var doit = function() {
+					if (config.mongolab.apikey && config.mongolab.database && config.mongolab.collection) // don't attempt to test without a config
+						mongolab.testConnection(config.mongolab.apikey, config.mongolab.database, config.mongolab.collection).then(good, bad);
+				};
+				if ("mongolab" in config) doit();
+				else config.on("mongolab", doit);
 			});
 		},
+		// connect: function() {
+		// 	return new Promise(function(good, bad) {
+		// 		var ml = config.mongolab;
+		// 		if (ml.apikey && ml.database && ml.collection) // don't attempt to test without a config
+		// 			mongolab.testConnection(ml.apikey, ml.database, ml.collection).then(good, bad);
+		// 	});
+		// },
 		disconnect: function() {
 			// no op
 		}, 

@@ -1,4 +1,4 @@
-require(["./feature/cgm_download", "./feature/mongolab", "./feature/trending_alerts", "waiting", "egv_records", "config"], function(cgm, mongolab, alerts, waiting, egvrecords, config) {
+require(["feature/cgm_download", "feature/mongolab", "feature/trending_alerts", "waiting", "egv_records", "/app/config.js!"], function(cgm, mongolab, alerts, waiting, egvrecords, config) {
 
 // OS Flags
 // Windows needs a different COM port than everything else because Windows.

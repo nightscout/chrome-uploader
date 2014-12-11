@@ -54,18 +54,49 @@ define(function () {
 		port: null,
 		buffer: [],
 		connect: function(serialport) {
+			if (serialport) {
+				return new Promise(function(resolve, reject) {
+					chrome.serial.getDevices(function(ports) {
+						for (var i=0; i<ports.length; i++) {
+							var port = ports[i];
+							console.log("[dexcom] Checking port for dexcom device ID: %s", port.path);
+							if (port.vendorId == 8867 && port.productId == 71) {
+								console.debug("[dexcom] Found dexcom serial port at %s", port.path);
+								dexcom.oldConnect(port, true).then(resolve, reject);
+								return;
+							}
+						}
+						dexcom.oldConnect(serialport, false).then(resolve, reject);
+					});
+				});
+			} else {
+				return this.scanForDexcom();
+			}
+		},
+		scanForDexcom: function() {
 			return new Promise(function(resolve, reject) {
 				chrome.serial.getDevices(function(ports) {
-					for (var i=0; i<ports.length; i++) {
-						var port = ports[i];
-						console.log("[dexcom] Checking port for dexcom device ID: %s", port.path);
-						if (port.vendorId == 8867 && port.productId == 71) {
-							console.debug("[dexcom] Found dexcom serial port at %s", port.path);
-							dexcom.oldConnect(port, true).then(resolve, reject);
-							return;
+					var tryPort = function(i) {
+						if (i >= ports.length) {
+							reject();
 						}
+						var port = ports[i];
+						dexcom.oldConnect(port, true).then(function() {
+							dexcom.ping().then(function(d) {
+								if (d.length) {
+									resolve(port);
+								} else {
+									dexcom.disconnect();
+									tryPort(++i);
+								}
+							}, function() {
+								tryPort(++i);
+							});
+						}, function() {
+							tryPort(++i);
+						});
 					}
-					dexcom.oldConnect(serialport, false).then(resolve, reject);
+					tryPort(0);
 				});
 			});
 		},
@@ -180,25 +211,31 @@ define(function () {
 			});
 			//locate the EGV data pages
 		},
-		getDexcomSystemTime: function() {
+		ping: function() {
+			// ping is command 10
 			return new Promise(function(done, reject) {
-				return done(new Date()); // I just don't need it. YOU make it work! :)
 				if (!dexcom.connected) {
 					return reject(new Error("Not connected"));
 				}
 				var buf = new ArrayBuffer(7);
 				readEGVDataPageRange =new Uint8Array(buf);
-				readEGVDataPageRange[0] = 0x01;
-				readEGVDataPageRange[1] = 0x07;
-				readEGVDataPageRange[3] = 34; // 0x22? 0x34?
-				readEGVDataPageRange[4] = 0x04;
-				readEGVDataPageRange[5] = 0x8b;
-				readEGVDataPageRange[6] = 0xb8;
+				readEGVDataPageRange[0] = 0x01; // sof
+				readEGVDataPageRange[1] = 0x07; // length
+				readEGVDataPageRange[3] = 0x00; // null because why?
+				readEGVDataPageRange[4] = 0x0a; // command
+				var crc = bytesOfInt(calculateCRC16(readEGVDataPageRange, 0, 5));
+				readEGVDataPageRange[5] = crc[0];
+				readEGVDataPageRange[6] = crc[1];
 				dexcom.writeSerial(buf, function() {
-					console.debug("[getDexcomSystemTime] returned");
-					dexcom.readSerial(32, 200, callback);
+					console.debug("[dexcom.js ping] returned");
+					dexcom.readSerial(6, 200, done);
 				});
-				console.debug("[getDexcomSystemTime]");
+				console.debug("[ping]");
+			});
+		},
+		getDexcomSystemTime: function() {
+			return new Promise(function(done, reject) {
+				return done(new Date()); // I just don't need it. YOU make it work! :)
 			});
 		},
 		getEGVDataPageRange: function(callback) {
@@ -211,8 +248,9 @@ define(function () {
 			readEGVDataPageRange[1] = 0x07;
 			readEGVDataPageRange[3] = 0x10;
 			readEGVDataPageRange[4] = 0x04;
-			readEGVDataPageRange[5] = 0x8b;
-			readEGVDataPageRange[6] = 0xb8;
+			var crc = bytesOfInt(calculateCRC16(readEGVDataPageRange, 0, 5));
+			readEGVDataPageRange[5] = crc[0];
+			readEGVDataPageRange[6] = crc[1];
 			dexcom.writeSerial(buf, function() {
 				console.debug("[dexcom.js getEGVDataPageRange] returned");
 				dexcom.readSerial(256, 200, callback);

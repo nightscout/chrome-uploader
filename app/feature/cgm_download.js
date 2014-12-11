@@ -1,5 +1,4 @@
 define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/app/config.js!"], function(dexcom, remotecgm, egvrecords, config) {
-	debugger;
 	var cgm = dexcom,
 	isdownloading = false;
 	var isWindows = !!~window.navigator.appVersion.indexOf("Win");
@@ -150,6 +149,5 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/a
 	onConnectError = function(){
 		console.log(arguments);
 	};
-	debugger;
 	connect().then(onConnected, onConnectError); // chain to start everything
 });

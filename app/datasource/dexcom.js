@@ -81,20 +81,23 @@ define(function () {
 							reject();
 						}
 						var port = ports[i];
-						dexcom.oldConnect(port, true).then(function() {
-							dexcom.ping().then(function(d) {
-								if (d.length) {
-									resolve(port);
-								} else {
+						setTimeout(function() {
+							dexcom.oldConnect(port, true).then(function() {
+								dexcom.ping().then(function(d) {
+									if (d.length) {
+										resolve(port);
+									} else {
+										dexcom.disconnect();
+										tryPort(++i);
+									}
+								}, function() {
 									dexcom.disconnect();
 									tryPort(++i);
-								}
+								});
 							}, function() {
 								tryPort(++i);
 							});
-						}, function() {
-							tryPort(++i);
-						});
+						}, 250);
 					}
 					tryPort(0);
 				});

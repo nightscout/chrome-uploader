@@ -12,7 +12,6 @@ define(function() {
 
 	var config = {
 		unit: "mgdl",
-		serialport: (isWindows? "COM3": "/dev/tty.usbmodem") ,
 		targetrange: {
 			low: 70,
 			high: 180
@@ -34,15 +33,13 @@ define(function() {
 	return {
 		defined: function() {
 		},
-		load: function(name, require, loaded, config) {
+		load: function(name, require, loaded) {
 			chrome.storage.local.get("config", function(local) {
 				for (var prop in local.config) {
 					if (prop == "on" || prop == "set") {
 						// special case
 					} else {
-						// config.set(prop, local.config[prop]);
 						config[prop] = local.config[prop];
-						// console.log(prop, config[prop]);
 					}
 				}
 				config.on = function(key, fn) {

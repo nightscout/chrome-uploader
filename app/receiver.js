@@ -220,8 +220,6 @@ require(["bloodsugar", "/app/config.js!", "egv_records"], function(convertBg, co
 		drawReceiverChart(egvrecords);
 	}
 
-	firstLoad();
-
 	$(".dropdown-toggle").dropdown();
 });
 

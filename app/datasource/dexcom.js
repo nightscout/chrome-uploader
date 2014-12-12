@@ -81,7 +81,6 @@ define(function () {
 			}
 		},
 		scanForDexcom: function() {
-			console.count("[dexcom.js scanForDexcom] scanning all serial devices for dexcom");
 			return new Promise(function(resolve, reject) {
 				chrome.serial.getDevices(function(ports) {
 					var tryPort = function(i) {

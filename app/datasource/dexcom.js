@@ -1,5 +1,6 @@
 define(function () {
 	// http://stackoverflow.com/questions/8482309/converting-javascript-integer-to-byte-array-and-back
+	var lastSerialPort = false;
 	function intFromBytes(x) {
 		var val = 0;
 		for (var i = 0; i < x.length; ++i) {
@@ -54,7 +55,13 @@ define(function () {
 		port: null,
 		buffer: [],
 		connect: function(serialport) {
-			if (serialport) {
+			if (lastSerialPort) {
+				return new Promise(function(resolve, reject) {
+					dexcom.oldConnect(lastSerialPort, true).then(resolve, function() {
+						dexcom.scanForDexcom.then(resolve, reject);
+					})
+				});
+			} else if (serialport) {
 				return new Promise(function(resolve, reject) {
 					chrome.serial.getDevices(function(ports) {
 						for (var i=0; i<ports.length; i++) {
@@ -74,6 +81,7 @@ define(function () {
 			}
 		},
 		scanForDexcom: function() {
+			console.count("[dexcom.js scanForDexcom] scanning all serial devices for dexcom");
 			return new Promise(function(resolve, reject) {
 				chrome.serial.getDevices(function(ports) {
 					var tryPort = function(i) {
@@ -85,6 +93,7 @@ define(function () {
 							dexcom.oldConnect(port, true).then(function() {
 								dexcom.ping().then(function(d) {
 									if (d.length) {
+										lastSerialPort = port;
 										resolve(port);
 									} else {
 										dexcom.disconnect();
@@ -115,6 +124,7 @@ define(function () {
 						dexcom.connected = true;
 						console.debug("[connecting] successfully connected to port %o", conn);
 						setTimeout(resolve, 100);
+						lastSerialPort = serialport;
 						chrome.serial.onReceive.addListener(dexcom.serialOnReceiveListener);
 					} else {
 						console.error("Couldn't open USB connection to port %o", conn);
@@ -140,6 +150,7 @@ define(function () {
 						console.log("[dexcom] getDevices returned ports: %o", ports);
 						ports.forEach(tryPort);
 						if (dexcom.port === null) {
+							lastSerialPort = false;
 							reject(new Error(
 								"Didn't find a Dexcom receiver plugged in"
 							));

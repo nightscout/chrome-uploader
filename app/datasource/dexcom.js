@@ -1,4 +1,53 @@
+if(global && !("Promise" in global)) {
+	global.Promise = require("es6-promise").Promise;
+
+}
 define(function () {
+	var SerialPort = require('serialport');
+	var sp;
+	chrome = {
+		serial: {
+			getDevices: function(callback) {
+				SerialPort.list(function(err,ports) {
+					callback(ports.map(function(port) {
+						return {
+							path: port.comName
+						};
+					}));
+				});
+			},
+			connect: function(port, options, callback) {
+				options.parser = SerialPort.parsers.raw
+				try {
+					sp = new SerialPort.SerialPort(port.toString(), options);
+				} catch (e) {
+					console.log(e);
+				}
+				sp.on("open", callback);
+				var buffer = "";
+				sp.on("data", function(data) {
+					buffer += data;
+				})
+				dexcom.readSerial = function(bytes, to, callback) {
+					callback(buffer);
+				}
+				dexcom.writeSerial = function(bytes, callback) {
+					sp.write(bytes);
+					callback();
+				}
+				callback({
+					connectionId: 0,
+					serialport: sp
+				});
+			},
+			onReceive: {
+				addListener: function() { }
+			}
+		}
+	}
+	console.debug = console.warn = console.error = console.log;
+	console.info = function() { };
+
 	// http://stackoverflow.com/questions/8482309/converting-javascript-integer-to-byte-array-and-back
 	var lastSerialPort = false;
 	function intFromBytes(x) {
@@ -55,61 +104,9 @@ define(function () {
 		port: null,
 		buffer: [],
 		connect: function(serialport) {
-			if (lastSerialPort) {
-				return new Promise(function(resolve, reject) {
-					dexcom.oldConnect(lastSerialPort, true).then(resolve, function() {
-						dexcom.scanForDexcom.then(resolve, reject);
-					})
-				});
-			} else if (serialport) {
-				return new Promise(function(resolve, reject) {
-					chrome.serial.getDevices(function(ports) {
-						for (var i=0; i<ports.length; i++) {
-							var port = ports[i];
-							console.log("[dexcom] Checking port for dexcom device ID: %s", port.path);
-							if (port.vendorId == 8867 && port.productId == 71) {
-								console.debug("[dexcom] Found dexcom serial port at %s", port.path);
-								dexcom.oldConnect(port, true).then(resolve, reject);
-								return;
-							}
-						}
-						dexcom.oldConnect(serialport, false).then(resolve, reject);
-					});
-				});
-			} else {
-				return this.scanForDexcom();
-			}
-		},
-		scanForDexcom: function() {
-			return new Promise(function(resolve, reject) {
-				chrome.serial.getDevices(function(ports) {
-					var tryPort = function(i) {
-						if (i >= ports.length) {
-							reject();
-						}
-						var port = ports[i];
-						setTimeout(function() {
-							dexcom.oldConnect(port, true).then(function() {
-								dexcom.ping().then(function(d) {
-									if (d.length) {
-										lastSerialPort = port;
-										resolve(port);
-									} else {
-										dexcom.disconnect();
-										tryPort(++i);
-									}
-								}, function() {
-									dexcom.disconnect();
-									tryPort(++i);
-								});
-							}, function() {
-								tryPort(++i);
-							});
-						}, 250);
-					}
-					tryPort(0);
-				});
-			});
+			var str = "/dev/cu.usbmodem142111";
+			str.path = str;
+			return dexcom.oldConnect(str, true);
 		},
 		oldConnect: function(serialport, foundActualDevice) {
 			console.log("[dexcom.js oldConnect] getDevices with device: %o", serialport);
@@ -122,9 +119,9 @@ define(function () {
 						dexcom.connection = conn;
 						dexcom.connected = true;
 						console.debug("[connecting] successfully connected to port %o", conn);
-						setTimeout(resolve, 100);
 						lastSerialPort = serialport;
 						chrome.serial.onReceive.addListener(dexcom.serialOnReceiveListener);
+						resolve();
 					} else {
 						console.error("Couldn't open USB connection to port %o", conn);
 						reject(new Error(
@@ -140,7 +137,7 @@ define(function () {
 					}
 					dexcom.port = port;
 					console.debug("[connecting] Found dexcom at port %o", port);
-					chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
+					chrome.serial.connect(dexcom.port, { bitrate: 115200 }, connected);
 				};
 				if (foundActualDevice) {
 					tryPort(serialport);

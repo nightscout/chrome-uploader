@@ -23,22 +23,35 @@ define(function () {
 				} catch (e) {
 					console.log(e);
 				}
-				sp.on("open", callback);
+				sp.on("open", function() {
+					callback({
+						connectionId: 0,
+						serialport: sp
+					});
+				});
 				var buffer = "";
 				sp.on("data", function(data) {
+					debugger;
 					buffer += data;
 				})
 				dexcom.readSerial = function(bytes, to, callback) {
-					callback(buffer);
+					if (buffer.length >= bytes) {
+						callback(buffer.slice(0,bytes));
+						buffer = buffer.slice(bytes);
+						callback(buffer);
+					} else if (to == 0) {
+						callback(buffer);
+						buffer = "";
+					} else {
+						setTimeout(function() {
+							dexcom.readSerial(bytes, 0, callback);
+						}, to);
+					}
 				}
 				dexcom.writeSerial = function(bytes, callback) {
 					sp.write(bytes);
 					callback();
 				}
-				callback({
-					connectionId: 0,
-					serialport: sp
-				});
 			},
 			onReceive: {
 				addListener: function() { }
@@ -104,7 +117,7 @@ define(function () {
 		port: null,
 		buffer: [],
 		connect: function(serialport) {
-			var str = "/dev/cu.usbmodem142111";
+			var str = "/dev/cu.usbmodem1421";
 			str.path = str;
 			return dexcom.oldConnect(str, true);
 		},
@@ -263,6 +276,7 @@ define(function () {
 			readEGVDataPageRange[6] = crc[1];
 			dexcom.writeSerial(buf, function() {
 				console.debug("[dexcom.js getEGVDataPageRange] returned");
+				debugger;
 				dexcom.readSerial(256, 200, callback);
 			});
 			console.debug("[dexcom.js getEGVDataPageRange]");

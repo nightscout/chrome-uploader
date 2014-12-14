@@ -10,9 +10,9 @@ requirejs.config({
 requirejs(["./app/datasource/dexcom"], function(dexcom) {
 	dexcom.connect().then(function() {
 		var page = 1;
-		debugger;
 		dexcom.readFromReceiver(page).then(function(data) {
 			console.log(data);
+			process.exit();
 		});
 	}, function() {
 		console.log("Couldn't find Dexcom");

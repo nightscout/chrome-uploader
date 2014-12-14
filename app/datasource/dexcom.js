@@ -1,5 +1,30 @@
 if(global && !("Promise" in global)) {
 	global.Promise = require("es6-promise").Promise;
+	if (!("milliseconds" in Number.prototype))
+	Number.prototype.milliseconds = function() { return this; };
+if (!("seconds" in Number.prototype))
+	Number.prototype.seconds = function() {	return this.milliseconds() * 1000; };
+if (!("minutes" in Number.prototype))
+	Number.prototype.minutes = function() { return this.seconds() * 60; };
+if (!("hours" in Number.prototype))
+	Number.prototype.hours = function() { return this.minutes() * 60; };
+if (!("days" in Number.prototype))
+	Number.prototype.days = function() { return this.hours() * 24; };
+if (!("weeks" in Number.prototype))
+	Number.prototype.weeks = function() { return this.days() * 7; };
+if (!("months" in Number.prototype))
+	Number.prototype.months = function() { return this.days() * 30; };
+
+if (!("toDays" in Number.prototype))
+	Number.prototype.toDays = function() { return this.toHours() / 24; };
+if (!("toHours" in Number.prototype))
+	Number.prototype.toHours = function() { return this.toMinutes() / 60; };
+if (!("toMinutes" in Number.prototype))
+	Number.prototype.toMinutes = function() { return this.toSeconds() / 60; };
+if (!("toSeconds" in Number.prototype))
+	Number.prototype.toSeconds = function() { return this.toMilliseconds() / 1000; };
+if (!("toMilliseconds" in Number.prototype))
+	Number.prototype.toMilliseconds = function() { return this; };
 
 }
 define(function () {
@@ -24,16 +49,18 @@ define(function () {
 					console.log(e);
 				}
 				sp.on("open", function() {
+					sp.on("data", function(data) {
+						for (var i = 0; i < data.length; i++) {
+							buffer.push(data[i]);
+						}
+					});
 					callback({
 						connectionId: 0,
 						serialport: sp
 					});
 				});
-				var buffer = "";
-				sp.on("data", function(data) {
-					debugger;
-					buffer += data;
-				})
+				var buffer = [];
+
 				dexcom.readSerial = function(bytes, to, callback) {
 					if (buffer.length >= bytes) {
 						callback(buffer.slice(0,bytes));
@@ -41,7 +68,7 @@ define(function () {
 						callback(buffer);
 					} else if (to == 0) {
 						callback(buffer);
-						buffer = "";
+						buffer = [];
 					} else {
 						setTimeout(function() {
 							dexcom.readSerial(bytes, 0, callback);
@@ -49,7 +76,11 @@ define(function () {
 					}
 				}
 				dexcom.writeSerial = function(bytes, callback) {
-					sp.write(bytes);
+					var command = [];
+					for (var i = 0; i < bytes.byteLength; i++) {
+						command.push(bytes[i]);
+					}
+					sp.write(command);
 					callback();
 				}
 			},
@@ -58,8 +89,7 @@ define(function () {
 			}
 		}
 	}
-	console.debug = console.warn = console.error = console.log;
-	console.info = function() { };
+	console.debug = console.warn = console.error = console.info = function() { };
 
 	// http://stackoverflow.com/questions/8482309/converting-javascript-integer-to-byte-array-and-back
 	var lastSerialPort = false;
@@ -122,7 +152,7 @@ define(function () {
 			return dexcom.oldConnect(str, true);
 		},
 		oldConnect: function(serialport, foundActualDevice) {
-			console.log("[dexcom.js oldConnect] getDevices with device: %o", serialport);
+			console.debug("[dexcom.js oldConnect] getDevices with device: %o", serialport);
 			return new Promise(function(resolve, reject) {
 				if (dexcom.connected) {
 					return reject(new Error("Wait for existing process to finish"));
@@ -276,7 +306,6 @@ define(function () {
 			readEGVDataPageRange[6] = crc[1];
 			dexcom.writeSerial(buf, function() {
 				console.debug("[dexcom.js getEGVDataPageRange] returned");
-				debugger;
 				dexcom.readSerial(256, 200, callback);
 			});
 			console.debug("[dexcom.js getEGVDataPageRange]");

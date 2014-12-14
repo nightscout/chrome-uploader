@@ -8,7 +8,7 @@ requirejs.config({
 });
 
 requirejs(["./app/datasource/dexcom"], function(dexcom) {
-	dexcom.connect().then(function() {
+	dexcom.connect(process.argv[2]).then(function() {
 		var page = 1;
 		dexcom.readFromReceiver(page).then(function(data) {
 			console.log(data);

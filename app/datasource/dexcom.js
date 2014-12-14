@@ -147,9 +147,7 @@ define(function () {
 		port: null,
 		buffer: [],
 		connect: function(serialport) {
-			var str = "/dev/cu.usbmodem1421";
-			str.path = str;
-			return dexcom.oldConnect(str, true);
+			return dexcom.oldConnect(serialport, true);
 		},
 		oldConnect: function(serialport, foundActualDevice) {
 			console.debug("[dexcom.js oldConnect] getDevices with device: %o", serialport);

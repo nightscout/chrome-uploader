@@ -32,26 +32,9 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/a
 			isdownloading = true;
 			var timer = new Date();
 			var max_existing = egvrecords.length > 0?  egvrecords[egvrecords.length - 1].displayTime : 0;
+			var max_allowed = new Date(Date.now() + (1).days());
 			
 			console.debug("[cgm_download.js connect] loading");
-			// var serialport = local.config.serialport || (isWindows? "COM3": "/dev/tty.usbmodem");
-			
-			// if ((serialport.substr(0,3) != "COM" && isWindows) || (serialport.substr(0,5) != "/dev/" && !isWindows)) {
-			// 	if (serialport.substr(0,3) != "COM" && isWindows) {
-			// 		message = "Can't load because you're not configured properly for Windows. Go into Options and pick the right serial port. It'll be something like COM3, COM4, COM5, something like that. It's currently " + local.config.serialport + " which is invalid on Windows. Using COM3 to keep things moving."
-			// 	} else if (serialport.substr(0,5) != "/dev/" && !isWindows) {
-			// 		message = "Can't load because you're not properly configured for Unix. Go into Options and pick the right serial port. It'll be something like /dev/tty.usbmodem.";
-			// 	}
-			// 	chrome.notifications.create("", {
-			// 			type: "basic",
-			// 			title: "NightScout.info CGM Utility",
-			// 			message: "" + message,
-			// 			iconUrl: "/public/assets/icon.png",
-			// 			priority: 1,
-			// 		}, function(notification_id) {
-
-			// 		});
-			// }
 			cgm.connect().then(function() { // success
 				console.debug("[cgm_download.js connect] successfully connected to %s", config.datasource);
 
@@ -63,7 +46,7 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/a
 						console.debug("[cgm_download.js process] read page %i", page);
 						d = d.concat(d_page);
 						if(d_page.filter(function(egv) {
-							return +egv.displayTime > max_existing;
+							return +egv.displayTime > max_existing && +egv.displayTime < max_allowed;
 						}).length == 0) {
 							console.debug("[cgm_download.js process] stopped reading at page %i", page);
 							cgm.disconnect();

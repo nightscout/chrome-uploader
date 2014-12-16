@@ -84,8 +84,8 @@ define(function () {
 			return new Promise(function(resolve, reject) {
 				chrome.serial.getDevices(function(ports) {
 					var tryPort = function(i) {
-						if (i >= ports.length) {
-							reject();
+						if (i > ports.length) {
+							return reject();
 						}
 						var port = ports[i];
 						setTimeout(function() {
@@ -192,12 +192,12 @@ define(function () {
 			}
 			chrome.serial.disconnect(dexcom.connection.connectionId, function() {
 				console.debug("[disconnect] completed");
-				dexcom.connected = false;
-				dexcom.connection = null;
-				dexcom.port = null;
-				dexcom.buffer = [];
-				chrome.serial.onReceive.removeListener(dexcom.serialOnReceiveListener);
 			});
+			dexcom.connected = false;
+			dexcom.connection = null;
+			dexcom.port = null;
+			dexcom.buffer = [];
+			chrome.serial.onReceive.removeListener(dexcom.serialOnReceiveListener);
 			console.debug("[disconnect] attempted");
 		},
 		writeSerial: function(bytes, callback) {

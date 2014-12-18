@@ -50,7 +50,7 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/a
 						if(d_page.filter(function(egv) {
 							return ((+egv.displayTime || +egv.date) > max_existing)
 							 && ((+egv.displayTime || +egv.date) < max_allowed);
-						}).length == 0 || page > 10) {
+						}).length == 0) {
 							console.debug("[cgm_download.js process] stopped reading at page %i", page);
 							cgm.disconnect();
 							isdownloading = false;
@@ -94,7 +94,6 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/a
 		(function(data) {
 			return new Promise(function(resolve) {
 				var existing = egvrecords || [];
-				debugger;
 				var max_existing = existing.length > 0?
 					(existing[existing.length - 1].displayTime || existing[existing.length].date) :
 					0;

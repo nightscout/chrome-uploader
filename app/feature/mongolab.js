@@ -140,7 +140,6 @@ define(["../waiting", "../egv_records", "config!"], function(waiting, egvrecords
 						var data = [];
 						var args = Array.prototype.slice.call(arguments, 0);
 						while (args.length) data = Array.prototype.concat.apply(data, args.shift());
-						debugger;
 						var existing = egvrecords.map(function(egv_r) {
 							return egv_r.displayDate;
 						});
@@ -167,7 +166,6 @@ define(["../waiting", "../egv_records", "config!"], function(waiting, egvrecords
 						try {
 							egvrecords.addAll(records);
 						} catch (e) {
-							debugger;
 							console.log(e)
 						}
 						complete({ new_records: records, raw_data: data });

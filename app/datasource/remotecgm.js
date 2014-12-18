@@ -26,7 +26,7 @@ define(["/app/config.js!", "../feature/mongolab"], function(config, mongolab) {
 		readFromReceiver: function(pageoffset) {
 			return new Promise(function(good, bad) {
 				$.getJSON(
-					mongolabUrl + ml.database + "/collections/" + ml.collection + "?apiKey=" + ml.apikey + "&l=288&s={\"date\":-1}"
+					mongolabUrl + ml.database + "/collections/" + ml.collection + "?apiKey=" + ml.apikey + "&l=300&sk=" + (300 * (pageoffset - 1)) + "&s={\"date\":-1}"
 				).then(function(docs) {
 					good(docs.filter(function(record) {
 						if (Object.keys(record).indexOf("type") > -1) {

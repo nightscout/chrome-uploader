@@ -1,18 +1,11 @@
-define(["../waiting", "../egv_records"], function(waiting, egvrecords) {
+define(["../waiting", "../egv_records", "config!"], function(waiting, egvrecords, config) {
 	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
 
 	var mongolab = { };
 	
-	Promise.all([
-		navigator.getBattery(),
-		new Promise(function(done) {
-			chrome.storage.local.get("config", done);
-		})
-	]).then(function(o) {
-		var battery=o[0], config = o[1].config;
-		
+	navigator.getBattery().then(function(battery) {
 		var update = function() {
-			console.debug("[Mongolab] Setting battery to %i in Mongolab", battery.level)
+			console.debug("[Mongolab] Setting battery to %i in Mongolab", battery.level * 100)
 			$.ajax({
 				url: mongolabUrl + config.mongolab.database + "/collections/devicestatus?apiKey=" + config.mongolab.apikey + "&u=true&q={\"id\":\"config\"}",
 				data: JSON.stringify({
@@ -147,34 +140,38 @@ define(["../waiting", "../egv_records"], function(waiting, egvrecords) {
 						var data = [];
 						var args = Array.prototype.slice.call(arguments, 0);
 						while (args.length) data = Array.prototype.concat.apply(data, args.shift());
-
-						chrome.storage.local.get("egvrecords", function(local) {
-							var records = (local.egvrecords || []).concat(data.filter(function(record) {
-								if (Object.keys(record).indexOf("type") > -1) {
-									return record.type == "sgv";
-								} else {
-									return true;
-								}
-							}).map(function(record) {
-								return {
-									displayTime: Date.parse(record.dateString) || record.date,
-									bgValue: parseInt(record.sgv),
-									trend: record.direction
-								};
-							}));
-							records.sort(function(a,b) {
-								return a.displayTime - b.displayTime;
-							});
-							records = records.filter(function(rec, ix, all) {
-								if (ix === 0) return true;
-								if (rec.bgValue <= 30) return false;
-								return all[ix - 1].displayTime != rec.displayTime;
-							});
-
-							chrome.storage.local.set({ egvrecords: records }, console.debug.bind(console, "[mongolab] grabbed all records from interwebs"));
-							complete({ new_records: records, raw_data: data });
-							waiting.hide();
+						debugger;
+						var existing = egvrecords.map(function(egv_r) {
+							return egv_r.displayDate;
 						});
+						var records = data.filter(function(record) {
+							if (Object.keys(record).indexOf("type") > -1) {
+								return record.type == "sgv";
+							} else {
+								return true;
+							}
+						}).map(function(record) {
+							return {
+								displayTime: Date.parse(record.dateString) || record.date,
+								bgValue: parseInt(record.sgv),
+								trend: record.direction,
+								recordSource: "mongolab"
+							};
+						}).filter(function(record){
+							return (existing.indexOf(record.displayTime) == -1)
+						}).filter(function(rec, ix, all) {
+							if (rec.bgValue <= 30) return false;
+							if (ix == 0) return true;
+							return all[ix - 1].displayTime != rec.displayTime;
+						});
+						try {
+							egvrecords.addAll(records);
+						} catch (e) {
+							debugger;
+							console.log(e)
+						}
+						complete({ new_records: records, raw_data: data });
+						waiting.hide();
 					});
 				});
 			});
@@ -252,15 +249,19 @@ define(["../waiting", "../egv_records"], function(waiting, egvrecords) {
 
 	// updated database
 	egvrecords.onChange(function(new_r, all) {
-		chrome.storage.local.get("config", function(local) {
-			var datasource = "dexcom";
-			if ("datasource" in local.config) datasource = local.config.datasource || "dexcom";
-			if (datasource == "dexcom") {
-				new_r.forEach(function(egv) {
+		var datasource = "dexcom";
+		if ("datasource" in config) datasource = config.datasource || "dexcom";
+		if (datasource == "dexcom") {
+			new_r.forEach(function(egv) {
+				if ("recordSource" in egv) {
+					if (egc.recordSource != "mongolab") {
+						mongolab.insert(egv);
+					}
+				} else {
 					mongolab.insert(egv);
-				});
-			}
-		});
+				}
+			});
+		}
 	});
 
 	return mongolab;

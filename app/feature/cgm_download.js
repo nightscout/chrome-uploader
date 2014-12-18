@@ -31,7 +31,9 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/a
 			if (isdownloading) reject();
 			isdownloading = true;
 			var timer = new Date();
-			var max_existing = egvrecords.length > 0?  egvrecords[egvrecords.length - 1].displayTime : 0;
+			var max_existing = egvrecords.length > 0?
+				(egvrecords[egvrecords.length - 1].displayTime || egvrecords[egvrecords.length - 1].date ):
+				0;
 			var max_allowed = new Date(Date.now() + (1).days());
 			
 			console.debug("[cgm_download.js connect] loading");
@@ -46,8 +48,9 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/a
 						console.debug("[cgm_download.js process] read page %i", page);
 						d = d.concat(d_page);
 						if(d_page.filter(function(egv) {
-							return +egv.displayTime > max_existing && +egv.displayTime < max_allowed;
-						}).length == 0) {
+							return ((+egv.displayTime || +egv.date) > max_existing)
+							 && ((+egv.displayTime || +egv.date) < max_allowed);
+						}).length == 0 || page > 10) {
 							console.debug("[cgm_download.js process] stopped reading at page %i", page);
 							cgm.disconnect();
 							isdownloading = false;
@@ -90,30 +93,32 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/a
 		// update my db
 		(function(data) {
 			return new Promise(function(resolve) {
-				chrome.storage.local.get(["config"], function(storage) {
-					var existing = egvrecords || [];
-					var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
-					var new_records = data.filter(function(egv) {
-						return +egv.displayTime > max_existing;
-					}).map(function(egv) {
-						return {
-							displayTime: +egv.displayTime,
-							bgValue: egv.bgValue,
-							trend: egv.trend
-						};
-					});
-					if (new_records.length === 0) {
-						if (lastNewRecord + (5).minutes() < Date.now()) {
-							console.warn("[cgm_download.js updateLocalDb] Something's wrong. We should have new data by now.");
-						}
-					} else {
-						lastNewRecord = Date.now();
-					}
-					new_records = new_records.filter(function(row) {
-						return row.bgValue > 30;
-					});
-					egvrecords.addAll(new_records);
+				var existing = egvrecords || [];
+				debugger;
+				var max_existing = existing.length > 0?
+					(existing[existing.length - 1].displayTime || existing[existing.length].date) :
+					0;
+				var new_records = data.filter(function(egv) {
+					return( +egv.displayTime > max_existing )|| (+egv.date > max_existing);
+				}).map(function(egv) {
+					return {
+						displayTime: +egv.displayTime || +egv.date,
+						bgValue: egv.bgValue || egv.sgv,
+						trend: egv.trend || egv.direction,
+						recordSource: config.datasource
+					};
 				});
+				if (new_records.length === 0) {
+					if (lastNewRecord + (5).minutes() < Date.now()) {
+						console.warn("[cgm_download.js updateLocalDb] Something's wrong. We should have new data by now.");
+					}
+				} else {
+					lastNewRecord = Date.now();
+				}
+				new_records = new_records.filter(function(row) {
+					return row.bgValue > 30;
+				});
+				egvrecords.addAll(new_records);
 			});
 		})(data);
 

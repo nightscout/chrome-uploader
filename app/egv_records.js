@@ -1,6 +1,7 @@
 define(function() {
 	var table = []; // representation of chrome.storage.local.get("egvrecords")
 	var listeners = [];
+	var readyToWrite = false;
 
 	var callback = function(newRecords) {
 		listeners.forEach(function(fn) {
@@ -9,6 +10,8 @@ define(function() {
 	};
 
 	var write = function(new_r, all) {
+		if (!readyToWrite) return;
+		
 		chrome.storage.local.set({
 			egvrecords: table.slice()
 		}, function(local) {
@@ -18,9 +21,21 @@ define(function() {
 
 	chrome.storage.local.get("egvrecords", function(local) {
 		// replace table with egvrecords from localstorage without loosing methods that've been tacked on here
-		Array.prototype.splice.apply(table, [0, table.length].concat(local.egvrecords || []))
+		var localRecords = [local.egvrecords.slice()];
+		while (localRecords[0].length > 0xfff0) {
+			localRecords.push(localRecords[0].splice(0, 0xfff0))
+		}
+
+		localRecords.forEach(function(page) {
+			Array.prototype.splice.apply(table, [table.length, 0].concat(page));
+		})
+
+		table.sort(function(a,b) {
+			return a.displayTime - b.displayTime;
+		});
 
 		callback([]); // run callback with no new records
+		readyToWrite = true;
 	});
 
 	table.add = function(record) {
@@ -29,8 +44,14 @@ define(function() {
 	};
 
 	table.addAll = function(records) {
-		table.splice(table.length,0);
-		Array.prototype.splice.apply(table, [table.length, 0].concat(records));
+		var localRecords = [records.slice()];
+		while (localRecords[0].length > 0xfff0) {
+			localRecords.push(localRecords[0].splice(0, 0xfff0))
+		}
+
+		localRecords.forEach(function(page) {
+			Array.prototype.splice.apply(table, [table.length, 0].concat(page));
+		})
 		table.sort(function(a,b) {
 			return a.displayTime - b.displayTime;
 		});

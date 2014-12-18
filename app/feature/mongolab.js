@@ -69,7 +69,7 @@ define(["../waiting", "../egv_records", "config!"], function(waiting, egvrecords
 		return {
 			device: "dexcom",
 			date: plot.displayTime,
-			dateString: formatDate(new Date(plot.displayTime)),
+			dateString: (new Date(plot.displayTime)).format("c"),
 			sgv: formatFloat(plot.bgValue, 2, "."),
 			direction: plot.trend,
 			type: "sgv"
@@ -252,7 +252,7 @@ define(["../waiting", "../egv_records", "config!"], function(waiting, egvrecords
 		if (datasource == "dexcom") {
 			new_r.forEach(function(egv) {
 				if ("recordSource" in egv) {
-					if (egc.recordSource != "mongolab") {
+					if (egv.recordSource != "mongolab") {
 						mongolab.insert(egv);
 					}
 				} else {

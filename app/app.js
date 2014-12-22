@@ -335,7 +335,6 @@ $(function() {
 		var rxLabel = rx.next();
 		rx.css("background-color", "#400");
 		rxLabel.css("color", "#666");
-		console.log(rxLabel);
 		return function(a) {
 			if (a[0].length == 2) return;
 			rx.css("background-color", "#f00");

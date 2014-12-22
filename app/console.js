@@ -23,8 +23,10 @@
 				if (val.toString == Object.toString) // JS Object
 					out = val.toString();
 				else // Native Object
-					out = "{\n" + Object.keys(val).map(function(k) {
-						return pad(recursions) + k + ": " + val[k];
+					out = "{\n" + Object.keys(val).filter(function(k) {
+						return k != "apikey" && (typeof val[k] != "function");
+					}).map(function(k) {
+						return pad(recursions) + k + ": " + toString(val[k]);
 					}).join(",\n") + "\n" +  pad(recursions - 1) + "}";
 			} else if (typeof val == "boolean") { // boolean
 				out = val.toString();

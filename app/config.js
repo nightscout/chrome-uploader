@@ -35,7 +35,7 @@ define(function() {
 		},
 		load: function(name, require, loaded) {
 			chrome.storage.local.get("config", function(local) {
-				for (var prop in local.config) {
+				for (var prop in (local.config || {})) {
 					if (prop == "on" || prop == "set") {
 						// special case
 					} else {

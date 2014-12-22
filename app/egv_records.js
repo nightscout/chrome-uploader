@@ -21,7 +21,7 @@ define(function() {
 
 	chrome.storage.local.get("egvrecords", function(local) {
 		// replace table with egvrecords from localstorage without loosing methods that've been tacked on here
-		var localRecords = [local.egvrecords.slice()];
+		var localRecords = [(local.egvrecords || []).slice()];
 		while (localRecords[0].length > 0xfff0) {
 			localRecords.push(localRecords[0].splice(0, 0xfff0))
 		}

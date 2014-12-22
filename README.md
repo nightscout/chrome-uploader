@@ -1,10 +1,12 @@
 ##NightScout.info CGM Utility
 Download Dexcom data on almost any platform Chrome runs on.
 
-* OSX 10.7+
+* OSX 10.7+.
 * Ubuntu 12.04+
 * Windows 7-8.1 if [Dexcom Studio](http://dexcom.com/dexcom-studio) is installed.
 * Windows 10 out of the box.
+
+There's a nodejs branch. It's only been tested on nodejs 0.10 on OSX Yosemite.
 
 Has not been tested on Windows XP.
 ##Don't use this for treatment. Don't. Seriously, don't. This is reverse engineered. Dexcom Studio can be aware of lots of gotchas that this simply isn't. Data might stop updating. Data can be entirely wrong. I've seen it make 300 point swings out of the blue, not because BG changed but simply because of how this thing works. 

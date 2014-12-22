@@ -17,3 +17,7 @@ rm -rf vendor/qunit
 rm -rf vendor/qunit-phantom-runner
 rm -rf vendor/bootstrap/test-infra
 rm Brocfile.js
+rm bowser.json
+rm .bowerrc
+rm package.json
+rm deploy.sh

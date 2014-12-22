@@ -1,3 +1,4 @@
+// todo: use config object
 define(["../bloodsugar", "../egv_records"], function(convertBg, egvrecords) {
 	var current_direction;
 	var current_bg = 0;

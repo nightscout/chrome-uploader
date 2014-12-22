@@ -1,4 +1,4 @@
-define(["../waiting", "../egv_records", "config!"], function(waiting, egvrecords, config) {
+define(["../waiting", "../egv_records", "/app/config.js!"], function(waiting, egvrecords, config) {
 	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
 
 	var mongolab = { };
@@ -82,95 +82,79 @@ define(["../waiting", "../egv_records", "config!"], function(waiting, egvrecords
 	mongolab.insert = function(plot) {
 		if (!plot) return;
 			
-		(new Promise(function(done, reject) {
-			chrome.storage.local.get("config", function(local) {
-				if ("mongolab" in local.config && local.config.mongolab.apikey) {
-					done(local.config || {});
-				} else {
-					reject();
-				}
-			});
-		})).then(function(config) {
-			// have a unique constraint on date to keep it from inserting too much data.
-			// mongolab returns a 400 when duplicate attempted
+		// have a unique constraint on date to keep it from inserting too much data.
+		// mongolab returns a 400 when duplicate attempted
 
-			if (!("mongolab" in config)) return;
-			if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
-			if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
-			if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
+		if (!("mongolab" in config)) return;
+		if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
+		if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
+		if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
 
-			console.log("[mongolab.js insert] Writing record to MongoLab %o", plot);
-			
-			$.ajax({
-				url: mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey,
-				data: formatData(plot),
-				type: "POST",
-				contentType: "application/json"
-			});
+		console.log("[mongolab.js insert] Writing record to MongoLab %o", plot);
+		
+		$.ajax({
+			url: mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey,
+			data: formatData(plot),
+			type: "POST",
+			contentType: "application/json"
 		});
 	};
 
 	mongolab.populateLocalStorage = function() { // (download from mongolab)
 		waiting.show("Downloading from Mongolab");
 		return new Promise(function(complete) {
-			(new Promise(function(done) {
-				chrome.storage.local.get("config", function(local) {
-					done(local.config || {});
-				});
-			})).then(function(config) {
-				// have a unique constraint on date to keep it from inserting too much data.
-				// mongolab returns a 400 when duplicate attempted
+			// have a unique constraint on date to keep it from inserting too much data.
+			// mongolab returns a 400 when duplicate attempted
 
-				console.log("[mongolab] Requesting all data from MongoLab");
-				if (!("mongolab" in config)) return;
-				if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
-				if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
-				if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
+			console.log("[mongolab] Requesting all data from MongoLab");
+			if (!("mongolab" in config)) return;
+			if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
+			if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
+			if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
 
-				// get count (can't transfer more than 1000 at a time)
-				$.getJSON(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?c=true&apiKey=" + config.mongolab.apikey).then(function(total) {
-					var requests = [];
-					do {
-						requests.push(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey + "&l=1000&sk=" + 1000 * requests.length);
-						total -= 1000;
-					} while (total > 0);
-					Promise.all(requests.map(function(url) {
-						return $.getJSON(url);
-					})).then(function() {
-						var data = [];
-						var args = Array.prototype.slice.call(arguments, 0);
-						while (args.length) data = Array.prototype.concat.apply(data, args.shift());
-						var existing = egvrecords.map(function(egv_r) {
-							return egv_r.displayDate;
-						});
-						var records = data.filter(function(record) {
-							if (Object.keys(record).indexOf("type") > -1) {
-								return record.type == "sgv";
-							} else {
-								return true;
-							}
-						}).map(function(record) {
-							return {
-								displayTime: Date.parse(record.dateString) || record.date,
-								bgValue: parseInt(record.sgv),
-								trend: record.direction,
-								recordSource: "mongolab"
-							};
-						}).filter(function(record){
-							return (existing.indexOf(record.displayTime) == -1)
-						}).filter(function(rec, ix, all) {
-							if (rec.bgValue <= 30) return false;
-							if (ix == 0) return true;
-							return all[ix - 1].displayTime != rec.displayTime;
-						});
-						try {
-							egvrecords.addAll(records);
-						} catch (e) {
-							console.log(e)
-						}
-						complete({ new_records: records, raw_data: data });
-						waiting.hide();
+			// get count (can't transfer more than 1000 at a time)
+			$.getJSON(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?c=true&apiKey=" + config.mongolab.apikey).then(function(total) {
+				var requests = [];
+				do {
+					requests.push(mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey + "&l=1000&sk=" + 1000 * requests.length);
+					total -= 1000;
+				} while (total > 0);
+				Promise.all(requests.map(function(url) {
+					return $.getJSON(url);
+				})).then(function() {
+					var data = [];
+					var args = Array.prototype.slice.call(arguments, 0);
+					while (args.length) data = Array.prototype.concat.apply(data, args.shift());
+					var existing = egvrecords.map(function(egv_r) {
+						return egv_r.displayDate;
 					});
+					var records = data.filter(function(record) {
+						if (Object.keys(record).indexOf("type") > -1) {
+							return record.type == "sgv";
+						} else {
+							return true;
+						}
+					}).map(function(record) {
+						return {
+							displayTime: Date.parse(record.dateString) || record.date,
+							bgValue: parseInt(record.sgv),
+							trend: record.direction,
+							recordSource: "mongolab"
+						};
+					}).filter(function(record){
+						return (existing.indexOf(record.displayTime) == -1)
+					}).filter(function(rec, ix, all) {
+						if (rec.bgValue <= 30) return false;
+						if (ix == 0) return true;
+						return all[ix - 1].displayTime != rec.displayTime;
+					});
+					try {
+						egvrecords.addAll(records);
+					} catch (e) {
+						console.log(e)
+					}
+					complete({ new_records: records, raw_data: data });
+					waiting.hide();
 				});
 			});
 		});
@@ -179,36 +163,30 @@ define(["../waiting", "../egv_records", "config!"], function(waiting, egvrecords
 	mongolab.publish = function(records) { // (backfill mongolab)
 		waiting.show("Sending entire history to MongoLab");
 		return new Promise(function(complete) {
-			(new Promise(function(done) {
-				chrome.storage.local.get("config", function(local) {
-					done(local.config || {});
+			// have a unique constraint on date to keep it from inserting too much data.
+			// mongolab returns a 400 when duplicate attempted
+
+			console.log("[mongolab] Publishing all data to MongoLab");
+			if (!("mongolab" in config)) return;
+			if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
+			if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
+			if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
+
+			var record_sections = [];
+			do {
+				record_sections.push(records.slice(record_sections.length * 1000, (record_sections.length + 1) * 1000));
+			} while ((record_sections.length * 1000) < records.length);
+
+			Promise.all(record_sections.map(function(records) {
+				return $.ajax({
+					url: mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey,
+					data: JSON.stringify(records.map(structureData)),
+					type: "POST",
+					contentType: "application/json"
 				});
-			})).then(function(config) {
-				// have a unique constraint on date to keep it from inserting too much data.
-				// mongolab returns a 400 when duplicate attempted
-
-				console.log("[mongolab] Publishing all data to MongoLab");
-				if (!("mongolab" in config)) return;
-				if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
-				if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
-				if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
-
-				var record_sections = [];
-				do {
-					record_sections.push(records.slice(record_sections.length * 1000, (record_sections.length + 1) * 1000));
-				} while ((record_sections.length * 1000) < records.length);
-
-				Promise.all(record_sections.map(function(records) {
-					return $.ajax({
-						url: mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey,
-						data: JSON.stringify(records.map(structureData)),
-						type: "POST",
-						contentType: "application/json"
-					});
-				})).then(function() {
-					waiting.hide();
-					complete();
-				});
+			})).then(function() {
+				waiting.hide();
+				complete();
 			});
 		});
 	};

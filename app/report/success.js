@@ -1,5 +1,4 @@
 require(["../egv_records", "../bloodsugar", "/app/config.js!"], function(data, convertBg, config) {
-	debugger;
 	var low = parseInt(config.targetrange.low),
 		high = parseInt(config.targetrange.high);
 	var config = {

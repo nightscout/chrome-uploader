@@ -233,6 +233,33 @@ a.navbar-brand {
 
     to { background-position: 40px 0 }
 }
+
+.nav li a {
+	font-size: 14pt;
+}
+
+
+.led {
+    border-radius: 50%;
+    width: 1em;
+    height: 1em;
+    float: left;
+}
+
+.communications {
+	font-size: 90%;
+	padding-top: 0.5em;
+	padding-left: 2em;
+}
+ul.communications {
+	list-style-type:none;
+}
+
+.communications label {
+	margin-left: 0.25em;
+	color: #aaa;
+}
+
 		</style>
 	</head>
 	<body>
@@ -300,7 +327,16 @@ a.navbar-brand {
 							</ul>
 						</li>
 						<li><a id="openhelp" href="#" target="_blank">Help</a></li>
+						<li>
+						<div>
+							<ul class="communications">
+								<li><div id="tx" class="led"> </div><label for="tx">Talking to CGM</label></li>
+								<li><div id="rx" class="led"> </div><label for="rx">CGM Replying</label></li>
+							</ul>
+						</div>
+						</li>
 					</ul>
+					
 					<form class="navbar-form navbar-right" role="form" action="javascript:void;">
 						<div class="btn-toolbar">
 							<div class="btn-group">

@@ -1,4 +1,4 @@
-require(["feature/cgm_download", "feature/mongolab", "feature/trending_alerts", "waiting", "egv_records", "/app/config.js!"], function(cgm, mongolab, alerts, waiting, egvrecords, config) {
+require(["feature/cgm_download", "feature/mongolab", "feature/trending_alerts", "waiting", "egv_records", "/app/config.js!", "blinken_lights"], function(cgm, mongolab, alerts, waiting, egvrecords, config, blinkenLights) {
 
 // OS Flags
 // Windows needs a different COM port than everything else because Windows.
@@ -27,8 +27,6 @@ if (isMac) {
 		}
 	}
 }
-
-
 
 // Keep errors from happening during large downloads
 var attempts = 0;
@@ -312,6 +310,42 @@ $(function() {
 			));
 		})
 	});
+
+	blinkenLights.on("output", (function() {
+		var to = false;
+		var tx = $("#tx");
+		var txLabel = tx.next();
+		tx.css("background-color", "#040");
+		txLabel.css("color", "#666");
+		return function() {
+			tx.css("background-color", "#0f0");
+			txLabel.css("color", "#aaa");
+			if (to) clearTimeout(to);
+			to = setTimeout(function() {
+				tx.css("background-color", "#040");
+				txLabel.css("color", "#666");
+			}, 300);
+		};
+	}).call());
+
+	blinkenLights.on("input", (function() {
+		var to = false;
+		var rx = $("#rx");
+		var rxLabel = rx.next();
+		rx.css("background-color", "#400");
+		rxLabel.css("color", "#666");
+		console.log(rxLabel);
+		return function(a) {
+			if (a[0].length == 2) return;
+			rx.css("background-color", "#f00");
+			rxLabel.css("color", "#aaa");
+			if (to) clearTimeout(to);
+			to = setTimeout(function() {
+				rx.css("background-color", "#400");
+				rxLabel.css("color", "#666");
+			}, 500);
+		};
+	}).call());
 });
 
 });

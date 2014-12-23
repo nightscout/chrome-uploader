@@ -54,6 +54,7 @@ config.on("remotecgmuri", putTheChartOnThePage);
 
 $(function() {
 	$.ajax("https://twitter.com/cgmtools4chrome").then(function(page) {
+		debugger;
 		var tweets = $(".js-tweet-text", page);
 		var important = tweets.filter(function(b) { return this.innerText.indexOf("#update") > -1 });
 		if (important.length > 0) {
@@ -296,7 +297,7 @@ $(function() {
 			contentType: "application/json"
 		}).then(function(r) {
 			$("#errorrreporting").modal('hide');
-			window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent("@bosh I have a problem with Nightscout CGM Uploader") + "&url=" + encodeURIComponent(r.html_url))
+			window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent("@cgmtools4chrome I have a problem with Nightscout CGM Uploader") + "&url=" + encodeURIComponent(r.html_url))
 		});
 	})
 	$("#errorreporting-disagree").click(function() {

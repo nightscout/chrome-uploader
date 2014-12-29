@@ -54,7 +54,6 @@ config.on("remotecgmuri", putTheChartOnThePage);
 
 $(function() {
 	$.ajax("https://twitter.com/cgmtools4chrome").then(function(page) {
-		debugger;
 		var tweets = $(".js-tweet-text", page);
 		var important = tweets.filter(function(b) { return this.innerText.indexOf("#update") > -1 });
 		if (important.length > 0) {

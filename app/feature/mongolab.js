@@ -1,4 +1,4 @@
-define(["../waiting", "../egv_records", "/app/config.js!"], function(waiting, egvrecords, config) {
+define(["../waiting", "../store/egv_records", "/app/config.js!"], function(waiting, egvrecords, config) {
 	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
 
 	var mongolab = { };

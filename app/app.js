@@ -1,4 +1,4 @@
-require(["feature/cgm_download", "feature/mongolab", "feature/trending_alerts", "waiting", "egv_records", "/app/config.js!", "blinken_lights"], function(cgm, mongolab, alerts, waiting, egvrecords, config, blinkenLights) {
+require(["feature/cgm_download", "feature/mongolab", "feature/trending_alerts", "waiting", "store/egv_records", "/app/config.js!", "blinken_lights"], function(cgm, mongolab, alerts, waiting, egvrecords, config, blinkenLights) {
 
 // OS Flags
 // Windows needs a different COM port than everything else because Windows.
@@ -92,84 +92,7 @@ $(function() {
 		onConfirm: egvrecords.removeAll
 	});
 
-	// TODO: this needs to be refactored out of here
-	// TODO: populateLocalStorage() in dexcom?
-	var downloadTheWorld = function(b){
-		waiting.show('Downloading entire history from Dexcom receiver');
-		isdownloading = true;
-
-		var i = 1;
-		var data = [];
-		var compile = function(i) {
-			return new Promise(function(resolve,reject) {
-				try {
-					cgm.readFromReceiver(i).then(function(d) {
-						data.push(d);
-
-						if (d.length) {
-							resolve(d);
-						} else {
-							reject();
-						}
-					});
-				} catch (e) {
-					reject(e);
-				}
-			});
-		},
-		reader = function() {
-			compile(i).then(function() {
-				waiting.setProgress(i);
-				i++;
-				reader();
-			}, function() { // no more data
-				waiting.setProgress(85);
-				setTimeout(function() {
-					cgm.disconnect();
-					var existing = egvrecords;
-					var existing_ts = existing.map(function(row) {
-						return row.displayTime;
-					});
-					var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
-					var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
-						return {
-							displayTime: +egv.displayTime,
-							bgValue: egv.bgValue,
-							trend: egv.trend
-						};
-					}).filter(function(row) {
-						return existing_ts.filter(function(ts) {
-							return ts == row.displayTime;
-						}).length === 0;
-					}).filter(function(row) {
-						return row.bgValue > 30;
-					});
-					egvrecords.addAll(new_records);
-					waiting.hide();
-					isdownloading = false;
-					chrome.notifications.create("", {
-						title: "Download complete",
-						type: "basic",
-						message: "Downloaded " + new_records.length + " new records (about " + Math.ceil(new_records.length / 216) + " day(s) worth."
-					}, function() { });
-					console.log("[app.js downloadTheWorld] %i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
-				}, 300);
-			});
-		};
-		try {
-			cgm.connect(config.serialport).then(reader, function() {
-				chrome.notifications.update(notification_id, {
-					message: "Could not find a connected Dexcom from which to download.",
-					iconUrl: "/public/assets/error.png"
-				}, function() { });
-			});
-		} catch (e) {
-			chrome.notifications.update(notification_id, {
-				message: "Could not find a connected Dexcom to download from"
-			}, function() { });
-		}
-	};
-	$(".downloadallfromdexcom").click(downloadTheWorld);
+	$(".downloadallfromdexcom").click(cgm.getAllRecords);
 
 	$("#fixit").click(function() {
 		$("#errorrreporting").modal();

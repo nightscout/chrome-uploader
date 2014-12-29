@@ -1,4 +1,4 @@
-define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/app/config.js!"], function(dexcom, remotecgm, egvrecords, config) {
+define(["../datasource/dexcom", "../datasource/remotecgm", "../store/egv_records", "/app/config.js!"], function(dexcom, remotecgm, egvrecords, config) {
 	var cgm = dexcom,
 	isdownloading = false;
 	var isWindows = !!~window.navigator.appVersion.indexOf("Win");
@@ -137,4 +137,10 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/a
 		console.log(arguments);
 	};
 	connect().then(onConnected, onConnectError); // chain to start everything
+
+	return {
+		getAllRecords: function() {
+			return cgm.getAllRecords();
+		}
+	}
 });

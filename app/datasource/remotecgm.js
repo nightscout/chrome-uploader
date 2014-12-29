@@ -37,6 +37,12 @@ define(["/app/config.js!", "../feature/mongolab"], function(config, mongolab) {
 					}));
 				}, bad)
 			});
+		},
+
+		getAllRecords: function() {
+			return new Promise(function(done) {
+				done([]);
+			});
 		}
 	}
 });

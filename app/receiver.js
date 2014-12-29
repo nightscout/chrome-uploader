@@ -1,6 +1,6 @@
 function launchReceiverUI() {
 
-require(["bloodsugar", "/app/config.js!", "egv_records"], function(convertBg, config, egvrecords) {
+require(["bloodsugar", "/app/config.js!", "store/egv_records"], function(convertBg, config, egvrecords) {
 	var jqShow = $.fn.show;
 	$.fn.show = function(domid) {
 		var o = jqShow.apply(this, [domid]);

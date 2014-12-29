@@ -405,6 +405,63 @@ define(function () {
 			}
 			console.debug("[dexcom.js parseDatabasePages] done");
 			return recordsToReturn;
+		},
+
+		getAllRecords: function() {
+			var i = 1;
+			var data = [];
+			var callback = function() { };
+
+			var compile = function(i) {
+				return new Promise(function(resolve,reject) {
+					try {
+						dexcom.readFromReceiver(i).then(function(d) {
+							data.push(d);
+
+							if (d.length) {
+								resolve(d);
+							} else {
+								reject();
+							}
+						});
+					} catch (e) {
+						reject(e);
+					}
+				});
+			},
+			reader = function() {
+				compile(i).then(function() {
+					waiting.setProgress(i);
+					i++;
+					reader();
+				}, function() { // no more data
+					var existing = egvrecords;
+					var existing_ts = existing.map(function(row) {
+						return row.displayTime;
+					});
+					var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
+						return {
+							displayTime: +egv.displayTime,
+							bgValue: egv.bgValue,
+							trend: egv.trend
+						};
+					}).filter(function(row) {
+						return existing_ts.filter(function(ts) {
+							return ts == row.displayTime;
+						}).length === 0;
+					}).filter(function(row) {
+						return row.bgValue > 30;
+					});
+					egvrecords.addAll(new_records);
+					console.debug("[dexcom.js getAllRecords.reader] %i new records", new_records.length);
+					dexcom.disconnect();
+					callback(new_records);
+				});
+			};
+			return new Promise(function(done) {
+				callback = done;
+				dexcom.connect().then(reader)
+			});
 		}
 	};
 	return dexcom;

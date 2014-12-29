@@ -1,4 +1,4 @@
-require(["../egv_records", "../bloodsugar", "/app/config.js!"], function(data, convertBg, config) {
+require(["../store/egv_records", "../bloodsugar", "/app/config.js!"], function(data, convertBg, config) {
 	var low = parseInt(config.targetrange.low),
 		high = parseInt(config.targetrange.high);
 	var config = {

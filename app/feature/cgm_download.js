@@ -140,7 +140,13 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../store/egv_records
 
 	return {
 		getAllRecords: function() {
-			return cgm.getAllRecords();
+			var oldCgm = cgm;
+			cgm = dexcom;
+			var p = cgm.getAllRecords();
+			p.then(function() {
+				cgm = oldCgm;
+			});
+			return p;
 		}
 	}
 });

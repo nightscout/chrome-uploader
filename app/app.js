@@ -96,7 +96,6 @@ $(function() {
 		$("#whatswrong").val("");
 	});
 
-
 	$('.dropdown-toggle').dropdown();
 	$("a.new_window").click(function() {
 		chrome.app.window.create($(this).attr("href"), {

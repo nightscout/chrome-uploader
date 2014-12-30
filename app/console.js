@@ -59,7 +59,10 @@ define([], function() {
 			}
 			stack = stack
 				.split("\n") // big string
-				.slice(3) // throw away intro and this fn's invocation
+				.slice(2) // throw away intro and this fn's invocation
+				.filter(function(line) {
+					return line.indexOf("blinken_lights.js") == -1;
+				})
 				.map(function(line) {
 					return line.trim();
 				})

@@ -28,9 +28,6 @@ if (isMac) {
 	}
 }
 
-// Keep errors from happening during large downloads
-var attempts = 0;
-
 $(function() {
 	// event handlers
 	$("#disclaimer").modal();

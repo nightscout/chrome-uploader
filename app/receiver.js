@@ -216,7 +216,7 @@ require(["bloodsugar", "/app/config.js!", "store/egv_records"], function(convert
 	$(function() {
 		//Adrian: Timeframe(ZOOM)-handlers:
 		$("[data-hours]").click(function() {
-			config.set("trenddisplaytime", $(this).attr("data-hours"));
+			config.set("trenddisplaytime", parseInt($(this).attr("data-hours"), 10));
 		})
 	});
 

@@ -78,73 +78,18 @@ $(function() {
 
 
 	$('.dropdown-toggle').dropdown();
-	$("#menuinsights").click(function() {
-		chrome.app.window.create('app/report/insights.html', {
-			id: "insightsreport",
+	$("a.new_window").click(function() {
+		chrome.app.window.create($(this).attr("href"), {
+			id: this.href.replace(/[\/\.:]/g, ""),
 			bounds: {
-				width: 800,
-				height: 600
+				width: parseInt($(this).attr("data-width"), 10),
+				height: parseInt($(this).attr("data-height"), 10)
 			}
+		}, function(w) {
+			w.contentWindow.console = console;
 		});
+		return false;
 	});
-	$("#menusuccess").click(function() {
-		chrome.app.window.create('app/report/success.html', {
-			id: "successreport",
-			bounds: {
-				width: 800,
-				height: 600
-			}
-		});
-	});
-	$("#menudailystats").click(function() {
-		chrome.app.window.create('app/report/dailystats.html', {
-			id: "dailystatsreport",
-			bounds: {
-				width: 600,
-				height: 650
-			}
-		});
-	});
-	$("#menudistribution").click(function() {
-		chrome.app.window.create('app/report/glucosedistribution.html', {
-			id: "glucosedistribution",
-			bounds: {
-				width: 960,
-				height: 400
-			}
-		});
-	});
-	$("#menuhourlystats").click(function() {
-		chrome.app.window.create('app/report/hourlystats.html', {
-			id: "hourlystats",
-			bounds: {
-				width: 960,
-				height: 800
-			}
-		});
-	});
-
-	$("#menupercentilechart").click(function() {
-		chrome.app.window.create('app/report/percentile.html', {
-			id: "percentilechart",
-			bounds: {
-				width: 960,
-				height: 578
-			}
-		});
-	});
-
-	$("#openoptions").click(function(){
-		chrome.app.window.create('app/options.html', {
-			id: "options",
-			bounds: {
-				width: 960,
-				height: 600
-			}
-		});
-		
-	});
-	
 	$("#pulldatabase").click(function() {
 		mongolab.populateLocalStorage().then(function(r, ml) {
 			chrome.notifications.create("", {

@@ -66,7 +66,7 @@ define(function () {
 					chrome.serial.getDevices(function(ports) {
 						for (var i=0; i<ports.length; i++) {
 							var port = ports[i];
-							console.log("[dexcom] Checking port for dexcom device ID: %s", port.path);
+							console.debug("[dexcom.js connect] Checking port for dexcom device ID: %s", port.path);
 							if (port.vendorId == 8867 && port.productId == 71) {
 								console.debug("[dexcom] Found dexcom serial port at %s", port.path);
 								dexcom.oldConnect(port, true).then(resolve, reject);
@@ -112,7 +112,7 @@ define(function () {
 			});
 		},
 		oldConnect: function(serialport, foundActualDevice) {
-			console.log("[dexcom.js oldConnect] getDevices with device: %o", serialport);
+			console.debug("[dexcom.oldConnect] getDevices with device: %o", serialport);
 			return new Promise(function(resolve, reject) {
 				if (dexcom.connected) {
 					return reject(new Error("Wait for existing process to finish"));
@@ -121,32 +121,31 @@ define(function () {
 					if (conn && "connectionId" in conn) {
 						dexcom.connection = conn;
 						dexcom.connected = true;
-						console.debug("[connecting] successfully connected to port %o", conn);
+						console.debug("[dexcom.oldConnect.connected] successfully connected to port %o", conn);
 						setTimeout(resolve, 100);
 						lastSerialPort = serialport;
 						chrome.serial.onReceive.addListener(dexcom.serialOnReceiveListener);
 					} else {
-						console.error("Couldn't open USB connection to port %o", conn);
+						if (conn) console.error("[dexcom.oldConnect.connected] Couldn't open USB connection to port %o", conn);
 						reject(new Error(
 							"Couldn't open USB connection. Unplug your Dexcom, plug it back in, and try again."
 						));
 					}
 				};
 				var tryPort = function(port) {
-					console.debug("[connecting] Trying port: %o", port);
+					console.debug("[dexcom.oldConnect.tryPort] Trying port: %o", port);
 					if (!foundActualDevice &&
 						(port.path.substr(0,serialport.length).toLowerCase() != serialport.toLowerCase())) {
 						return;
 					}
 					dexcom.port = port;
-					console.debug("[connecting] Found dexcom at port %o", port);
 					chrome.serial.connect(dexcom.port.path, { bitrate: 115200 }, connected);
 				};
 				if (foundActualDevice) {
 					tryPort(serialport);
 				} else {
 					chrome.serial.getDevices(function(ports) {
-						console.log("[dexcom] getDevices returned ports: %o", ports);
+						console.debug("[dexcom.oldConnect.getDevices] returned ports: %o", ports);
 						ports.forEach(tryPort);
 						if (dexcom.port === null) {
 							lastSerialPort = false;
@@ -161,7 +160,7 @@ define(function () {
 		serialOnReceiveListener: function(info) {
 			if (dexcom.connected && info.connectionId == dexcom.connection.connectionId && info.data) {
 				var bufView=new Uint8Array(info.data);
-				console.debug("[connection (low-level)] incoming data; %i bytes", bufView.byteLength);
+				console.debug("[dexcom.serialOnReceiverListener] connection (low-level)] incoming data; %i bytes", bufView.byteLength);
 				for (var i=0; i<bufView.byteLength; i++) {
 					dexcom.buffer.push(bufView[i]);
 				}
@@ -191,24 +190,24 @@ define(function () {
 				throw new Error("Not connected");
 			}
 			chrome.serial.disconnect(dexcom.connection.connectionId, function() {
-				console.debug("[disconnect] completed");
+				console.debug("[dexcom.disconnect] completed");
 			});
 			dexcom.connected = false;
 			dexcom.connection = null;
 			dexcom.port = null;
 			dexcom.buffer = [];
 			chrome.serial.onReceive.removeListener(dexcom.serialOnReceiveListener);
-			console.debug("[disconnect] attempted");
+			console.debug("[dexcom.disconnect] attempted");
 		},
 		writeSerial: function(bytes, callback) {
 			dexcom.buffer = [];
 			chrome.serial.send(dexcom.connection.connectionId, bytes, callback);
-			console.debug("[connection (low-level)] wrote command to serial");
+			console.debug("[dexcom.writeSerial (low level)] wrote command to serial");
 		},
 		readFromReceiver: function(pageOffset, callback) {
 			return new Promise(function(resolve,reject) {
 				try {
-					console.debug("[readFromReceiver] read page %i from serial", pageOffset);
+					console.debug("[dexcom.readFromReceiver] read page %i from serial", pageOffset);
 					dexcom.getEGVDataPageRange(function(dexcomPageRange) {
 						dexcom.getLastFourPages(dexcomPageRange, pageOffset, function(databasePages) {
 							databasePages = databasePages.slice(4); // why? i dunno
@@ -240,10 +239,9 @@ define(function () {
 				readEGVDataPageRange[5] = crc[0];
 				readEGVDataPageRange[6] = crc[1];
 				dexcom.writeSerial(buf, function() {
-					console.debug("[dexcom.js ping] returned");
 					dexcom.readSerial(6, 200, done);
 				});
-				console.debug("[ping]");
+				console.debug("[dexcom.ping] dispatched");
 			});
 		},
 		getDexcomSystemTime: function() {
@@ -265,10 +263,9 @@ define(function () {
 			readEGVDataPageRange[5] = crc[0];
 			readEGVDataPageRange[6] = crc[1];
 			dexcom.writeSerial(buf, function() {
-				console.debug("[dexcom.js getEGVDataPageRange] returned");
 				dexcom.readSerial(256, 200, callback);
 			});
-			console.debug("[dexcom.js getEGVDataPageRange]");
+			console.debug("[dexcom.getEGVDataPageRange]");
 		},
 		getLastFourPages: function(dexcomPageRangeJS, pageOffset,callback) {
 			if (dexcomPageRangeJS.length === 0) {
@@ -300,10 +297,9 @@ define(function () {
 			getLastEGVPage[11] = checksum[1];
 
 			dexcom.writeSerial(buf, function() {
-				dexcom.readSerial(2118, 10000, callback); // was 2122
-				console.debug("[dexcom.js getLastFourPages] returned");
+				dexcom.readSerial(2118, 10000, callback);
 			});
-			console.debug("[dexcom.js getLastFourPages] called");
+			console.debug("[dexcom.getLastFourPages] called");
 		},
 		parseDatabasePages: function(databasePages) {
 			var fourPages = [];
@@ -325,7 +321,7 @@ define(function () {
 			// }
 			delta.ms = (delta.h < 0? -1: 1) * (Math.abs(delta.h).hours() + delta.m.minutes());
 
-			console.debug("[dexcom.js parseDatabasePages] parsing raw results to eGV records");
+			console.debug("[dexcom.parseDatabasePages] parsing raw results to eGV records");
 
 			//we parse 4 pages at a time, calculate total record count while we do this
 			for (i = 0; i < 4; i++) {
@@ -403,7 +399,7 @@ define(function () {
 					});
 				}
 			}
-			console.debug("[dexcom.js parseDatabasePages] done");
+			console.debug("[dexcom.parseDatabasePages] done");
 			return recordsToReturn;
 		},
 
@@ -453,7 +449,7 @@ define(function () {
 						return row.bgValue > 30;
 					});
 					egvrecords.addAll(new_records);
-					console.debug("[dexcom.js getAllRecords.reader] %i new records", new_records.length);
+					console.debug("[dexcom.getAllRecords.reader] %i new records", new_records.length);
 					dexcom.disconnect();
 					callback(new_records);
 				});

@@ -29,6 +29,26 @@ if (isMac) {
 }
 
 $(function() {
+	$.ajax("https://twitter.com/cgmtools4chrome").then(function(page) {
+		var tweets = $(".js-tweet-text", page);
+		var important = tweets.filter(function(b) { return this.innerText.indexOf("#update") > -1 });
+		if (important.length > 0) {
+			var mostRecent = important.map(function() { return this.innerText.replace(" #update", ""); })[0];
+			if (mostRecent.indexOf("http") > -1) {
+				var linkStart = mostRecent.indexOf("http");
+				if (linkStart > -1) {
+					var endsAt = mostRecent.indexOf(" ", linkStart);
+					if (endsAt > -1) {
+						endsAt -= linkStart;
+					} else {
+						endsAt = mostRecent.length - endsAt;
+					}
+					mostRecent = mostRecent.substr(0, linkStart) + '<a href="' + mostRecent.substr(linkStart, endsAt)  + '" target="_blank">' + mostRecent.substr(linkStart, endsAt) + "</a>" + mostRecent.substr(linkStart + endsAt);
+				}
+			}
+			$("#updateText").html(mostRecent);
+		} 
+	})
 	// event handlers
 	$("#disclaimer").modal();
 	$("#disclaimer").show();
@@ -120,7 +140,7 @@ $(function() {
 			contentType: "application/json"
 		}).then(function(r) {
 			$("#errorrreporting").modal('hide');
-			window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent("@bosh I have a problem with Nightscout CGM Uploader") + "&url=" + encodeURIComponent(r.html_url))
+			window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent("@cgmtools4chrome I have a problem with Nightscout CGM Uploader") + "&url=" + encodeURIComponent(r.html_url))
 		});
 	})
 	$("#errorreporting-disagree").click(function() {

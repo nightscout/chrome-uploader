@@ -31,27 +31,6 @@ if (isMac) {
 // Keep errors from happening during large downloads
 var attempts = 0;
 
-function putTheChartOnThePage(remotecgmuri) {
-	$("#receiverui").html("");
-	if (typeof remotecgmuri == "string" && remotecgmuri.length > 0) {
-		if (remotecgmuri.indexOf("://") == -1) {
-			remotecgmuri = "http://" + remotecgmuri;
-		}
-		// load remote
-		console.log("[app.js putTheChartOnThePage] Using remote CGM monitor");
-		$("#receiverui").append($("<div class='row'/>").append($("<webview class='container col-xs-12'/>").attr({
-			src: remotecgmuri
-		})));
-	} else {
-		// load hosted
-		console.log("[app.js putTheChartOnThePage] Using built-in chart");
-		$("#receiverui").load('receiver.html', launchReceiverUI /* receiver.js */);
-	}
-}
-
-putTheChartOnThePage(config.remotecgmuri);
-config.on("remotecgmuri", putTheChartOnThePage);
-
 $(function() {
 	// event handlers
 	$("#disclaimer").modal();

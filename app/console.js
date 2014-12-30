@@ -1,4 +1,4 @@
-(function(console) {
+define([], function() {
 	var myLog = [], consoleFunctions = {};
 	var flattenSimple = function(d) {
 		var recursions = 0;
@@ -89,4 +89,5 @@
 	console.fixMyStuff = function() {
 		return myLog.join("\n");
 	};
-})(console);
+	return console;
+});

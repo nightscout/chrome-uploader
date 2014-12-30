@@ -1,4 +1,4 @@
-require(["feature/cgm_download", "feature/mongolab", "feature/trending_alerts", "waiting", "store/egv_records", "/app/config.js!", "blinken_lights"], function(cgm, mongolab, alerts, waiting, egvrecords, config, blinkenLights) {
+require(["feature/cgm_download", "feature/mongolab", "feature/trending_alerts", "waiting", "store/egv_records", "/app/config.js!", "blinken_lights", "console"], function(cgm, mongolab, alerts, waiting, egvrecords, config, blinkenLights, console) {
 
 // OS Flags
 // Windows needs a different COM port than everything else because Windows.
@@ -30,7 +30,7 @@ if (isMac) {
 
 $(function() {
 	$.ajax("https://twitter.com/cgmtools4chrome").then(function(page) {
-		var tweets = $(".js-tweet-text", page);
+		var tweets = $(".js-tweet-text", page.replace(/<script.*<\/script>/g, "").replace(/<img.*>/g, ""));
 		var important = tweets.filter(function(b) { return this.innerText.indexOf("#update") > -1 });
 		if (important.length > 0) {
 			var mostRecent = important.map(function() { return this.innerText.replace(" #update", ""); })[0];

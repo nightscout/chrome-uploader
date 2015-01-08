@@ -100,6 +100,29 @@ define(["../waiting", "../store/egv_records", "/app/config.js!"], function(waiti
 		});
 	};
 
+	mongolab.addAll = function(plots) {
+		if (plots.length == 0) return;
+			
+		// have a unique constraint on date to keep it from inserting too much data.
+		// mongolab returns a 400 when duplicate attempted
+
+		if (!("mongolab" in config)) return;
+		if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
+		if (!("collection" in config.mongolab && config.mongolab.collection.length > 0)) return;
+		if (!("database" in config.mongolab && config.mongolab.database.length > 0)) return;
+
+		console.log("[mongolab.js insert] Writing records to MongoLab %o", plots);
+		
+		$.ajax({
+			url: mongolabUrl + config.mongolab.database + "/collections/" + config.mongolab.collection + "?apiKey=" + config.mongolab.apikey,
+			data: JSON.stringify(plots.map(function(egv) {
+				return structureData(egv);
+			})),
+			type: "POST",
+			contentType: "application/json"
+		});
+	};
+
 	mongolab.populateLocalStorage = function() { // (download from mongolab)
 		waiting.show("Downloading from Mongolab");
 		return new Promise(function(complete) {
@@ -228,15 +251,9 @@ define(["../waiting", "../store/egv_records", "/app/config.js!"], function(waiti
 		var datasource = "dexcom";
 		if ("datasource" in config) datasource = config.datasource || "dexcom";
 		if (datasource == "dexcom") {
-			new_r.forEach(function(egv) {
-				if ("recordSource" in egv) {
-					if (egv.recordSource != "mongolab") {
-						mongolab.insert(egv);
-					}
-				} else {
-					mongolab.insert(egv);
-				}
-			});
+			mongolab.addAll(new_r.filter(function(egv) {
+				return egv.recordSource != "mongolab";
+			}));
 		}
 	});
 

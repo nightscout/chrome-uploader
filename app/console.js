@@ -58,30 +58,30 @@ define([], function() {
 				stack = e.stack;
 			}
 			try {
-			stack = stack
-				.split("\n") // big string
-				.slice(2) // throw away intro and this fn's invocation
-				.filter(function(line) {
-					return line.indexOf("blinken_lights.js") == -1;
-				})
-				.map(function(line) {
-					return line.trim();
-				})
-				.filter(function(line) {
-					return line.indexOf("jquery") == -1;
-				}).map(function(line) {
-					var parts = line.split(":");
-					return {
-						file: parts[1]
-							.split("/")
-							.slice(3) // throw away chrome-extension part
-							.join("/"),
-						line: parseInt(parts[2],10)
-					};
-				});
-			var args = Array.prototype.slice.call(arguments);
-			myLog.push(fn.toUpperCase() + ": " + stack[0].file + ":" + stack[0].line + ": " + flattenSimple(args));
-			consoleFunctions[fn].apply(console, arguments);
+				stack = stack
+					.split("\n") // big string
+					.slice(2) // throw away intro and this fn's invocation
+					.filter(function(line) {
+						return line.indexOf("blinken_lights.js") == -1;
+					})
+					.map(function(line) {
+						return line.trim();
+					})
+					.filter(function(line) {
+						return line.indexOf("jquery") == -1 && line.indexOf("(native)") == -1;
+					}).map(function(line) {
+						var parts = line.split(":");
+						return {
+							file: parts[1]
+								.split("/")
+								.slice(3) // throw away chrome-extension part
+								.join("/"),
+							line: parseInt(parts[2],10)
+						};
+					});
+				var args = Array.prototype.slice.call(arguments);
+				myLog.push(fn.toUpperCase() + ": " + stack[0].file + ":" + stack[0].line + ": " + flattenSimple(args));
+				consoleFunctions[fn].apply(console, arguments);
 			}
 			catch (e) {
 				myLog.push("Error occured during console operation. " + JSON.stringify(e));

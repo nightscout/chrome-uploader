@@ -12,7 +12,6 @@ define(["../bloodsugar", "../store/egv_records", "/app/config.js!"], function(co
 
 		high = config.targetrange.high;
 		low = config.targetrange.low;
-		ready(config.notifications || "important");
 
 		var now_trend = cur_record.trend;
 		var last_bg = last_record? last_record.bgValue: false;
@@ -28,7 +27,7 @@ define(["../bloodsugar", "../store/egv_records", "/app/config.js!"], function(co
 		}; })(new Date());
 
 
-		if (setting == "none"|| (now_bg==current_bg && current_direction == now_trend)) {
+		if (config.notifications == "none"|| (now_bg==current_bg && current_direction == now_trend)) {
 			//do nothing
 		
 		
@@ -80,7 +79,7 @@ define(["../bloodsugar", "../store/egv_records", "/app/config.js!"], function(co
 		} else if (current_direction && current_direction != now_trend) {
 			doNotify(now_bg,1, "Trend direction changed to " + now_trend + ". You're #cgmnow " + convertBg(now_bg) + at(), high, low);
 
-		} else if (setting == "all" && (!last_bg || current_bg != now_bg)){
+		} else if (config.notifications == "all" && (!last_bg || current_bg != now_bg)){
 			doNotify(now_bg,3, "You're #cgmnow " + convertBg(now_bg) + at() + ". The trend is " + now_trend +".", high, low);
 
 		} else {

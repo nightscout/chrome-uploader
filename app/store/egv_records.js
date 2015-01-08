@@ -5,7 +5,11 @@ define(function() {
 
 	var callback = function(newRecords) {
 		listeners.forEach(function(fn) {
-			fn(newRecords, table);
+			try {
+				fn(newRecords, table);
+			} catch (e) {
+				console.log(e);
+			}
 		});
 	};
 
@@ -28,7 +32,7 @@ define(function() {
 
 		localRecords.forEach(function(page) {
 			Array.prototype.splice.apply(table, [table.length, 0].concat(page));
-		})
+		});
 
 		table.sort(function(a,b) {
 			return a.displayTime - b.displayTime;

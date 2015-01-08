@@ -121,7 +121,7 @@ $(function() {
 	});
 	$("#errorreporting-agree").click(function(){
 		var github = "https://api.github.com";
-		console.debug(config);
+		// console.debug(config);
 		$.ajax({
 			url: github + "/gists",
 			accept: "application/vnd.github.v3+json",

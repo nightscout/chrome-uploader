@@ -120,18 +120,18 @@ define(["../bloodsugar", "../store/egv_records", "/app/config.js!"], function(co
 				}, timeout_funct);
 			} else{
 				//create canvas
-	   			var canvas = document.createElement('canvas');
-	    		canvas.width = 80;
-	    		canvas.height = 45;
-	    		var ctx = canvas.getContext('2d');
-	    		ctx.fillStyle = "";
-	    		ctx.fillRect(0, 0, canvas.width,canvas.height);
-	    		ctx.fillStyle = "rgb(200,0,0)";
+				var canvas = document.createElement('canvas');
+				canvas.width = 80;
+				canvas.height = 45;
+				var ctx = canvas.getContext('2d');
+				ctx.fillStyle = "";
+				ctx.fillRect(0, 0, canvas.width,canvas.height);
+				ctx.fillStyle = "rgb(200,0,0)";
 				if (bg_value >= low) ctx.fillStyle = "rgb(0,200,0)";
 				if (bg_value > high) ctx.fillStyle = "rgb(250,250,0)";
-	    		ctx.font = "30px Verdana";
+				ctx.font = "30px Verdana";
 	 			ctx.fillText(convertBg(bg_value),5,35);
-	    		var dataURL = canvas.toDataURL('image/png');
+				var dataURL = canvas.toDataURL('image/png');
 				//create notification
 				chrome.notifications.create("", {
 					type: "image",

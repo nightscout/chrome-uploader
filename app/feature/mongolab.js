@@ -161,14 +161,20 @@ define(["../waiting", "../store/egv_records", "/app/config.js!"], function(waiti
 	};
 
 	mongolab.publish = function(records) { // (backfill mongolab)
+		var uxWaiting = function() {
+			if (records.length > 1000) {
+				waiting.show("Sending entire history to MongoLab");
+				return waiting.hide.bind(waiting);
+			} else {
+				return function() { };
+			}
+		};
+
 		return (new Promise(function(complete) {
 			// have a unique constraint on date to keep it from inserting too much data.
 			// mongolab returns a 400 when duplicate attempted
 			if (records.length == 0) return complete();
-			else if (records.length > 1000) {
-				waiting.show("Sending entire history to MongoLab");
-			}
-
+			
 			console.log("[mongolab] Publishing all data to MongoLab");
 			if (!("mongolab" in config)) return;
 			if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
@@ -188,9 +194,7 @@ define(["../waiting", "../store/egv_records", "/app/config.js!"], function(waiti
 					contentType: "application/json"
 				});
 			})).then(complete);
-		})).then(function() {
-			waiting.hide();
-		});
+		})).then(uxWaiting());
 	};
 
 	mongolab.testConnection = function(apikey, databasename, collectionname) {

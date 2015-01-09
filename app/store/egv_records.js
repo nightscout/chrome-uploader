@@ -2,6 +2,10 @@ define(function() {
 	var table = []; // representation of chrome.storage.local.get("egvrecords")
 	var listeners = [];
 	var readyToWrite = false;
+	var loaded = false;
+	var loadPromise = new Promise(function(done) {
+		loaded = done;
+	});
 
 	var callback = function(newRecords) {
 		listeners.forEach(function(fn) {
@@ -40,6 +44,7 @@ define(function() {
 
 		callback([]); // run callback with no new records
 		readyToWrite = true;
+		loaded();
 	});
 
 	table.add = function(record) {
@@ -75,6 +80,7 @@ define(function() {
 	};
 
 	table.onChange(write); // every time it changes re-save
+	table.onLoad = loadPromise;
 
 	return table;
 });

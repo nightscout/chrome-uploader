@@ -1,4 +1,4 @@
-define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/app/config.js!"], function(dexcom, remotecgm, egvrecords, config) {
+define(["../datasource/dexcom", "../datasource/remotecgm", "../store/egv_records", "/app/config.js!"], function(dexcom, remotecgm, egvrecords, config) {
 	var cgm = dexcom,
 	isdownloading = false;
 	var isWindows = !!~window.navigator.appVersion.indexOf("Win");
@@ -31,9 +31,9 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/a
 			if (isdownloading) reject();
 			isdownloading = true;
 			var timer = new Date();
-			var max_existing = egvrecords.length > 0?
+			var max_existing = (egvrecords.length > 0?
 				(egvrecords[egvrecords.length - 1].displayTime || egvrecords[egvrecords.length - 1].date ):
-				0;
+				0);
 			var max_allowed = new Date(Date.now() + (1).days());
 			
 			console.debug("[cgm_download.js connect] loading");
@@ -91,35 +91,31 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/a
 		var lastNewRecord = Date.now();
 
 		// update my db
-		(function(data) {
-			return new Promise(function(resolve) {
-				var existing = egvrecords || [];
-				var max_existing = existing.length > 0?
-					(existing[existing.length - 1].displayTime || existing[existing.length].date) :
-					0;
-				var new_records = data.filter(function(egv) {
-					return( +egv.displayTime > max_existing )|| (+egv.date > max_existing);
-				}).map(function(egv) {
-					return {
-						displayTime: +egv.displayTime || +egv.date,
-						bgValue: egv.bgValue || egv.sgv,
-						trend: egv.trend || egv.direction,
-						recordSource: config.datasource
-					};
-				});
-				if (new_records.length === 0) {
-					if (lastNewRecord + (5).minutes() < Date.now()) {
-						console.warn("[cgm_download.js updateLocalDb] Something's wrong. We should have new data by now.");
-					}
-				} else {
-					lastNewRecord = Date.now();
-				}
-				new_records = new_records.filter(function(row) {
-					return row.bgValue > 30;
-				});
-				egvrecords.addAll(new_records);
-			});
-		})(data);
+		var existing = egvrecords || [];
+		var max_existing = existing.length > 0?
+			(existing[existing.length - 1].displayTime || existing[existing.length].date) :
+			0;
+		var new_records = data.filter(function(egv) {
+			return( +egv.displayTime > max_existing )|| (+egv.date > max_existing);
+		}).map(function(egv) {
+			return {
+				displayTime: +egv.displayTime || +egv.date,
+				bgValue: egv.bgValue || egv.sgv,
+				trend: egv.trend || egv.direction,
+				recordSource: config.datasource
+			};
+		});
+		if (new_records.length === 0) {
+			if (lastNewRecord + (5).minutes() < Date.now()) {
+				console.warn("[cgm_download.js updateLocalDb] Something's wrong. We should have new data by now.");
+			}
+		} else {
+			lastNewRecord = Date.now();
+		}
+		new_records = new_records.filter(function(row) {
+			return row.bgValue > 30;
+		});
+		egvrecords.addAll(new_records);
 
 		var nextRun = function() {
 			console.log("[cgmdownload.js nextRun] Attempting to refresh data");
@@ -136,5 +132,19 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../egv_records", "/a
 	onConnectError = function(){
 		console.log(arguments);
 	};
-	connect().then(onConnected, onConnectError); // chain to start everything
+	egvrecords.onLoad.then(function() {
+		connect().then(onConnected, onConnectError); // chain to start everything
+	});
+
+	return {
+		getAllRecords: function() {
+			var oldCgm = cgm;
+			cgm = dexcom;
+			var p = cgm.getAllRecords();
+			p.then(function() {
+				cgm = oldCgm;
+			});
+			return p;
+		}
+	}
 });

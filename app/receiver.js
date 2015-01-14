@@ -1,6 +1,32 @@
+require(["/app/config.js!"], function(config) {
+	function putTheChartOnThePage(remotecgmuri) {
+		$("#receiverui").html("");
+		if (typeof remotecgmuri == "string" && remotecgmuri.length > 0) {
+			if (remotecgmuri.indexOf("://") == -1) {
+				remotecgmuri = "http://" + remotecgmuri;
+			}
+			// load remote
+			console.log("[app.js putTheChartOnThePage] Using remote CGM monitor");
+			$("#receiverui").append($("<div class='row'/>").append($("<webview class='container col-xs-12'/>").attr({
+				src: remotecgmuri
+			})));
+		} else {
+			// load hosted
+			console.log("[app.js putTheChartOnThePage] Using built-in chart");
+			$("#receiverui").load('receiver.html', launchReceiverUI);
+		}
+	}
+
+	config.on("remotecgmuri", putTheChartOnThePage);
+
+	$(function() {
+		putTheChartOnThePage(config.remotecgmuri);
+	});
+});
+
 function launchReceiverUI() {
 
-require(["bloodsugar", "/app/config.js!", "egv_records"], function(convertBg, config, egvrecords) {
+require(["bloodsugar", "/app/config.js!", "store/egv_records"], function(convertBg, config, egvrecords) {
 	var jqShow = $.fn.show;
 	$.fn.show = function(domid) {
 		var o = jqShow.apply(this, [domid]);
@@ -189,36 +215,15 @@ require(["bloodsugar", "/app/config.js!", "egv_records"], function(convertBg, co
 
 	$(function() {
 		//Adrian: Timeframe(ZOOM)-handlers:
-		$("#setTime1").click(function() {
-			config.set("trenddisplaytime", 1);
-		});
-		$("#setTime3").click(function() {
-			config.set("trenddisplaytime", 3);
-		});
-		$("#setTime6").click(function() {
-			config.set("trenddisplaytime", 6);
-		});
-		$("#setTime12").click(function() {
-			config.set("trenddisplaytime", 12);
-		});
-		$("#setTime24").click(function() {
-			config.set("trenddisplaytime", 24);
-		});
-		$("#setTime48").click(function() {
-			config.set("trenddisplaytime", 47);;
-		});
-		$("#setTime72").click(function() {
-			config.set("trenddisplaytime", 72);
-		});
-		$("#setTime168").click(function() {
-			config.set("trenddisplaytime", 168);
-		});
+		$("[data-hours]").click(function() {
+			config.set("trenddisplaytime", parseInt($(this).attr("data-hours"), 10));
+		})
 	});
 
 	// first load, before receiver's returned data
-	var firstLoad = function() {
+	var firstLoad = function() { // called in overriden $.fn.show above
 		drawReceiverChart(egvrecords);
-	}
+	};
 
 	$(".dropdown-toggle").dropdown();
 });

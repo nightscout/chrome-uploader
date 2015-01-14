@@ -1,4 +1,4 @@
-define(["../waiting", "../egv_records", "/app/config.js!"], function(waiting, egvrecords, config) {
+define(["../waiting", "../store/egv_records", "/app/config.js!"], function(waiting, egvrecords, config) {
 	var mongolabUrl = "https://api.mongolab.com/api/1/databases/";
 
 	var mongolab = { };
@@ -161,11 +161,20 @@ define(["../waiting", "../egv_records", "/app/config.js!"], function(waiting, eg
 	};
 
 	mongolab.publish = function(records) { // (backfill mongolab)
-		waiting.show("Sending entire history to MongoLab");
-		return new Promise(function(complete) {
+		var uxWaiting = function() {
+			if (records.length > 1000) {
+				waiting.show("Sending entire history to MongoLab");
+				return waiting.hide.bind(waiting);
+			} else {
+				return function() { };
+			}
+		};
+
+		return (new Promise(function(complete) {
 			// have a unique constraint on date to keep it from inserting too much data.
 			// mongolab returns a 400 when duplicate attempted
-
+			if (records.length == 0) return complete();
+			
 			console.log("[mongolab] Publishing all data to MongoLab");
 			if (!("mongolab" in config)) return;
 			if (!("apikey" in config.mongolab && config.mongolab.apikey.length > 0)) return;
@@ -184,11 +193,8 @@ define(["../waiting", "../egv_records", "/app/config.js!"], function(waiting, eg
 					type: "POST",
 					contentType: "application/json"
 				});
-			})).then(function() {
-				waiting.hide();
-				complete();
-			});
-		});
+			})).then(complete);
+		})).then(uxWaiting());
 	};
 
 	mongolab.testConnection = function(apikey, databasename, collectionname) {
@@ -228,15 +234,9 @@ define(["../waiting", "../egv_records", "/app/config.js!"], function(waiting, eg
 		var datasource = "dexcom";
 		if ("datasource" in config) datasource = config.datasource || "dexcom";
 		if (datasource == "dexcom") {
-			new_r.forEach(function(egv) {
-				if ("recordSource" in egv) {
-					if (egv.recordSource != "mongolab") {
-						mongolab.insert(egv);
-					}
-				} else {
-					mongolab.insert(egv);
-				}
-			});
+			mongolab.publish(new_r.filter(function(egv) {
+				return egv.recordSource != "mongolab";
+			}));
 		}
 	});
 

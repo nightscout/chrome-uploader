@@ -1,5 +1,4 @@
 require(["feature/mongolab.js", "/app/config.js!"], function(mongolab, config) {
-	console.log(config);
 	function getValue(param, options) {
 		var parts = param.split(".");
 		var key = parts.shift();
@@ -12,24 +11,6 @@ require(["feature/mongolab.js", "/app/config.js!"], function(mongolab, config) {
 	$("#optionsui input,#optionsui select").map(function(ix) {
 		$(this).val(getValue(this.name, config));
 	});
-	// chrome.serial.getDevices(function(ports) {
-	// 	// build list of "available" serialports
-	// 	var isWindows = !!~window.navigator.appVersion.indexOf("Win");
-	// 	document.getElementById("serialportlist").innerHTML +=
-	// 		(isWindows?
-	// 			"<li>Default is <code>COM3</code>. Other's available when NightScout.info CGM Utility started include</li>":
-	// 			"<li>Default is <code>/dev/tty.usbmodem</code>. Others available when NightScout.info CGM Utility started include</li>"
-	// 		) + ports.map(function(sp) {
-	// 			if (!isWindows || sp.path != "COM3")
-	// 				return "<li><code>" + sp.path + "</code></li>";
-	// 			else
-	// 				return "";
-	// 		}).join("");
-
-	// 	$("#serialportlist code").click(function(event) {
-	// 		$("input[name=serialport]").val(this.textContent);
-	// 	});
-	// });
 
 	$("#optionsui").on("click", "#savesettings", function(){
 		var newConfig = $("#optionsui input, #optionsui select").toArray().reduce(function(out, field) {

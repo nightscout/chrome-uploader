@@ -6,7 +6,6 @@
 		<script src="../vendor/jquery/dist/jquery.min.js"></script>
 		<script src="../vendor/flot/jquery.flot.js"></script>
 		<script src="../vendor/flot/jquery.flot.time.js"></script>
-		<script src="console.js"></script>
 		<script src="time.js"></script>
 		<script src="receiver.js"></script>
 		<script src="app.js"></script>
@@ -273,6 +272,7 @@ ul.communications {
 					<div class="modal-body">
 						<p>This is pre-release software. It's reverse engineered. Don't rely on it. Don't make decisions around it. Don't blame the author for anything. You're choosing to use this, and accept any responsibility stemming from that.</p>
 					</div>
+					<div id="updateText" class="well"></div>
 					<div class="modal-footer">
 						<button id="acknowledge-agree" class="btn">I agree</button>
 						<button id="acknowledge-disagree" class="btn">I disagree</button>
@@ -313,16 +313,16 @@ ul.communications {
 				</div>
 				<div class="navbar-collapse collapse" role="navigation">
 					<ul class="nav navbar-nav">
-						<li><a href="#" id="openoptions">Options</a></li>
+						<li><a href="app/options.html" class="new_window" data-width="960" data-height="650">Options</a></li>
 						<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Reports</a>
 							<ul class="dropdown-menu" role="menu">
-								<li><a href="#" id="menudailystats">Daily Stats</a></li>
-								<li><a href="#" id="menupercentilechart">Percentile Chart</a></li>
+								<li><a href="app/report/dailystats.html" class="new_window" data-width="600" data-height="650">Daily Stats</a></li>
+								<li><a href="app/report/percentile.html" class="new_window" data-width="960" data-height="578">Percentile Chart</a></li>
 								<!-- li><a href="#" id="menudailytrends">Daily Trends (not built)</a></li -->
-								<li><a href="#" id="menudistribution">Distribution</a></li>
+								<li><a href="app/report/glucosedistribution.html" class="new_window" data-width="960" data-height="400">Distribution</a></li>
 								<!-- li><a href="#" id="menuglucosetrends">Glucose Trends (not built)</a></li -->
-								<li><a href="#" id="menuhourlystats">Hourly Stats</a></li>
-								<li><a href="#" id="menusuccess">Success Report</a></li>
+								<li><a href="app/report/hourlystats.html" class="new_window" data-width="960" data-height="800">Hourly Stats</a></li>
+								<li><a href="app/report/success.html" class="new_window" data-width="800" data-height="600">Success Report</a></li>
 								<!-- li><a href="#" id="menuinsights">Trends and Insights (not built)</a></li-->
 							</ul>
 						</li>

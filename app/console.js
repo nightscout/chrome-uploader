@@ -1,4 +1,4 @@
-(function(console) {
+define([], function() {
 	var myLog = [], consoleFunctions = {};
 	var flattenSimple = function(d) {
 		var recursions = 0;
@@ -51,9 +51,41 @@
 	["log", "warn", "info", "error", "debug"].forEach(function(fn) { consoleFunctions[fn] = console[fn] || function() { }; });
 	["log", "warn", "info", "error", "debug"].forEach(function(fn) {
 		console[fn] = function() {
-			var args = Array.prototype.slice.call(arguments);
-			myLog.push(fn.toUpperCase() + ": " + flattenSimple(args));
-			consoleFunctions[fn].apply(console, arguments);
+			var stack = {};
+			try {
+				throw new Error();
+			} catch (e) {
+				stack = e.stack;
+			}
+			try {
+				stack = stack
+					.split("\n") // big string
+					.slice(2) // throw away intro and this fn's invocation
+					.filter(function(line) {
+						return line.indexOf("blinken_lights.js") == -1;
+					})
+					.map(function(line) {
+						return line.trim();
+					})
+					.filter(function(line) {
+						return line.indexOf("jquery") == -1 && line.indexOf("(native)") == -1;
+					}).map(function(line) {
+						var parts = line.split(":");
+						return {
+							file: parts[1]
+								.split("/")
+								.slice(3) // throw away chrome-extension part
+								.join("/"),
+							line: parseInt(parts[2],10)
+						};
+					});
+				var args = Array.prototype.slice.call(arguments);
+				myLog.push(fn.toUpperCase() + ": " + stack[0].file + ":" + stack[0].line + ": " + flattenSimple(args));
+				consoleFunctions[fn].apply(console, arguments);
+			}
+			catch (e) {
+				myLog.push("Error occured during console operation. " + JSON.stringify(e));
+			}
 		}
 	});
 
@@ -65,4 +97,5 @@
 	console.fixMyStuff = function() {
 		return myLog.join("\n");
 	};
-})(console);
+	return console;
+});

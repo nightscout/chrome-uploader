@@ -1,4 +1,4 @@
-require(["feature/cgm_download", "feature/mongolab", "feature/trending_alerts", "waiting", "egv_records", "/app/config.js!", "blinken_lights"], function(cgm, mongolab, alerts, waiting, egvrecords, config, blinkenLights) {
+require(["feature/cgm_download", "feature/mongolab", "feature/trending_alerts", "waiting", "store/egv_records", "/app/config.js!", "blinken_lights", "console"], function(cgm, mongolab, alerts, waiting, egvrecords, config, blinkenLights, console) {
 
 // OS Flags
 // Windows needs a different COM port than everything else because Windows.
@@ -28,31 +28,27 @@ if (isMac) {
 	}
 }
 
-// Keep errors from happening during large downloads
-var attempts = 0;
-
-function putTheChartOnThePage(remotecgmuri) {
-	$("#receiverui").html("");
-	if (typeof remotecgmuri == "string" && remotecgmuri.length > 0) {
-		if (remotecgmuri.indexOf("://") == -1) {
-			remotecgmuri = "http://" + remotecgmuri;
-		}
-		// load remote
-		console.log("[app.js putTheChartOnThePage] Using remote CGM monitor");
-		$("#receiverui").append($("<div class='row'/>").append($("<webview class='container col-xs-12'/>").attr({
-			src: remotecgmuri
-		})));
-	} else {
-		// load hosted
-		console.log("[app.js putTheChartOnThePage] Using built-in chart");
-		$("#receiverui").load('receiver.html', launchReceiverUI /* receiver.js */);
-	}
-}
-
-putTheChartOnThePage(config.remotecgmuri);
-config.on("remotecgmuri", putTheChartOnThePage);
-
 $(function() {
+	$.ajax("https://twitter.com/cgmtools4chrome").then(function(page) {
+		var tweets = $(".js-tweet-text", page.replace(/<script.*<\/script>/g, "").replace(/<img.*>/g, ""));
+		var important = tweets.filter(function(b) { return this.innerText.indexOf("#update") > -1 });
+		if (important.length > 0) {
+			var mostRecent = important.map(function() { return this.innerText.replace(" #update", ""); })[0];
+			if (mostRecent.indexOf("http") > -1) {
+				var linkStart = mostRecent.indexOf("http");
+				if (linkStart > -1) {
+					var endsAt = mostRecent.indexOf(" ", linkStart);
+					if (endsAt > -1) {
+						endsAt -= linkStart;
+					} else {
+						endsAt = mostRecent.length - endsAt;
+					}
+					mostRecent = mostRecent.substr(0, linkStart) + '<a href="' + mostRecent.substr(linkStart, endsAt)  + '" target="_blank">' + mostRecent.substr(linkStart, endsAt) + "</a>" + mostRecent.substr(linkStart + endsAt);
+				}
+			}
+			$("#updateText").html(mostRecent);
+		} 
+	})
 	// event handlers
 	$("#disclaimer").modal();
 	$("#disclaimer").show();
@@ -92,84 +88,7 @@ $(function() {
 		onConfirm: egvrecords.removeAll
 	});
 
-	// TODO: this needs to be refactored out of here
-	// TODO: populateLocalStorage() in dexcom?
-	var downloadTheWorld = function(b){
-		waiting.show('Downloading entire history from Dexcom receiver');
-		isdownloading = true;
-
-		var i = 1;
-		var data = [];
-		var compile = function(i) {
-			return new Promise(function(resolve,reject) {
-				try {
-					cgm.readFromReceiver(i).then(function(d) {
-						data.push(d);
-
-						if (d.length) {
-							resolve(d);
-						} else {
-							reject();
-						}
-					});
-				} catch (e) {
-					reject(e);
-				}
-			});
-		},
-		reader = function() {
-			compile(i).then(function() {
-				waiting.setProgress(i);
-				i++;
-				reader();
-			}, function() { // no more data
-				waiting.setProgress(85);
-				setTimeout(function() {
-					cgm.disconnect();
-					var existing = egvrecords;
-					var existing_ts = existing.map(function(row) {
-						return row.displayTime;
-					});
-					var max_existing = existing.length > 0?  existing[existing.length - 1].displayTime : 0;
-					var new_records = Array.prototype.concat.apply([], data).map(function(egv) {
-						return {
-							displayTime: +egv.displayTime,
-							bgValue: egv.bgValue,
-							trend: egv.trend
-						};
-					}).filter(function(row) {
-						return existing_ts.filter(function(ts) {
-							return ts == row.displayTime;
-						}).length === 0;
-					}).filter(function(row) {
-						return row.bgValue > 30;
-					});
-					egvrecords.addAll(new_records);
-					waiting.hide();
-					isdownloading = false;
-					chrome.notifications.create("", {
-						title: "Download complete",
-						type: "basic",
-						message: "Downloaded " + new_records.length + " new records (about " + Math.ceil(new_records.length / 216) + " day(s) worth."
-					}, function() { });
-					console.log("[app.js downloadTheWorld] %i new records (about %i days)", new_records.length, Math.ceil(new_records.length / 216)); // 1 page holds about 18h (3/4 * 288 rec / day)
-				}, 300);
-			});
-		};
-		try {
-			cgm.connect(config.serialport).then(reader, function() {
-				chrome.notifications.update(notification_id, {
-					message: "Could not find a connected Dexcom from which to download.",
-					iconUrl: "/public/assets/error.png"
-				}, function() { });
-			});
-		} catch (e) {
-			chrome.notifications.update(notification_id, {
-				message: "Could not find a connected Dexcom to download from"
-			}, function() { });
-		}
-	};
-	$(".downloadallfromdexcom").click(downloadTheWorld);
+	$(".downloadallfromdexcom").click(cgm.getAllRecords);
 
 	$("#fixit").click(function() {
 		$("#errorrreporting").modal();
@@ -177,75 +96,19 @@ $(function() {
 		$("#whatswrong").val("");
 	});
 
-
 	$('.dropdown-toggle').dropdown();
-	$("#menuinsights").click(function() {
-		chrome.app.window.create('app/report/insights.html', {
-			id: "insightsreport",
+	$("a.new_window").click(function() {
+		chrome.app.window.create($(this).attr("href"), {
+			id: this.href.replace(/[\/\.:]/g, ""),
 			bounds: {
-				width: 800,
-				height: 600
+				width: parseInt($(this).attr("data-width"), 10),
+				height: parseInt($(this).attr("data-height"), 10)
 			}
+		}, function(w) {
+			w.contentWindow.console = console;
 		});
+		return false;
 	});
-	$("#menusuccess").click(function() {
-		chrome.app.window.create('app/report/success.html', {
-			id: "successreport",
-			bounds: {
-				width: 800,
-				height: 600
-			}
-		});
-	});
-	$("#menudailystats").click(function() {
-		chrome.app.window.create('app/report/dailystats.html', {
-			id: "dailystatsreport",
-			bounds: {
-				width: 600,
-				height: 650
-			}
-		});
-	});
-	$("#menudistribution").click(function() {
-		chrome.app.window.create('app/report/glucosedistribution.html', {
-			id: "glucosedistribution",
-			bounds: {
-				width: 960,
-				height: 400
-			}
-		});
-	});
-	$("#menuhourlystats").click(function() {
-		chrome.app.window.create('app/report/hourlystats.html', {
-			id: "hourlystats",
-			bounds: {
-				width: 960,
-				height: 800
-			}
-		});
-	});
-
-	$("#menupercentilechart").click(function() {
-		chrome.app.window.create('app/report/percentile.html', {
-			id: "percentilechart",
-			bounds: {
-				width: 960,
-				height: 578
-			}
-		});
-	});
-
-	$("#openoptions").click(function(){
-		chrome.app.window.create('app/options.html', {
-			id: "options",
-			bounds: {
-				width: 960,
-				height: 600
-			}
-		});
-		
-	});
-	
 	$("#pulldatabase").click(function() {
 		mongolab.populateLocalStorage().then(function(r, ml) {
 			chrome.notifications.create("", {
@@ -258,7 +121,7 @@ $(function() {
 	});
 	$("#errorreporting-agree").click(function(){
 		var github = "https://api.github.com";
-		console.debug(config);
+		// console.debug(config);
 		$.ajax({
 			url: github + "/gists",
 			accept: "application/vnd.github.v3+json",
@@ -276,7 +139,7 @@ $(function() {
 			contentType: "application/json"
 		}).then(function(r) {
 			$("#errorrreporting").modal('hide');
-			window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent("@bosh I have a problem with Nightscout CGM Uploader") + "&url=" + encodeURIComponent(r.html_url))
+			window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent("@cgmtools4chrome I have a problem with Nightscout CGM Uploader") + "&url=" + encodeURIComponent(r.html_url))
 		});
 	})
 	$("#errorreporting-disagree").click(function() {

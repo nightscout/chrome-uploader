@@ -105,7 +105,7 @@ define(["../bloodsugar", "../store/egv_records", "/app/config.js!"], function(co
 						chrome.notifications.clear(notification_id, function(notification_id) {
 							//nothing
 						});
-					}, settings[0].seconds());
+					}, parseInt(settings[0]).seconds());
 				};
 			}
 

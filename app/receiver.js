@@ -213,11 +213,15 @@ require(["bloodsugar", "/app/config.js!", "store/egv_records"], function(convert
 		drawReceiverChart(egvrecords);
 	});
 
+	config.on("targetrange", function() {
+		drawReceiverChart(egvrecords);
+	});
+
 	$(function() {
 		//Adrian: Timeframe(ZOOM)-handlers:
 		$("[data-hours]").click(function() {
 			config.set("trenddisplaytime", parseInt($(this).attr("data-hours"), 10));
-		})
+		});
 	});
 
 	// first load, before receiver's returned data

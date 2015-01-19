@@ -9,16 +9,9 @@ require(["feature/mongolab.js"], function(mongolab) {
 		}
 	}
 
-	var setter = function() {
-		if (!config) {
-			return setTimeout(setter, 100);
-		}
-		$("#optionsui input,#optionsui select").map(function(ix) {
-			$(this).val(getValue(this.name, config));
-		});
-	}.bind(this);
-
-	setter();
+	$("#optionsui input,#optionsui select").map(function(ix) {
+		$(this).val(getValue(this.name, config));
+	});
 
 	$("#optionsui").on("click", "#savesettings", function(){
 		var newConfig = $("#optionsui input, #optionsui select").toArray().reduce(function(out, field) {
@@ -35,8 +28,6 @@ require(["feature/mongolab.js"], function(mongolab) {
 			working[key] = field.value;
 			return out;
 		}, {});
-
-			debugger;
 		Object.keys(newConfig).forEach(function(key) {
 			config.set(key,newConfig[key]);
 		});

@@ -51,7 +51,6 @@ define(function() {
 					}
 				};
 				config.set = function(key, val) {
-					debugger;
 					var working = config;
 					var old;
 					while (key.indexOf(".") > -1) {

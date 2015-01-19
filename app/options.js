@@ -1,4 +1,4 @@
-require(["feature/mongolab.js", "/app/config.js!"], function(mongolab, config) {
+require(["feature/mongolab.js"], function(mongolab) {
 	function getValue(param, options) {
 		var parts = param.split(".");
 		var key = parts.shift();
@@ -8,9 +8,17 @@ require(["feature/mongolab.js", "/app/config.js!"], function(mongolab, config) {
 			return (typeof options == "object" && key in options)? options[key]: "";
 		}
 	}
-	$("#optionsui input,#optionsui select").map(function(ix) {
-		$(this).val(getValue(this.name, config));
-	});
+
+	var setter = function() {
+		if (!config) {
+			return setTimeout(setter, 100);
+		}
+		$("#optionsui input,#optionsui select").map(function(ix) {
+			$(this).val(getValue(this.name, config));
+		});
+	}.bind(this);
+
+	setter();
 
 	$("#optionsui").on("click", "#savesettings", function(){
 		var newConfig = $("#optionsui input, #optionsui select").toArray().reduce(function(out, field) {
@@ -28,6 +36,7 @@ require(["feature/mongolab.js", "/app/config.js!"], function(mongolab, config) {
 			return out;
 		}, {});
 
+			debugger;
 		Object.keys(newConfig).forEach(function(key) {
 			config.set(key,newConfig[key]);
 		});

@@ -1,4 +1,4 @@
-require(["feature/mongolab.js", "/app/config.js!"], function(mongolab, config) {
+require(["feature/mongolab.js"], function(mongolab) {
 	function getValue(param, options) {
 		var parts = param.split(".");
 		var key = parts.shift();
@@ -8,6 +8,7 @@ require(["feature/mongolab.js", "/app/config.js!"], function(mongolab, config) {
 			return (typeof options == "object" && key in options)? options[key]: "";
 		}
 	}
+
 	$("#optionsui input,#optionsui select").map(function(ix) {
 		$(this).val(getValue(this.name, config));
 	});
@@ -27,7 +28,6 @@ require(["feature/mongolab.js", "/app/config.js!"], function(mongolab, config) {
 			working[key] = field.value;
 			return out;
 		}, {});
-
 		Object.keys(newConfig).forEach(function(key) {
 			config.set(key,newConfig[key]);
 		});

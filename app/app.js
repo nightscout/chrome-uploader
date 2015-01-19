@@ -109,6 +109,19 @@ $(function() {
 		});
 		return false;
 	});
+	$("a#options").click(function() {
+		chrome.app.window.create($(this).attr("href"), {
+			id: this.href.replace(/[\/\.:]/g, ""),
+			bounds: {
+				width: parseInt($(this).attr("data-width"), 10),
+				height: parseInt($(this).attr("data-height"), 10)
+			}
+		}, function(w) {
+			w.contentWindow.console = console;
+			w.contentWindow.config = config;
+		});
+		return false;
+	});
 	$("#pulldatabase").click(function() {
 		mongolab.populateLocalStorage().then(function(r, ml) {
 			chrome.notifications.create("", {

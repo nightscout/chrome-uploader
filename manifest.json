@@ -3,7 +3,7 @@
 
   "name": "NightScout.info CGM Utility",
   "description": "Report #cgmnow, run reports, and upload data to NightScout.",
-  "version": "0.1.6.0",
+  "version": "0.1.6.1",
   "app": {
     "background": {
       "scripts": ["app/background.js"]

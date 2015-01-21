@@ -20,7 +20,9 @@
     "url": "https://github.com/nightscout/chrome-uploader/issues"
   },
   "dependencies": {
+    "cajon": "^0.2.5",
     "dexcom-uart": "git+https://github.com/bewest/dexcom-uart.git",
-    "serial-chromify": "git+https://github.com/bewest/serial-chromeify.git"
+    "serial-chromify": "git+https://github.com/bewest/serial-chromeify.git",
+    "systemjs": "^0.11.3"
   }
 }

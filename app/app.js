@@ -1,3 +1,4 @@
+debugger;
 require(["feature/cgm_download", "feature/mongolab", "feature/trending_alerts", "waiting", "store/egv_records", "/app/config.js!", "blinken_lights", "console"], function(cgm, mongolab, alerts, waiting, egvrecords, config, blinkenLights, console) {
 
 // OS Flags

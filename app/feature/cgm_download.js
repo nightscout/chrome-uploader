@@ -14,6 +14,7 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../store/egv_records
 
 	config.on("datasource", pickDatasource);
 	pickDatasource(config.datasource);
+	var max_allowed;
 
 	// emit events that UI can react to
 	var connect = function() {
@@ -34,7 +35,7 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../store/egv_records
 			var max_existing = (egvrecords.length > 0?
 				(egvrecords[egvrecords.length - 1].displayTime || egvrecords[egvrecords.length - 1].date ):
 				0);
-			var max_allowed = new Date(Date.now() + (1).days());
+			max_allowed = new Date(Date.now() + (1).days());
 			
 			console.debug("[cgm_download.js connect] loading");
 			cgm.connect().then(function() { // success
@@ -113,7 +114,7 @@ define(["../datasource/dexcom", "../datasource/remotecgm", "../store/egv_records
 			lastNewRecord = Date.now();
 		}
 		new_records = new_records.filter(function(row) {
-			return row.bgValue > 30;
+			return row.bgValue > 30 && row.displayTime < max_allowed;
 		});
 		egvrecords.addAll(new_records);
 

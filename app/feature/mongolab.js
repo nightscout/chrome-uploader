@@ -142,7 +142,9 @@ define(["../waiting", "../store/egv_records", "/app/config.js!"], function(waiti
 							recordSource: "mongolab"
 						};
 					}).filter(function(record){
-						return (existing.indexOf(record.displayTime) == -1)
+						return (existing.indexOf(record.displayTime) == -1);
+					}).filter(function(record) {
+						return record.displayTime < Date.now();
 					}).filter(function(rec, ix, all) {
 						if (rec.bgValue <= 30) return false;
 						if (ix == 0) return true;

@@ -99,7 +99,7 @@ require(["bloodsugar", "/app/config.js!", "store/egv_records"], function(convert
 				parseFloat(convertBg(plot.bgValue))
 			];
 		}).filter(function(plot) {
-			return plot[0] + t.hours() > now;
+			return plot[0] + t.hours() > now && plot[0] < Date.now();
 		});
 
 		high = parseFloat(convertBg(high));
